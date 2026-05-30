@@ -12,10 +12,53 @@ interface SelectOption {
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 type Items = Record<string, JsonValue>;
 
+// Placeholder (first / "none") option labels as full 11-language i18n objects.
+// repochecker E5611 requires inline i18n objects in jsonConfig to be complete; an
+// explicit object is also guaranteed to render translated in every admin language.
+const PLACEHOLDER_COUNTRY: Record<string, string> = {
+  en: "— Select country —",
+  de: "— Land wählen —",
+  es: "— Seleccionar país —",
+  fr: "— Sélectionner le pays —",
+  it: "— Seleziona paese —",
+  nl: "— Land selecteren —",
+  pl: "— Wybierz kraj —",
+  pt: "— Selecionar país —",
+  ru: "— Выберите страну —",
+  uk: "— Виберіть країну —",
+  "zh-cn": "— 选择国家 —",
+};
+const PLACEHOLDER_STATE: Record<string, string> = {
+  en: "— (none) —",
+  de: "— (keines) —",
+  es: "— (ninguno) —",
+  fr: "— (aucun) —",
+  it: "— (nessuno) —",
+  nl: "— (geen) —",
+  pl: "— (brak) —",
+  pt: "— (nenhum) —",
+  ru: "— (нет) —",
+  uk: "— (немає) —",
+  "zh-cn": "— (无) —",
+};
+const PLACEHOLDER_REGION: Record<string, string> = {
+  en: "— (none) —",
+  de: "— (keine) —",
+  es: "— (ninguna) —",
+  fr: "— (aucune) —",
+  it: "— (nessuna) —",
+  nl: "— (geen) —",
+  pl: "— (brak) —",
+  pt: "— (nenhuma) —",
+  ru: "— (нет) —",
+  uk: "— (немає) —",
+  "zh-cn": "— (无) —",
+};
+
 const hd = new Holidays();
 const countries = hd.getCountries();
 
-const countryOptions: SelectOption[] = [{ label: { en: "— Select country —", de: "— Land wählen —" }, value: "" }];
+const countryOptions: SelectOption[] = [{ label: PLACEHOLDER_COUNTRY, value: "" }];
 for (const [code, name] of Object.entries(countries).sort((a, b) => a[1].localeCompare(b[1]))) {
   countryOptions.push({ label: `${(name as string).replace(/\\/g, "")} (${code})`, value: code });
 }
@@ -27,14 +70,14 @@ for (const cc of Object.keys(countries)) {
   const states = hd.getStates(cc);
   if (!states || Object.keys(states).length === 0) continue;
 
-  const stateOptions: SelectOption[] = [{ label: { en: "— (none) —", de: "— (keines) —" }, value: "" }];
+  const stateOptions: SelectOption[] = [{ label: PLACEHOLDER_STATE, value: "" }];
 
   for (const [code, name] of Object.entries(states).sort((a, b) => (a[1] as string).localeCompare(b[1] as string))) {
     stateOptions.push({ label: `${(name as string).replace(/\\/g, "")} (${code})`, value: code });
 
     const regions = hd.getRegions(cc, code);
     if (regions && Object.keys(regions).length > 0) {
-      const regionOptions: SelectOption[] = [{ label: { en: "— (none) —", de: "— (keine) —" }, value: "" }];
+      const regionOptions: SelectOption[] = [{ label: PLACEHOLDER_REGION, value: "" }];
       for (const [rc, rn] of Object.entries(regions).sort((a, b) => (a[1] as string).localeCompare(b[1] as string))) {
         regionOptions.push({ label: `${(rn as string).replace(/\\/g, "")} (${rc})`, value: rc });
       }

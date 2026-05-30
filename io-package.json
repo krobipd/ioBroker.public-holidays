@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "news": {
+      "0.5.2": {
+        "en": "Settings dropdown placeholders now appear in all 11 supported languages, not only English and German.",
+        "de": "Auswahl-Platzhalter in den Einstellungen erscheinen jetzt in allen 11 unterstützten Sprachen, nicht nur Englisch und Deutsch.",
+        "ru": "Подсказки в выпадающих списках настроек теперь отображаются на всех 11 поддерживаемых языках, а не только на английском и немецком.",
+        "pt": "Os marcadores dos menus suspensos nas configurações agora aparecem em todos os 11 idiomas suportados, não apenas inglês e alemão.",
+        "nl": "Tijdelijke aanduidingen in keuzelijsten verschijnen nu in alle 11 ondersteunde talen, niet alleen Engels en Duits.",
+        "fr": "Les libellés des menus déroulants des réglages s'affichent désormais dans les 11 langues prises en charge, pas seulement l'anglais et l'allemand.",
+        "it": "I segnaposto dei menu a tendina nelle impostazioni ora appaiono in tutte le 11 lingue supportate, non solo inglese e tedesco.",
+        "es": "Los marcadores de los menús desplegables ahora aparecen en los 11 idiomas admitidos, no solo inglés y alemán.",
+        "pl": "Etykiety zastępcze list rozwijanych w ustawieniach pojawiają się teraz we wszystkich 11 obsługiwanych językach, nie tylko angielskim i niemieckim.",
+        "uk": "Підказки у випадаючих списках налаштувань тепер відображаються всіма 11 підтримуваними мовами, а не лише англійською та німецькою.",
+        "zh-cn": "设置中下拉菜单的占位符现在以全部 11 种受支持的语言显示，而不仅是英语和德语。"
+      },
       "0.5.1": {
         "en": "Removed legacy changelog entries for versions never published under this package name",
         "de": "Veraltete Changelog-Einträge für nie unter diesem Paketnamen veröffentlichte Versionen entfernt",

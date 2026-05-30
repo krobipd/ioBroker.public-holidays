@@ -98,6 +98,10 @@ Bridge days appear in the state tree with the localized name matching the system
 **Holiday not detected** — Some holidays are classified as `observance` rather than `public`. Enable the observance type in the holiday settings if needed.
 
 ## Changelog
+### 0.5.2 (2026-05-30)
+
+- Admin settings: country, state and region dropdown placeholders now appear in all 11 supported languages instead of only English and German
+
 ### 0.5.1 (2026-05-25)
 
 - Removed legacy changelog entries for versions never published under this package name (repochecker E2004)
@@ -118,13 +122,6 @@ Bridge days appear in the state tree with the localized name matching the system
 - Removed ID states from all channels — slimmed state tree from 17 to 12 data points
 - Reduced verbose output during normal operation
 - Improved adapter stability: crash protection, race condition fix, reduced unnecessary state writes
-
-### 0.2.0 (2026-05-24)
-
-- State and region selection via dropdown menus instead of free text input
-- Exclude holidays shown per type — only visible when the corresponding type is enabled
-- Country auto-detected from ioBroker system settings when not configured
-- Slimmed state tree from 27 to 17 data points (removed redundant region/type fields)
 
 Older entries are in [CHANGELOG_OLD.md](CHANGELOG_OLD.md).
 

@@ -23,6 +23,9 @@ coverage/
 .nyc_output/
 *.tsbuildinfo
 
+# dev-server (local ioBroker test instance)
+.dev-server/
+
 # Environment
 .env
 .env.local

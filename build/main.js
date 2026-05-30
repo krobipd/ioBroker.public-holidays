@@ -28,27 +28,11 @@ var import_coerce = require("./lib/coerce");
 var import_holiday_engine = require("./lib/holiday-engine");
 var import_i18n = require("./lib/i18n");
 var import_state_publisher = require("./lib/state-publisher");
-let processHandlersInstalled = false;
-let installedUnhandledHandler = null;
-let installedUncaughtHandler = null;
 class PublicHolidaysAdapter extends utils.Adapter {
   constructor(options = {}) {
     super({ ...options, name: "public-holidays" });
     this.on("ready", this.onReady.bind(this));
     this.on("unload", this.onUnload.bind(this));
-    if (!processHandlersInstalled) {
-      installedUnhandledHandler = (reason) => {
-        console.error(
-          `[public-holidays] Unhandled rejection: ${reason instanceof Error ? reason.message : String(reason)}`
-        );
-      };
-      installedUncaughtHandler = (err) => {
-        console.error(`[public-holidays] Uncaught exception: ${err.message}`);
-      };
-      process.on("unhandledRejection", installedUnhandledHandler);
-      process.on("uncaughtException", installedUncaughtHandler);
-      processHandlersInstalled = true;
-    }
   }
   async onReady() {
     var _a, _b, _c;
@@ -63,15 +47,15 @@ class PublicHolidaysAdapter extends utils.Adapter {
       await import_adapter_core.I18n.init((0, import_node_path.join)(this.adapterDir, "admin"), this);
       this.log.debug("Computing holidays...");
       const raw = this.config;
+      let detectedCountry = "";
       if (!raw.country) {
         const sysCountry = await (0, import_i18n.getSystemCountry)(this);
         if (sysCountry) {
-          const upper = sysCountry.toUpperCase();
-          raw.country = upper;
-          this.log.info(`Using system country: ${upper}`);
+          detectedCountry = sysCountry.toUpperCase();
+          this.log.info(`Using system country: ${detectedCountry}`);
         }
       }
-      const config = this.validateConfig();
+      const config = this.validateConfig(detectedCountry);
       if (!config) {
         this.log.warn("No country configured \u2014 open adapter settings");
         void ((_b = this.stop) == null ? void 0 : _b.call(this));
@@ -94,9 +78,9 @@ class PublicHolidaysAdapter extends utils.Adapter {
     }
     void ((_c = this.stop) == null ? void 0 : _c.call(this));
   }
-  validateConfig() {
+  validateConfig(fallbackCountry = "") {
     const raw = this.config;
-    const country = typeof raw.country === "string" ? raw.country.trim() : "";
+    const country = (typeof raw.country === "string" ? raw.country.trim() : "") || fallbackCountry;
     if (!country) {
       return null;
     }
@@ -133,7 +117,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
     };
   }
   static toStringArray(val) {
-    return Array.isArray(val) ? val : [];
+    return Array.isArray(val) ? val.filter((x) => typeof x === "string") : [];
   }
   onUnload(callback) {
     callback();

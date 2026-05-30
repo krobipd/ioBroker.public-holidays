@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@iobroker/adapter-core", () => ({
@@ -213,5 +215,38 @@ describe("publishStates", () => {
   it("total state count is 12", async () => {
     await publishStates(adapter as any, makeComputed());
     expect(adapter.setStateChangedAsync).toHaveBeenCalledTimes(12);
+  });
+});
+
+// Guard against drift between the two state-schema sources:
+// io-package.json:instanceObjects (install) ↔ state-publisher FIELD_SPECS (runtime).
+describe("io-package consistency", () => {
+  const ioPkg = JSON.parse(readFileSync(join(__dirname, "../../io-package.json"), "utf8"));
+  const byId: Record<string, any> = Object.fromEntries(
+    ioPkg.common && ioPkg.instanceObjects ? ioPkg.instanceObjects.map((o: any) => [o._id, o]) : [],
+  );
+
+  it("runtime objects match io-package instanceObjects (type/role/read/write)", async () => {
+    const adapter = makeMockAdapter();
+    await ensureObjects(adapter as any);
+    for (const [id, obj] of Object.entries(adapter.objects)) {
+      const io = byId[id];
+      expect(io, `${id} created at runtime but missing in io-package.json instanceObjects`).toBeDefined();
+      expect(io.type).toBe((obj as any).type);
+      if ((obj as any).type === "state") {
+        expect(io.common.type, `${id} type`).toBe((obj as any).common.type);
+        expect(io.common.role, `${id} role`).toBe((obj as any).common.role);
+        expect(io.common.read, `${id} read`).toBe((obj as any).common.read);
+        expect(io.common.write, `${id} write`).toBe((obj as any).common.write);
+      }
+    }
+  });
+
+  it("every io-package instanceObject is created at runtime", async () => {
+    const adapter = makeMockAdapter();
+    await ensureObjects(adapter as any);
+    for (const o of ioPkg.instanceObjects) {
+      expect(adapter.objects[o._id], `${o._id} in io-package.json but not created by ensureObjects`).toBeDefined();
+    }
   });
 });

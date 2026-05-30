@@ -1,6 +1,13 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.2.0 (2026-05-24)
+
+- State and region selection via dropdown menus instead of free text input
+- Exclude holidays shown per type — only visible when the corresponding type is enabled
+- Country auto-detected from ioBroker system settings when not configured
+- Slimmed state tree from 27 to 17 data points (removed redundant region/type fields)
+
 ## 0.1.5 (2026-05-23)
 
 - Changelog rewritten in user-centric style.

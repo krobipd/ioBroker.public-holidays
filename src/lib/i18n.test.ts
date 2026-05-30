@@ -109,6 +109,39 @@ describe("resolveLanguages", () => {
     const langs = resolveLanguages("pt", "PT");
     expect(langs[0]).toBe("pt");
   });
+});
+
+// Guard against repochecker E5611: every inline i18n object in the generated
+// jsonConfig (e.g. dropdown placeholder labels) must cover all 11 admin languages.
+describe("jsonConfig i18n completeness (E5611 guard)", () => {
+  const i18nDir2 = join(__dirname, "../../admin/i18n");
+  const langs = readdirSync(i18nDir2)
+    .filter(f => f.endsWith(".json"))
+    .map(f => f.replace(".json", ""))
+    .sort();
+  const cfg = JSON.parse(readFileSync(join(__dirname, "../../admin/jsonConfig.json"), "utf8"));
+
+  function collect(node: unknown, path: string, out: { path: string; keys: string[] }[]): void {
+    if (Array.isArray(node)) {
+      node.forEach((v, i) => collect(v, `${path}[${i}]`, out));
+    } else if (node && typeof node === "object") {
+      const rec = node as Record<string, unknown>;
+      if (typeof rec.en === "string") {
+        out.push({ path, keys: Object.keys(rec).sort() });
+        return;
+      }
+      for (const [k, v] of Object.entries(rec)) collect(v, `${path}/${k}`, out);
+    }
+  }
+
+  it("every inline i18n object covers all 11 admin languages", () => {
+    const objs: { path: string; keys: string[] }[] = [];
+    collect(cfg, "", objs);
+    expect(objs.length).toBeGreaterThan(0);
+    for (const { path, keys } of objs) {
+      expect(keys, `jsonConfig i18n object at ${path} is incomplete`).toEqual(langs);
+    }
+  });
 
   it("nl supported for NL country", () => {
     const langs = resolveLanguages("nl", "NL");

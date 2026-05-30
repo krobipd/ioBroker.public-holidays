@@ -7,28 +7,11 @@ import { getSystemCountry, getSystemLanguage, resolveLanguages } from "./lib/i18
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
 import type { AdapterConfig } from "./lib/types";
 
-let processHandlersInstalled = false;
-let installedUnhandledHandler: ((reason: unknown) => void) | null = null;
-let installedUncaughtHandler: ((err: Error) => void) | null = null;
-
 class PublicHolidaysAdapter extends utils.Adapter {
   constructor(options: Partial<utils.AdapterOptions> = {}) {
     super({ ...options, name: "public-holidays" });
     this.on("ready", this.onReady.bind(this));
     this.on("unload", this.onUnload.bind(this));
-    if (!processHandlersInstalled) {
-      installedUnhandledHandler = (reason: unknown): void => {
-        console.error(
-          `[public-holidays] Unhandled rejection: ${reason instanceof Error ? reason.message : String(reason)}`,
-        );
-      };
-      installedUncaughtHandler = (err: Error): void => {
-        console.error(`[public-holidays] Uncaught exception: ${err.message}`);
-      };
-      process.on("unhandledRejection", installedUnhandledHandler);
-      process.on("uncaughtException", installedUncaughtHandler);
-      processHandlersInstalled = true;
-    }
   }
 
   private async onReady(): Promise<void> {
@@ -45,16 +28,16 @@ class PublicHolidaysAdapter extends utils.Adapter {
 
       this.log.debug("Computing holidays...");
       const raw = this.config as Record<string, unknown>;
+      let detectedCountry = "";
       if (!raw.country) {
         const sysCountry = await getSystemCountry(this);
         if (sysCountry) {
-          const upper = sysCountry.toUpperCase();
-          raw.country = upper;
-          this.log.info(`Using system country: ${upper}`);
+          detectedCountry = sysCountry.toUpperCase();
+          this.log.info(`Using system country: ${detectedCountry}`);
         }
       }
 
-      const config = this.validateConfig();
+      const config = this.validateConfig(detectedCountry);
       if (!config) {
         this.log.warn("No country configured — open adapter settings");
         void this.stop?.();
@@ -85,9 +68,9 @@ class PublicHolidaysAdapter extends utils.Adapter {
     void this.stop?.();
   }
 
-  private validateConfig(): AdapterConfig | null {
+  private validateConfig(fallbackCountry = ""): AdapterConfig | null {
     const raw = this.config as Record<string, unknown>;
-    const country = typeof raw.country === "string" ? raw.country.trim() : "";
+    const country = (typeof raw.country === "string" ? raw.country.trim() : "") || fallbackCountry;
     if (!country) {
       return null;
     }
@@ -127,7 +110,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
   }
 
   private static toStringArray(val: unknown): string[] {
-    return Array.isArray(val) ? (val as string[]) : [];
+    return Array.isArray(val) ? val.filter((x): x is string => typeof x === "string") : [];
   }
 
   private onUnload(callback: () => void): void {

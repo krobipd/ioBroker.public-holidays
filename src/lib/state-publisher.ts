@@ -100,6 +100,19 @@ async function ensureState(adapter: ioBroker.Adapter, channel: string, field: st
   );
 }
 
+// Map state-field name → value getter (bridges field id "boolean" ↔ property "isHoliday").
+const DAY_VALUE: Record<string, (d: DayInfo) => string | boolean> = {
+  name: d => d.name,
+  boolean: d => d.isHoliday,
+};
+
+const NEXT_VALUE: Record<string, (n: NextHoliday) => string | boolean | number> = {
+  name: n => n.name,
+  boolean: n => n.isHoliday,
+  date: n => n.date,
+  daysUntil: n => n.daysUntil,
+};
+
 export async function publishStates(adapter: ioBroker.Adapter, computed: ComputedHolidays): Promise<void> {
   const dayMap: Record<string, DayInfo> = {
     today: computed.today,
@@ -110,16 +123,12 @@ export async function publishStates(adapter: ioBroker.Adapter, computed: Compute
 
   for (const ch of DAY_CHANNELS) {
     const info = dayMap[ch];
-    await adapter.setStateChangedAsync(`${ch}.name`, info.name, true);
-    await adapter.setStateChangedAsync(`${ch}.boolean`, info.isHoliday, true);
+    for (const field of DAY_FIELDS) {
+      await adapter.setStateChangedAsync(`${ch}.${field}`, DAY_VALUE[field](info), true);
+    }
   }
 
-  await publishNextHoliday(adapter, computed.next);
-}
-
-async function publishNextHoliday(adapter: ioBroker.Adapter, next: NextHoliday): Promise<void> {
-  await adapter.setStateChangedAsync("next.name", next.name, true);
-  await adapter.setStateChangedAsync("next.boolean", next.isHoliday, true);
-  await adapter.setStateChangedAsync("next.date", next.date, true);
-  await adapter.setStateChangedAsync("next.daysUntil", next.daysUntil, true);
+  for (const field of NEXT_FIELDS) {
+    await adapter.setStateChangedAsync(`next.${field}`, NEXT_VALUE[field](computed.next), true);
+  }
 }

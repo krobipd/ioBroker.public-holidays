@@ -14,7 +14,16 @@
             {
               "label": {
                 "en": "— Select country —",
-                "de": "— Land wählen —"
+                "de": "— Land wählen —",
+                "es": "— Seleccionar país —",
+                "fr": "— Sélectionner le pays —",
+                "it": "— Seleziona paese —",
+                "nl": "— Land selecteren —",
+                "pl": "— Wybierz kraj —",
+                "pt": "— Selecionar país —",
+                "ru": "— Выберите страну —",
+                "uk": "— Виберіть країну —",
+                "zh-cn": "— 选择国家 —"
               },
               "value": ""
             },
@@ -865,7 +874,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -898,7 +916,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -931,7 +958,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -996,7 +1032,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1057,7 +1102,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1098,7 +1152,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1143,7 +1206,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1208,7 +1280,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1249,7 +1330,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1378,7 +1468,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1459,7 +1558,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1592,7 +1700,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1661,7 +1778,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1706,7 +1832,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1739,7 +1874,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1832,7 +1976,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1865,7 +2018,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -1970,7 +2132,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2039,7 +2210,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2088,7 +2268,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2121,7 +2310,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2158,7 +2356,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2215,7 +2422,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2384,7 +2600,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2437,7 +2662,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2474,7 +2708,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2567,7 +2810,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2608,7 +2860,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2705,7 +2966,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2738,7 +3008,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2795,7 +3074,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2836,7 +3124,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2885,7 +3182,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -2918,7 +3224,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3151,7 +3466,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keines) —"
+                    "de": "— (keines) —",
+                    "es": "— (ninguno) —",
+                    "fr": "— (aucun) —",
+                    "it": "— (nessuno) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhum) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3208,7 +3532,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3241,7 +3574,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3274,7 +3616,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3307,7 +3658,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3340,7 +3700,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3373,7 +3742,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3406,7 +3784,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3439,7 +3826,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3472,7 +3868,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3505,7 +3910,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3546,7 +3960,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3579,7 +4002,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3620,7 +4052,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3653,7 +4094,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3686,7 +4136,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3743,7 +4202,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3840,7 +4308,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3873,7 +4350,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3906,7 +4392,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3939,7 +4434,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -3972,7 +4476,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4005,7 +4518,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4038,7 +4560,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4071,7 +4602,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4108,7 +4648,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4141,7 +4690,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4174,7 +4732,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4207,7 +4774,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
@@ -4240,7 +4816,16 @@
                 {
                   "label": {
                     "en": "— (none) —",
-                    "de": "— (keine) —"
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
                   },
                   "value": ""
                 },
