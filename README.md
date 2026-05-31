@@ -100,8 +100,7 @@ Bridge days appear in the state tree with the localized name matching the system
 **Holiday not detected** — Some holidays are classified as `observance` rather than `public`. Enable the observance type in the holiday settings if needed.
 
 ## Changelog
-
-### **WORK IN PROGRESS**
+### 0.6.0 (2026-05-31)
 
 - Country auto-detection now works reliably: if the country field is left empty, the country is taken from your ioBroker system settings. Previously this could leave all states empty.
 - Bridge days are now also detected across the year boundary (for example a bridge day in early January).
@@ -124,12 +123,6 @@ Bridge days appear in the state tree with the localized name matching the system
 
 - Bridge day names now shown in system language (11 languages)
 - Fixed adapter not restarting when settings changed in admin
-
-### 0.3.0 (2026-05-24)
-
-- Removed ID states from all channels — slimmed state tree from 17 to 12 data points
-- Reduced verbose output during normal operation
-- Improved adapter stability: crash protection, race condition fix, reduced unnecessary state writes
 
 Older entries are in [CHANGELOG_OLD.md](CHANGELOG_OLD.md).
 

@@ -1,6 +1,12 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.3.0 (2026-05-24)
+
+- Removed ID states from all channels — slimmed state tree from 17 to 12 data points
+- Reduced verbose output during normal operation
+- Improved adapter stability: crash protection, race condition fix, reduced unnecessary state writes
+
 ## 0.2.0 (2026-05-24)
 
 - State and region selection via dropdown menus instead of free text input

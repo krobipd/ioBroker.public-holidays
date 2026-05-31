@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.5.2",
+    "version": "0.6.0",
     "news": {
-      "NEXT": {
+      "0.6.0": {
         "en": "Country auto-detection from the ioBroker system settings now works; an empty country no longer means no holidays. Bridge days are now also detected across the year boundary.",
         "de": "Länder-Autoerkennung aus den ioBroker-Systemeinstellungen funktioniert jetzt; ein leeres Land bleibt nicht ohne Feiertage. Brückentage werden auch über den Jahreswechsel erkannt.",
         "ru": "Автоопределение страны из системных настроек ioBroker теперь работает; пустое поле страны не оставляет без праздников. Промежуточные дни определяются и на стыке годов.",
