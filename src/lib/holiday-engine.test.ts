@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeHolidays, detectBridgeDays, toHolidayId, toDateKey } from "./holiday-engine";
+import { computeHolidays, detectBridgeDays, logAvailableHolidays, toHolidayId, toDateKey } from "./holiday-engine";
 import type { AdapterConfig } from "./types";
 
 function makeConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
@@ -283,6 +283,15 @@ describe("bridge days", () => {
     expect(bridges).toHaveLength(0);
   });
 
+  it("detects a bridge day in the following year (year-boundary)", () => {
+    // Jan 1 2026 is a Thursday (Neujahr) -> Fri Jan 2 2026 is a bridge day, which lies in
+    // the year AFTER the reference date. Guards that bridge days are computed for all 3 years.
+    const config = makeConfig({ includeBridgeDays: true });
+    const result = computeHolidays(config, ["de"], makeDate("2025-12-31"));
+    expect(result.dayAfterTomorrow.isHoliday).toBe(true);
+    expect(result.dayAfterTomorrow.name).toBe("Brückentag");
+  });
+
   describe("bridge day name localization", () => {
     const bridgeDayDate = makeDate("2026-05-15");
 
@@ -558,9 +567,29 @@ describe("country diversity", () => {
     expect(result.today.isHoliday).toBe(true);
   });
 
-  it("bridge days work for non-DACH countries", () => {
-    const config = makeConfig({ country: "US", includeBridgeDays: true });
-    const result = computeHolidays(config, ["en"], makeDate("2026-07-04"));
+  it("bridge day is created for a non-DACH country (FR Ascension Thu -> Fri)", () => {
+    // Ascension 2026 = Thu May 14 (public holiday in FR); Fri May 15 is a bridge day.
+    const config = makeConfig({ country: "FR", includeBridgeDays: true });
+    const result = computeHolidays(config, ["fr"], makeDate("2026-05-15"));
     expect(result.today.isHoliday).toBe(true);
+    expect(result.today.name).toBe("Jour de pont");
+  });
+});
+
+// ─── logAvailableHolidays ───────────────────────────────────────────
+
+describe("logAvailableHolidays", () => {
+  it("logs the matching holiday IDs for the configured country", () => {
+    const msgs: string[] = [];
+    logAvailableHolidays(makeConfig({ country: "DE" }), ["de"], m => msgs.push(m));
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0]).toContain("DE");
+    expect(msgs[0]).toMatch(/holidays for \d{4}/);
+  });
+
+  it("reports zero when no holiday type matches", () => {
+    const msgs: string[] = [];
+    logAvailableHolidays(makeConfig({ country: "DE", holidayTypes: [] }), ["de"], m => msgs.push(m));
+    expect(msgs[0]).toContain("0 holidays");
   });
 });

@@ -222,9 +222,7 @@ describe("publishStates", () => {
 // io-package.json:instanceObjects (install) ↔ state-publisher FIELD_SPECS (runtime).
 describe("io-package consistency", () => {
   const ioPkg = JSON.parse(readFileSync(join(__dirname, "../../io-package.json"), "utf8"));
-  const byId: Record<string, any> = Object.fromEntries(
-    ioPkg.common && ioPkg.instanceObjects ? ioPkg.instanceObjects.map((o: any) => [o._id, o]) : [],
-  );
+  const byId: Record<string, any> = Object.fromEntries(ioPkg.instanceObjects.map((o: any) => [o._id, o]));
 
   it("runtime objects match io-package instanceObjects (type/role/read/write)", async () => {
     const adapter = makeMockAdapter();

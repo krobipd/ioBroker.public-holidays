@@ -3,6 +3,19 @@
     "name": "public-holidays",
     "version": "0.5.2",
     "news": {
+      "NEXT": {
+        "en": "Country auto-detection from the ioBroker system settings now works; an empty country no longer means no holidays. Bridge days are now also detected across the year boundary.",
+        "de": "Länder-Autoerkennung aus den ioBroker-Systemeinstellungen funktioniert jetzt; ein leeres Land bleibt nicht ohne Feiertage. Brückentage werden auch über den Jahreswechsel erkannt.",
+        "ru": "Автоопределение страны из системных настроек ioBroker теперь работает; пустое поле страны не оставляет без праздников. Промежуточные дни определяются и на стыке годов.",
+        "pt": "A deteção automática do país nas definições do ioBroker agora funciona; um país vazio já não fica sem feriados. Os dias de ponte são detetados também na passagem de ano.",
+        "nl": "Automatische landdetectie uit de ioBroker-instellingen werkt nu; een leeg land betekent niet langer geen feestdagen. Brugdagen worden nu ook rond de jaarwisseling gedetecteerd.",
+        "fr": "La détection automatique du pays via les réglages ioBroker fonctionne ; un pays vide ne reste plus sans jours fériés. Les jours de pont sont aussi détectés au passage d'année.",
+        "it": "Il rilevamento automatico del paese dalle impostazioni di ioBroker ora funziona; un paese vuoto non resta senza festività. I giorni ponte sono rilevati anche a cavallo dell'anno.",
+        "es": "La detección automática del país desde la configuración de ioBroker ya funciona; un país vacío no se queda sin festivos. Los días puente se detectan también en el cambio de año.",
+        "pl": "Automatyczne wykrywanie kraju z ustawień ioBroker teraz działa; puste pole kraju nie oznacza już braku świąt. Dni pomostowe są wykrywane także na przełomie roku.",
+        "uk": "Автовизначення країни з налаштувань ioBroker тепер працює; порожнє поле країни більше не лишає без свят. Перехідні дні визначаються й на стику років.",
+        "zh-cn": "现在可从 ioBroker 系统设置自动检测国家；国家留空不再导致没有假日。跨年度的桥接日现在也能检测到。"
+      },
       "0.5.2": {
         "en": "Settings dropdown placeholders now appear in all 11 supported languages, not only English and German.",
         "de": "Auswahl-Platzhalter in den Einstellungen erscheinen jetzt in allen 11 unterstützten Sprachen, nicht nur Englisch und Deutsch.",

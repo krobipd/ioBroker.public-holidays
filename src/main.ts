@@ -1,9 +1,9 @@
 import * as utils from "@iobroker/adapter-core";
 import { I18n } from "@iobroker/adapter-core";
 import { join } from "node:path";
-import { errText } from "./lib/coerce";
-import { computeHolidays, logAvailableHolidays } from "./lib/holiday-engine";
-import { getSystemCountry, getSystemLanguage, resolveLanguages } from "./lib/i18n";
+import { errText } from "./lib/error-utils";
+import { computeHolidays, createHolidaysInstance, logAvailableHolidays } from "./lib/holiday-engine";
+import { getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
 import type { AdapterConfig } from "./lib/types";
 
@@ -28,11 +28,13 @@ class PublicHolidaysAdapter extends utils.Adapter {
 
       this.log.debug("Computing holidays...");
       const raw = this.config as Record<string, unknown>;
+      const sysConfig = await getSystemConfig(this);
+
       let detectedCountry = "";
-      if (!raw.country) {
-        const sysCountry = await getSystemCountry(this);
-        if (sysCountry) {
-          detectedCountry = sysCountry.toUpperCase();
+      const explicitCountry = typeof raw.country === "string" ? raw.country.trim() : "";
+      if (!explicitCountry && sysConfig.country) {
+        detectedCountry = resolveCountryCode(sysConfig.country);
+        if (detectedCountry) {
           this.log.info(`Using system country: ${detectedCountry}`);
         }
       }
@@ -44,13 +46,17 @@ class PublicHolidaysAdapter extends utils.Adapter {
         return;
       }
 
-      const systemLang = await getSystemLanguage(this);
-      const languages = resolveLanguages(systemLang, config.country);
-      this.log.debug(`System language: ${systemLang}, holiday languages: [${languages.join(", ")}]`);
+      const languages = resolveLanguages(sysConfig.language, config.country);
+      this.log.debug(`System language: ${sysConfig.language}, holiday languages: [${languages.join(", ")}]`);
 
-      const computed = computeHolidays(config, languages);
+      const hd = createHolidaysInstance(config, languages);
+      if (hd.getHolidays(new Date().getFullYear()).length === 0) {
+        this.log.warn(`Country '${config.country}' is not recognized — check the country setting`);
+      }
 
-      logAvailableHolidays(config, languages, msg => this.log.debug(msg));
+      const computed = computeHolidays(config, languages, undefined, hd);
+
+      logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
 
       this.log.info(
         `Today: ${computed.today.isHoliday ? computed.today.name : "no holiday"}, ` +

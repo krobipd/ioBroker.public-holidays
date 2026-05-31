@@ -88,9 +88,6 @@ async function ensureChannel(adapter, channel) {
 }
 async function ensureState(adapter, channel, field) {
   const spec = FIELD_SPECS[field];
-  if (!spec) {
-    return;
-  }
   await adapter.extendObjectAsync(
     `${channel}.${field}`,
     {

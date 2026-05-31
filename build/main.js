@@ -24,7 +24,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var utils = __toESM(require("@iobroker/adapter-core"));
 var import_adapter_core = require("@iobroker/adapter-core");
 var import_node_path = require("node:path");
-var import_coerce = require("./lib/coerce");
+var import_error_utils = require("./lib/error-utils");
 var import_holiday_engine = require("./lib/holiday-engine");
 var import_i18n = require("./lib/i18n");
 var import_state_publisher = require("./lib/state-publisher");
@@ -47,11 +47,12 @@ class PublicHolidaysAdapter extends utils.Adapter {
       await import_adapter_core.I18n.init((0, import_node_path.join)(this.adapterDir, "admin"), this);
       this.log.debug("Computing holidays...");
       const raw = this.config;
+      const sysConfig = await (0, import_i18n.getSystemConfig)(this);
       let detectedCountry = "";
-      if (!raw.country) {
-        const sysCountry = await (0, import_i18n.getSystemCountry)(this);
-        if (sysCountry) {
-          detectedCountry = sysCountry.toUpperCase();
+      const explicitCountry = typeof raw.country === "string" ? raw.country.trim() : "";
+      if (!explicitCountry && sysConfig.country) {
+        detectedCountry = (0, import_i18n.resolveCountryCode)(sysConfig.country);
+        if (detectedCountry) {
           this.log.info(`Using system country: ${detectedCountry}`);
         }
       }
@@ -61,11 +62,14 @@ class PublicHolidaysAdapter extends utils.Adapter {
         void ((_b = this.stop) == null ? void 0 : _b.call(this));
         return;
       }
-      const systemLang = await (0, import_i18n.getSystemLanguage)(this);
-      const languages = (0, import_i18n.resolveLanguages)(systemLang, config.country);
-      this.log.debug(`System language: ${systemLang}, holiday languages: [${languages.join(", ")}]`);
-      const computed = (0, import_holiday_engine.computeHolidays)(config, languages);
-      (0, import_holiday_engine.logAvailableHolidays)(config, languages, (msg) => this.log.debug(msg));
+      const languages = (0, import_i18n.resolveLanguages)(sysConfig.language, config.country);
+      this.log.debug(`System language: ${sysConfig.language}, holiday languages: [${languages.join(", ")}]`);
+      const hd = (0, import_holiday_engine.createHolidaysInstance)(config, languages);
+      if (hd.getHolidays((/* @__PURE__ */ new Date()).getFullYear()).length === 0) {
+        this.log.warn(`Country '${config.country}' is not recognized \u2014 check the country setting`);
+      }
+      const computed = (0, import_holiday_engine.computeHolidays)(config, languages, void 0, hd);
+      (0, import_holiday_engine.logAvailableHolidays)(config, languages, (msg) => this.log.debug(msg), hd);
       this.log.info(
         `Today: ${computed.today.isHoliday ? computed.today.name : "no holiday"}, next: ${computed.next.name} in ${computed.next.daysUntil} days`
       );
@@ -74,7 +78,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
       await (0, import_state_publisher.publishStates)(this, computed);
       this.log.debug("All holidays computed and published");
     } catch (err) {
-      this.log.error(`onReady failed: ${(0, import_coerce.errText)(err)}`);
+      this.log.error(`onReady failed: ${(0, import_error_utils.errText)(err)}`);
     }
     void ((_c = this.stop) == null ? void 0 : _c.call(this));
   }

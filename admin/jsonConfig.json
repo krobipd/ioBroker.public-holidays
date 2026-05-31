@@ -6016,16 +6016,8 @@
                   "value": "easter_1"
                 },
                 {
-                  "label": "Ostersonntag (easter)",
-                  "value": "easter"
-                },
-                {
                   "label": "Pfingstmontag (easter_50)",
                   "value": "easter_50"
-                },
-                {
-                  "label": "Pfingstsonntag (easter_49)",
-                  "value": "easter_49"
                 },
                 {
                   "label": "Rupert (09-24)",
@@ -6122,6 +6114,14 @@
                 {
                   "label": "Muttertag (2nd_sunday_in_may)",
                   "value": "2nd_sunday_in_may"
+                },
+                {
+                  "label": "Ostersonntag (easter)",
+                  "value": "easter"
+                },
+                {
+                  "label": "Pfingstsonntag (easter_49)",
+                  "value": "easter_49"
                 }
               ],
               "xs": 12,

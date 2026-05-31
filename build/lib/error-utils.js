@@ -16,11 +16,11 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var coerce_exports = {};
-__export(coerce_exports, {
+var error_utils_exports = {};
+__export(error_utils_exports, {
   errText: () => errText
 });
-module.exports = __toCommonJS(coerce_exports);
+module.exports = __toCommonJS(error_utils_exports);
 function errText(err) {
   if (err instanceof Error) {
     return err.message;
@@ -34,4 +34,4 @@ function errText(err) {
 0 && (module.exports = {
   errText
 });
-//# sourceMappingURL=coerce.js.map
+//# sourceMappingURL=error-utils.js.map

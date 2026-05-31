@@ -154,29 +154,29 @@ const TYPE_LABELS: Record<string, string> = {
 const excludePanels: Items = {};
 const year = new Date().getFullYear();
 
+function collectHolidays(hdInstance: Holidays, holidaysByType: Map<string, Map<string, string>>): void {
+  for (const h of hdInstance.getHolidays(year)) {
+    const bucket = holidaysByType.get(h.type);
+    if (!bucket) continue;
+    const id = toHolidayId(h.name, h.rule);
+    if (!bucket.has(id)) bucket.set(id, h.name);
+  }
+}
+
 for (const cc of Object.keys(countries)) {
   const holidaysByType = new Map<string, Map<string, string>>();
   for (const t of HOLIDAY_TYPES) holidaysByType.set(t, new Map());
 
-  function collectHolidays(hdInstance: Holidays): void {
-    for (const h of hdInstance.getHolidays(year)) {
-      const bucket = holidaysByType.get(h.type);
-      if (!bucket) continue;
-      const id = toHolidayId(h.name, h.rule);
-      if (!bucket.has(id)) bucket.set(id, h.name);
-    }
-  }
-
-  collectHolidays(new Holidays(cc));
+  collectHolidays(new Holidays(cc), holidaysByType);
 
   const states = hd.getStates(cc);
   if (states) {
     for (const st of Object.keys(states)) {
-      collectHolidays(new Holidays(cc, st));
+      collectHolidays(new Holidays(cc, st), holidaysByType);
       const regions = hd.getRegions(cc, st);
       if (regions) {
         for (const rg of Object.keys(regions)) {
-          collectHolidays(new Holidays(cc, st, rg));
+          collectHolidays(new Holidays(cc, st, rg), holidaysByType);
         }
       }
     }

@@ -42,6 +42,8 @@ Holiday data provided by [date-holidays](https://github.com/commenthol/date-holi
 | State / Province | Dropdown — only shown for countries with states (e.g. DE, CH, US) |
 | Region           | Dropdown — only shown when the selected state has regions         |
 
+> If **Country** is left empty, it is auto-detected from your ioBroker system settings (System settings → Country). Selecting it explicitly is recommended.
+
 ### Tab 2 — Holidays
 
 | Setting            | Description                                     |
@@ -72,7 +74,7 @@ public-holidays.0.
 │   └── boolean      boolean
 └── next.
     ├── name         string    next holiday name (localized)
-    ├── boolean      boolean   always true (it's a holiday)
+    ├── boolean      boolean   true when an upcoming holiday exists
     ├── date         string    "2026-12-25" (ISO date)
     └── daysUntil    number    days until holiday
 ```
@@ -98,6 +100,12 @@ Bridge days appear in the state tree with the localized name matching the system
 **Holiday not detected** — Some holidays are classified as `observance` rather than `public`. Enable the observance type in the holiday settings if needed.
 
 ## Changelog
+
+### **WORK IN PROGRESS**
+
+- Country auto-detection now works reliably: if the country field is left empty, the country is taken from your ioBroker system settings. Previously this could leave all states empty.
+- Bridge days are now also detected across the year boundary (for example a bridge day in early January).
+
 ### 0.5.2 (2026-05-30)
 
 - Admin settings: country, state and region dropdown placeholders now appear in all 11 supported languages instead of only English and German

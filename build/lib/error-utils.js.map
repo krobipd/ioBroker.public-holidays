@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "sources": ["../../src/lib/coerce.ts"],
+  "sources": ["../../src/lib/error-utils.ts"],
   "sourcesContent": ["export function errText(err: unknown): string {\n  if (err instanceof Error) {\n    return err.message;\n  }\n  if (typeof err === \"string\") {\n    return err;\n  }\n  return String(err);\n}\n"],
   "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,SAAS,QAAQ,KAAsB;AAC5C,MAAI,eAAe,OAAO;AACxB,WAAO,IAAI;AAAA,EACb;AACA,MAAI,OAAO,QAAQ,UAAU;AAC3B,WAAO;AAAA,EACT;AACA,SAAO,OAAO,GAAG;AACnB;",
   "names": []

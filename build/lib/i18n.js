@@ -28,14 +28,16 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var i18n_exports = {};
 __export(i18n_exports, {
-  getSystemCountry: () => getSystemCountry,
-  getSystemLanguage: () => getSystemLanguage,
+  SUPPORTED_LANGS: () => SUPPORTED_LANGS,
+  getSystemConfig: () => getSystemConfig,
+  resolveCountryCode: () => resolveCountryCode,
   resolveLanguages: () => resolveLanguages,
   tName: () => tName
 });
 module.exports = __toCommonJS(i18n_exports);
 var import_adapter_core = require("@iobroker/adapter-core");
 var import_date_holidays = __toESM(require("date-holidays"));
+var import_country_codes = require("./country-codes");
 const SUPPORTED_LANGS = ["de", "en", "es", "fr", "it", "nl", "pl", "pt", "ru", "uk", "zh"];
 function tName(key) {
   return import_adapter_core.I18n.getTranslatedObject(key);
@@ -52,28 +54,43 @@ function resolveLanguages(systemLang, country) {
   }
   return ["en"];
 }
-async function getSystemLanguage(adapter) {
-  try {
-    const obj = await adapter.getForeignObjectAsync("system.config");
-    const common = obj == null ? void 0 : obj.common;
-    return (typeof (common == null ? void 0 : common.language) === "string" ? common.language : "") || "en";
-  } catch {
-    return "en";
-  }
-}
-async function getSystemCountry(adapter) {
-  try {
-    const obj = await adapter.getForeignObjectAsync("system.config");
-    const common = obj == null ? void 0 : obj.common;
-    return typeof (common == null ? void 0 : common.country) === "string" ? common.country : "";
-  } catch {
+let supportedCodes = null;
+let nameToCode = null;
+function resolveCountryCode(value) {
+  const v = value.trim();
+  if (!v) {
     return "";
+  }
+  if (!supportedCodes) {
+    supportedCodes = new Set(Object.keys(new import_date_holidays.default().getCountries()));
+  }
+  if (!nameToCode) {
+    nameToCode = new Map(Object.entries(import_country_codes.COUNTRY_NAME_TO_CODE).map(([name, code]) => [name.toLowerCase(), code]));
+  }
+  const upper = v.toUpperCase();
+  if (v.length === 2 && supportedCodes.has(upper)) {
+    return upper;
+  }
+  const mapped = nameToCode.get(v.toLowerCase());
+  return mapped && supportedCodes.has(mapped) ? mapped : "";
+}
+async function getSystemConfig(adapter) {
+  try {
+    const obj = await adapter.getForeignObjectAsync("system.config");
+    const common = obj == null ? void 0 : obj.common;
+    return {
+      country: typeof (common == null ? void 0 : common.country) === "string" ? common.country : "",
+      language: (typeof (common == null ? void 0 : common.language) === "string" ? common.language : "") || "en"
+    };
+  } catch {
+    return { country: "", language: "en" };
   }
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  getSystemCountry,
-  getSystemLanguage,
+  SUPPORTED_LANGS,
+  getSystemConfig,
+  resolveCountryCode,
   resolveLanguages,
   tName
 });

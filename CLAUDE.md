@@ -16,16 +16,14 @@
 ## Architektur
 
 ```
-src/main.ts                        → Adapter (onReady → compute → publish → terminate)
+src/main.ts                        → Adapter (onReady → resolve country → compute → publish → terminate)
 src/lib/
-├── holiday-engine.ts              → date-holidays Wrapper, Type-Filter, Brückentag-Algo
-├── holiday-engine.test.ts         → 136 Tests
+├── holiday-engine.ts              → date-holidays Wrapper, Type-Filter, Brückentag-Algo (alle 3 Jahre), createHolidaysInstance (injizierbar)
 ├── state-publisher.ts             → ComputedHolidays → ioBroker States
-├── state-publisher.test.ts        → 21 Tests
-├── i18n.ts                        → tName(key) Wrapper über I18n.getTranslatedObject() + system.config.language Lookup + EN-Fallback
-├── i18n.test.ts                   → 19 Tests (tName delegation + i18n completeness + resolveLanguages)
+├── i18n.ts                        → tName-Wrapper + getSystemConfig (1 Read, typed) + resolveLanguages + resolveCountryCode (Name→ISO via country-codes)
+├── country-codes.ts              → ISO-3166 Name→alpha-2 Map (aus admin countries.json; Auto-Detect resolver)
 ├── types.ts                       → AdapterConfig, DayInfo, NextHoliday, ComputedHolidays
-└── coerce.ts                      → errText
+└── error-utils.ts                 → errText
 admin/
 ├── jsonConfig.json                → 2 Tabs (Region + Holidays), generiert durch generate-country-data.ts
 ├── i18n/<lang>.json               → Single-Source-of-Truth für UI- + State-Translations (31 Keys × 11 Sprachen)
@@ -48,14 +46,15 @@ scripts/
 
 4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, boolean. Next: name, boolean, date, daysUntil.
 
-## Tests (136 vitest + 57 package = 193)
+## Tests (164 vitest + 57 package = 221)
 
-Test-Breakdown: holiday-engine 96, state-publisher 21, i18n 19 = 136 vitest.
+Test-Breakdown: holiday-engine 99, i18n 39, state-publisher 23, error-utils 3 = 164 vitest.
 
 ```
-src/lib/holiday-engine.test.ts    → 96: structural/behavioral tests (config diversity, type filter, exclude, bridge days incl 12 locale via it.each, relative days, next holiday, localization, edge cases, toHolidayId, toDateKey, 20-country crash tests)
-src/lib/state-publisher.test.ts   → 21: ensureObjects, cleanupDeprecated, publishStates, preserve option (mock adapter)
-src/lib/i18n.test.ts              → 19: tName delegation + i18n completeness (11 languages, identical keysets) + resolveLanguages
+src/lib/holiday-engine.test.ts    → 99: config diversity, type filter, exclude, bridge days (incl 11 locale via it.each + year-boundary), relative days, next holiday, localization, edge cases, toHolidayId, toDateKey, 20-country crash tests, logAvailableHolidays
+src/lib/i18n.test.ts              → 39: tName + i18n completeness (11 langs) + resolveLanguages + resolveCountryCode (name→code + fail-safe) + getSystemConfig + jsonConfig E5611 guard + lang-set drift guard
+src/lib/state-publisher.test.ts   → 23: ensureObjects, cleanupDeprecated, publishStates, preserve, io-package↔FIELD_SPECS drift guard (mock adapter)
+src/lib/error-utils.test.ts       → 3: errText branches
 test/package.js                   → 57: @iobroker/testing packageFiles
 test/integration.js               → @iobroker/testing integration (CI only)
 ```

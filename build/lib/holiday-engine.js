@@ -28,7 +28,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var holiday_engine_exports = {};
 __export(holiday_engine_exports, {
+  BRIDGE_DAY_NAMES: () => BRIDGE_DAY_NAMES,
   computeHolidays: () => computeHolidays,
+  createHolidaysInstance: () => createHolidaysInstance,
   detectBridgeDays: () => detectBridgeDays,
   logAvailableHolidays: () => logAvailableHolidays,
   toDateKey: () => toDateKey,
@@ -50,9 +52,9 @@ const BRIDGE_DAY_NAMES = {
   uk: "\u041D\u0435\u0440\u043E\u0431\u043E\u0447\u0438\u0439 \u0434\u0435\u043D\u044C",
   zh: "\u6865\u63A5\u65E5"
 };
-function computeHolidays(config, languages, referenceDate) {
+function computeHolidays(config, languages, referenceDate, instance) {
   const now = referenceDate != null ? referenceDate : /* @__PURE__ */ new Date();
-  const hd = createHolidaysInstance(config, languages);
+  const hd = instance != null ? instance : createHolidaysInstance(config, languages);
   const filtered = getFilteredHolidays(hd, now, config, languages);
   const yesterday = getDayInfo(filtered, addDays(now, -1));
   const today = getDayInfo(filtered, now);
@@ -61,8 +63,8 @@ function computeHolidays(config, languages, referenceDate) {
   const next = getNextHoliday(filtered, now);
   return { yesterday, today, tomorrow, dayAfterTomorrow, next };
 }
-function logAvailableHolidays(config, languages, log) {
-  const hd = createHolidaysInstance(config, languages);
+function logAvailableHolidays(config, languages, log, instance) {
+  const hd = instance != null ? instance : createHolidaysInstance(config, languages);
   const year = (/* @__PURE__ */ new Date()).getFullYear();
   const holidays = hd.getHolidays(year);
   const matching = holidays.filter((h) => config.holidayTypes.includes(h.type)).map((h) => `${toHolidayId(h.name, h.rule)} (${h.name}, ${h.type})`);
@@ -103,7 +105,9 @@ function getFilteredHolidays(hd, referenceDate, config, languages) {
     }
   }
   if (config.includeBridgeDays) {
-    addBridgeDays(result, year, languages);
+    for (const y of years) {
+      addBridgeDays(result, y, languages);
+    }
   }
   return result;
 }
@@ -180,8 +184,6 @@ function addBridgeDays(holidays, year, languages) {
     if (!holidays.has(key)) {
       holidays.set(key, {
         date: key,
-        start: bd,
-        end: addDays(bd, 1),
         name,
         type: "bridge",
         rule: ""
@@ -211,7 +213,9 @@ function addDays(date, days) {
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  BRIDGE_DAY_NAMES,
   computeHolidays,
+  createHolidaysInstance,
   detectBridgeDays,
   logAvailableHolidays,
   toDateKey,

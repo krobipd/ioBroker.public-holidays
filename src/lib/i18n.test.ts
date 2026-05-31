@@ -8,7 +8,8 @@ vi.mock("@iobroker/adapter-core", () => ({
   },
 }));
 
-import { resolveLanguages, tName } from "./i18n";
+import { getSystemConfig, resolveCountryCode, resolveLanguages, SUPPORTED_LANGS, tName } from "./i18n";
+import { BRIDGE_DAY_NAMES } from "./holiday-engine";
 
 describe("tName", () => {
   it("delegates to I18n.getTranslatedObject", () => {
@@ -109,6 +110,101 @@ describe("resolveLanguages", () => {
     const langs = resolveLanguages("pt", "PT");
     expect(langs[0]).toBe("pt");
   });
+
+  it("nl supported for NL country", () => {
+    const langs = resolveLanguages("nl", "NL");
+    expect(langs[0]).toBe("nl");
+  });
+
+  it("pl supported for PL country", () => {
+    const langs = resolveLanguages("pl", "PL");
+    expect(langs[0]).toBe("pl");
+  });
+
+  it("ru supported for RU country", () => {
+    const langs = resolveLanguages("ru", "RU");
+    expect(langs[0]).toBe("ru");
+  });
+});
+
+describe("resolveCountryCode", () => {
+  // ioBroker.admin stores the country NAME (ISO-3166) in system.config.common.country.
+  it.each([
+    ["Austria", "AT"],
+    ["Germany", "DE"],
+    ["Italy", "IT"],
+    ["United States", "US"],
+    ["Korea, Republic of", "KR"],
+    ["Viet Nam", "VN"],
+    ["Russian Federation", "RU"],
+  ])("maps name %s -> %s", (name, code) => {
+    expect(resolveCountryCode(name)).toBe(code);
+  });
+
+  it("accepts an already-valid alpha-2 code (uppercase)", () => {
+    expect(resolveCountryCode("DE")).toBe("DE");
+  });
+
+  it("accepts a lowercase alpha-2 code", () => {
+    expect(resolveCountryCode("de")).toBe("DE");
+  });
+
+  it("matches names case-insensitively", () => {
+    expect(resolveCountryCode("austria")).toBe("AT");
+  });
+
+  it("returns '' for empty / whitespace", () => {
+    expect(resolveCountryCode("")).toBe("");
+    expect(resolveCountryCode("   ")).toBe("");
+  });
+
+  it("returns '' for an unknown name", () => {
+    expect(resolveCountryCode("Definitely Not A Country")).toBe("");
+  });
+
+  it("returns '' for a name mapped to a code date-holidays does not support (fail-safe)", () => {
+    // Antarctica is in the admin country list (AQ) but date-holidays has no data for it.
+    expect(resolveCountryCode("Antarctica")).toBe("");
+  });
+});
+
+describe("getSystemConfig", () => {
+  function makeAdapter(common: unknown, reject = false): ioBroker.Adapter {
+    return {
+      getForeignObjectAsync: vi.fn(async () => {
+        if (reject) {
+          throw new Error("boom");
+        }
+        return common === undefined ? null : { common };
+      }),
+    } as unknown as ioBroker.Adapter;
+  }
+
+  it("reads country and language", async () => {
+    const res = await getSystemConfig(makeAdapter({ country: "Austria", language: "de" }));
+    expect(res).toEqual({ country: "Austria", language: "de" });
+  });
+
+  it("defaults language to en when missing", async () => {
+    const res = await getSystemConfig(makeAdapter({ country: "DE" }));
+    expect(res.language).toBe("en");
+  });
+
+  it("returns defaults when system.config is missing", async () => {
+    const res = await getSystemConfig(makeAdapter(undefined));
+    expect(res).toEqual({ country: "", language: "en" });
+  });
+
+  it("treats a non-string country as empty", async () => {
+    const res = await getSystemConfig(makeAdapter({ country: 123, language: "fr" }));
+    expect(res.country).toBe("");
+    expect(res.language).toBe("fr");
+  });
+
+  it("returns defaults on read error", async () => {
+    const res = await getSystemConfig(makeAdapter({}, true));
+    expect(res).toEqual({ country: "", language: "en" });
+  });
 });
 
 // Guard against repochecker E5611: every inline i18n object in the generated
@@ -142,19 +238,12 @@ describe("jsonConfig i18n completeness (E5611 guard)", () => {
       expect(keys, `jsonConfig i18n object at ${path} is incomplete`).toEqual(langs);
     }
   });
+});
 
-  it("nl supported for NL country", () => {
-    const langs = resolveLanguages("nl", "NL");
-    expect(langs[0]).toBe("nl");
-  });
-
-  it("pl supported for PL country", () => {
-    const langs = resolveLanguages("pl", "PL");
-    expect(langs[0]).toBe("pl");
-  });
-
-  it("ru supported for RU country", () => {
-    const langs = resolveLanguages("ru", "RU");
-    expect(langs[0]).toBe("ru");
+// Guard against drift between the two language sets that must stay in sync:
+// the date-holidays language list (SUPPORTED_LANGS) and the bridge-day translations.
+describe("language set consistency (drift guard)", () => {
+  it("BRIDGE_DAY_NAMES keys match SUPPORTED_LANGS", () => {
+    expect(Object.keys(BRIDGE_DAY_NAMES).sort()).toEqual([...SUPPORTED_LANGS].sort());
   });
 });

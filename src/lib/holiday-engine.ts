@@ -3,18 +3,14 @@ import type { AdapterConfig, ComputedHolidays, DayInfo, NextHoliday } from "./ty
 
 interface RawHoliday {
   date: string;
-  start: Date;
-  end: Date;
   name: string;
   type: string;
   rule?: string;
-  substitute?: boolean;
-  note?: string;
 }
 
 const EMPTY_DAY: DayInfo = { name: "", isHoliday: false };
 
-const BRIDGE_DAY_NAMES: Record<string, string> = {
+export const BRIDGE_DAY_NAMES: Record<string, string> = {
   de: "Brückentag",
   en: "Bridge day",
   es: "Día puente",
@@ -28,9 +24,14 @@ const BRIDGE_DAY_NAMES: Record<string, string> = {
   zh: "桥接日",
 };
 
-export function computeHolidays(config: AdapterConfig, languages: string[], referenceDate?: Date): ComputedHolidays {
+export function computeHolidays(
+  config: AdapterConfig,
+  languages: string[],
+  referenceDate?: Date,
+  instance?: Holidays,
+): ComputedHolidays {
   const now = referenceDate ?? new Date();
-  const hd = createHolidaysInstance(config, languages);
+  const hd = instance ?? createHolidaysInstance(config, languages);
   const filtered = getFilteredHolidays(hd, now, config, languages);
 
   const yesterday = getDayInfo(filtered, addDays(now, -1));
@@ -42,8 +43,13 @@ export function computeHolidays(config: AdapterConfig, languages: string[], refe
   return { yesterday, today, tomorrow, dayAfterTomorrow, next };
 }
 
-export function logAvailableHolidays(config: AdapterConfig, languages: string[], log: (msg: string) => void): void {
-  const hd = createHolidaysInstance(config, languages);
+export function logAvailableHolidays(
+  config: AdapterConfig,
+  languages: string[],
+  log: (msg: string) => void,
+  instance?: Holidays,
+): void {
+  const hd = instance ?? createHolidaysInstance(config, languages);
   const year = new Date().getFullYear();
   const holidays = hd.getHolidays(year) as RawHoliday[];
   const matching = holidays
@@ -54,7 +60,7 @@ export function logAvailableHolidays(config: AdapterConfig, languages: string[],
   );
 }
 
-function createHolidaysInstance(config: AdapterConfig, languages: string[]): Holidays {
+export function createHolidaysInstance(config: AdapterConfig, languages: string[]): Holidays {
   let hd: Holidays;
   if (config.state && config.region) {
     hd = new Holidays(config.country, config.state, config.region);
@@ -95,7 +101,9 @@ function getFilteredHolidays(
   }
 
   if (config.includeBridgeDays) {
-    addBridgeDays(result, year, languages);
+    for (const y of years) {
+      addBridgeDays(result, y, languages);
+    }
   }
 
   return result;
@@ -182,8 +190,6 @@ function addBridgeDays(holidays: Map<string, RawHoliday>, year: number, language
     if (!holidays.has(key)) {
       holidays.set(key, {
         date: key,
-        start: bd,
-        end: addDays(bd, 1),
         name,
         type: "bridge",
         rule: "",

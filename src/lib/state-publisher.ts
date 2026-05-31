@@ -80,9 +80,6 @@ async function ensureChannel(adapter: ioBroker.Adapter, channel: string): Promis
 
 async function ensureState(adapter: ioBroker.Adapter, channel: string, field: string): Promise<void> {
   const spec = FIELD_SPECS[field];
-  if (!spec) {
-    return;
-  }
   await adapter.extendObjectAsync(
     `${channel}.${field}`,
     {
