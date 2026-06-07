@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.4.0 (2026-05-24)
+
+- Bridge day names now shown in system language (11 languages)
+- Fixed adapter not restarting when settings changed in admin
+
 ## 0.3.0 (2026-05-24)
 
 - Removed ID states from all channels — slimmed state tree from 17 to 12 data points
