@@ -124,7 +124,7 @@ Bridge days appear in the state tree with the localized name matching the system
 - Bridge day names now shown in system language (11 languages)
 - Fixed adapter not restarting when settings changed in admin
 
-Older entries are in [CHANGELOG_OLD.md](CHANGELOG_OLD.md).
+[Older changelogs can be found there](CHANGELOG_OLD.md)
 
 ## Credits
 
