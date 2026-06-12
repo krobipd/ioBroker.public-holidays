@@ -1,6 +1,12 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.5.0 (2026-05-25)
+
+- Schedule mode restored — adapter no longer runs as daemon (v0.4.0 regression)
+- Fixed timezone issue causing wrong holiday dates for non-European countries
+- Renamed `next.duration` to `next.daysUntil` for clarity (breaking: update scripts that read this state)
+
 ## 0.4.0 (2026-05-24)
 
 - Bridge day names now shown in system language (11 languages)

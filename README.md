@@ -109,7 +109,7 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.7.1 (2026-06-12)
 
 - Internal refactoring. No user-facing changes.
 
@@ -129,12 +129,6 @@ Bridge days appear in the state tree with the localized name matching the system
 ### 0.5.1 (2026-05-25)
 
 - Removed legacy changelog entries for versions never published under this package name (repochecker E2004)
-
-### 0.5.0 (2026-05-25)
-
-- Schedule mode restored — adapter no longer runs as daemon (v0.4.0 regression)
-- Fixed timezone issue causing wrong holiday dates for non-European countries
-- Renamed `next.duration` to `next.daysUntil` for clarity (breaking: update scripts that read this state)
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
