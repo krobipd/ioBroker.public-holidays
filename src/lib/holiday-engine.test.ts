@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { computeHolidays, detectBridgeDays, logAvailableHolidays, toHolidayId, toDateKey } from "./holiday-engine";
+import {
+  computeHolidays,
+  detectBridgeDays,
+  logAvailableHolidays,
+  toHolidayId,
+  toDateKey,
+  type RawHoliday,
+} from "./holiday-engine";
 import type { AdapterConfig } from "./types";
 
 function makeConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
@@ -41,10 +48,24 @@ describe("config: country/state/region", () => {
     expect(nw.today.isHoliday).toBe(false);
   });
 
-  it("region config works (IT/BZ — South Tyrol)", () => {
+  it("country + state works (IT/BZ — South Tyrol)", () => {
     const config = makeConfig({ country: "IT", state: "BZ" });
     const result = computeHolidays(config, ["de"], makeDate("2026-01-01"));
     expect(result.today.isHoliday).toBe(true);
+  });
+
+  it("full country/state/region config works (DE/BY/A — Augsburger Friedensfest Aug 8)", () => {
+    // The ONLY real region branch in createHolidaysInstance: 3-arg constructor.
+    // Friedensfest (Aug 8) is a public holiday only in the city of Augsburg
+    // (region A of DE/BY) — plain DE/BY does not have it.
+    const withRegion = computeHolidays(
+      makeConfig({ country: "DE", state: "BY", region: "A" }),
+      ["de"],
+      makeDate("2026-08-08"),
+    );
+    const withoutRegion = computeHolidays(makeConfig({ country: "DE", state: "BY" }), ["de"], makeDate("2026-08-08"));
+    expect(withRegion.today.isHoliday).toBe(true);
+    expect(withoutRegion.today.isHoliday).toBe(false);
   });
 
   it("country + state works (CH/BE)", () => {
@@ -210,76 +231,64 @@ describe("bridge days", () => {
   });
 
   it("detectBridgeDays returns correct dates for Thursday holiday", () => {
-    const holidays = new Map<string, { date: string; start: Date; end: Date; name: string; type: string }>();
+    const holidays = new Map<string, RawHoliday>();
     holidays.set("2026-05-14", {
       date: "2026-05-14",
-      start: new Date("2026-05-14T00:00:00"),
-      end: new Date("2026-05-15T00:00:00"),
       name: "Test",
       type: "public",
     });
-    const bridges = detectBridgeDays(holidays as any, 2026);
+    const bridges = detectBridgeDays(holidays, 2026);
     expect(bridges).toHaveLength(1);
     expect(toDateKey(bridges[0])).toBe("2026-05-15");
   });
 
   it("detectBridgeDays returns correct dates for Tuesday holiday", () => {
-    const holidays = new Map<string, { date: string; start: Date; end: Date; name: string; type: string }>();
+    const holidays = new Map<string, RawHoliday>();
     holidays.set("2030-01-01", {
       date: "2030-01-01",
-      start: new Date("2030-01-01T00:00:00"),
-      end: new Date("2030-01-02T00:00:00"),
       name: "Test",
       type: "public",
     });
-    const bridges = detectBridgeDays(holidays as any, 2030);
+    const bridges = detectBridgeDays(holidays, 2030);
     expect(bridges).toHaveLength(1);
     expect(toDateKey(bridges[0])).toBe("2029-12-31");
   });
 
   it("detectBridgeDays returns nothing for Monday holiday", () => {
-    const holidays = new Map<string, { date: string; start: Date; end: Date; name: string; type: string }>();
+    const holidays = new Map<string, RawHoliday>();
     holidays.set("2026-01-05", {
       date: "2026-01-05",
-      start: new Date("2026-01-05T00:00:00"),
-      end: new Date("2026-01-06T00:00:00"),
       name: "Test",
       type: "public",
     });
-    const bridges = detectBridgeDays(holidays as any, 2026);
+    const bridges = detectBridgeDays(holidays, 2026);
     expect(bridges).toHaveLength(0);
   });
 
   it("detectBridgeDays returns nothing for Friday holiday", () => {
-    const holidays = new Map<string, { date: string; start: Date; end: Date; name: string; type: string }>();
+    const holidays = new Map<string, RawHoliday>();
     holidays.set("2026-01-02", {
       date: "2026-01-02",
-      start: new Date("2026-01-02T00:00:00"),
-      end: new Date("2026-01-03T00:00:00"),
       name: "Test",
       type: "public",
     });
-    const bridges = detectBridgeDays(holidays as any, 2026);
+    const bridges = detectBridgeDays(holidays, 2026);
     expect(bridges).toHaveLength(0);
   });
 
   it("no duplicate bridge day when adjacent holidays", () => {
-    const holidays = new Map<string, { date: string; start: Date; end: Date; name: string; type: string }>();
+    const holidays = new Map<string, RawHoliday>();
     holidays.set("2026-05-14", {
       date: "2026-05-14",
-      start: new Date("2026-05-14T00:00:00"),
-      end: new Date("2026-05-15T00:00:00"),
       name: "Holiday Thu",
       type: "public",
     });
     holidays.set("2026-05-15", {
       date: "2026-05-15",
-      start: new Date("2026-05-15T00:00:00"),
-      end: new Date("2026-05-16T00:00:00"),
       name: "Holiday Fri",
       type: "public",
     });
-    const bridges = detectBridgeDays(holidays as any, 2026);
+    const bridges = detectBridgeDays(holidays, 2026);
     expect(bridges).toHaveLength(0);
   });
 

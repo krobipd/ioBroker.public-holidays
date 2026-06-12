@@ -5,6 +5,10 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -21,6 +25,12 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var main_exports = {};
+__export(main_exports, {
+  PublicHolidaysAdapter: () => PublicHolidaysAdapter
+});
+module.exports = __toCommonJS(main_exports);
 var utils = __toESM(require("@iobroker/adapter-core"));
 var import_adapter_core = require("@iobroker/adapter-core");
 var import_node_path = require("node:path");
@@ -46,10 +56,9 @@ class PublicHolidaysAdapter extends utils.Adapter {
       }
       await import_adapter_core.I18n.init((0, import_node_path.join)(this.adapterDir, "admin"), this);
       this.log.debug("Computing holidays...");
-      const raw = this.config;
       const sysConfig = await (0, import_i18n.getSystemConfig)(this);
       let detectedCountry = "";
-      const explicitCountry = typeof raw.country === "string" ? raw.country.trim() : "";
+      const explicitCountry = this.configuredCountry();
       if (!explicitCountry && sysConfig.country) {
         detectedCountry = (0, import_i18n.resolveCountryCode)(sysConfig.country);
         if (detectedCountry) {
@@ -82,9 +91,18 @@ class PublicHolidaysAdapter extends utils.Adapter {
     }
     void ((_c = this.stop) == null ? void 0 : _c.call(this));
   }
+  /** The raw (untyped) native config — single cast point for all config reads. */
+  rawConfig() {
+    return this.config;
+  }
+  /** The explicitly configured country, trimmed; "" when unset/non-string. */
+  configuredCountry() {
+    const c = this.rawConfig().country;
+    return typeof c === "string" ? c.trim() : "";
+  }
   validateConfig(fallbackCountry = "") {
-    const raw = this.config;
-    const country = (typeof raw.country === "string" ? raw.country.trim() : "") || fallbackCountry;
+    const raw = this.rawConfig();
+    const country = this.configuredCountry() || fallbackCountry;
     if (!country) {
       return null;
     }
@@ -132,4 +150,8 @@ if (require.main !== module) {
 } else {
   new PublicHolidaysAdapter();
 }
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  PublicHolidaysAdapter
+});
 //# sourceMappingURL=main.js.map

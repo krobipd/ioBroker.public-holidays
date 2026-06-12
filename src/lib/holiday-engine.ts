@@ -1,7 +1,8 @@
 import Holidays from "date-holidays";
 import type { AdapterConfig, ComputedHolidays, DayInfo, NextHoliday } from "./types";
 
-interface RawHoliday {
+// Exported for unit tests only — production callers stay inside this module.
+export interface RawHoliday {
   date: string;
   name: string;
   type: string;

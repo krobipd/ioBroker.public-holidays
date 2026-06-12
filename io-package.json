@@ -1,591 +1,591 @@
 {
-  "common": {
-    "name": "public-holidays",
-    "version": "0.7.0",
-    "news": {
-      "0.7.0": {
-        "en": "Added optional Sentry error reporting: crashes are sent to the developer so issues get fixed faster. Active only with ioBroker diagnostics enabled; anonymous.",
-        "de": "Optionale Fehlermeldung über Sentry hinzugefügt: Abstürze werden an den Entwickler gesendet, damit Probleme schneller behoben werden. Nur aktiv bei eingeschalteter ioBroker-Diagnose; anonym.",
-        "ru": "Добавлена необязательная отправка ошибок через Sentry: сбои отправляются разработчику, чтобы быстрее их устранять. Работает только при включённой диагностике ioBroker; анонимно.",
-        "pt": "Adicionado relatório de erros opcional via Sentry: as falhas são enviadas ao programador para corrigir problemas mais rápido. Ativo apenas com o diagnóstico do ioBroker ligado; anónimo.",
-        "nl": "Optionele foutrapportage via Sentry toegevoegd: crashes worden naar de ontwikkelaar gestuurd om problemen sneller op te lossen. Alleen actief met ioBroker-diagnostiek ingeschakeld; anoniem.",
-        "fr": "Rapport d'erreurs optionnel via Sentry ajouté : les plantages sont envoyés au développeur pour corriger plus vite. Actif seulement si le diagnostic ioBroker est activé ; anonyme.",
-        "it": "Aggiunta segnalazione errori opzionale via Sentry: gli arresti vengono inviati allo sviluppatore per risolvere prima i problemi. Attivo solo con la diagnostica ioBroker attiva; anonimo.",
-        "es": "Añadido informe de errores opcional mediante Sentry: los fallos se envían al desarrollador para solucionar problemas más rápido. Activo solo con el diagnóstico de ioBroker activado; anónimo.",
-        "pl": "Dodano opcjonalne raportowanie błędów przez Sentry: awarie są wysyłane do dewelopera, aby szybciej rozwiązywać problemy. Aktywne tylko przy włączonej diagnostyce ioBroker; anonimowo.",
-        "uk": "Додано необов'язкову відправку помилок через Sentry: збої надсилаються розробнику, щоб швидше їх виправляти. Працює лише з увімкненою діагностикою ioBroker; анонімно.",
-        "zh-cn": "新增可选的 Sentry 错误上报：崩溃信息会发送给开发者以更快修复问题。仅在启用 ioBroker 诊断时生效；匿名。"
-      },
-      "0.6.0": {
-        "en": "Country auto-detection from the ioBroker system settings now works; an empty country no longer means no holidays. Bridge days are now also detected across the year boundary.",
-        "de": "Länder-Autoerkennung aus den ioBroker-Systemeinstellungen funktioniert jetzt; ein leeres Land bleibt nicht ohne Feiertage. Brückentage werden auch über den Jahreswechsel erkannt.",
-        "ru": "Автоопределение страны из системных настроек ioBroker теперь работает; пустое поле страны не оставляет без праздников. Промежуточные дни определяются и на стыке годов.",
-        "pt": "A deteção automática do país nas definições do ioBroker agora funciona; um país vazio já não fica sem feriados. Os dias de ponte são detetados também na passagem de ano.",
-        "nl": "Automatische landdetectie uit de ioBroker-instellingen werkt nu; een leeg land betekent niet langer geen feestdagen. Brugdagen worden nu ook rond de jaarwisseling gedetecteerd.",
-        "fr": "La détection automatique du pays via les réglages ioBroker fonctionne ; un pays vide ne reste plus sans jours fériés. Les jours de pont sont aussi détectés au passage d'année.",
-        "it": "Il rilevamento automatico del paese dalle impostazioni di ioBroker ora funziona; un paese vuoto non resta senza festività. I giorni ponte sono rilevati anche a cavallo dell'anno.",
-        "es": "La detección automática del país desde la configuración de ioBroker ya funciona; un país vacío no se queda sin festivos. Los días puente se detectan también en el cambio de año.",
-        "pl": "Automatyczne wykrywanie kraju z ustawień ioBroker teraz działa; puste pole kraju nie oznacza już braku świąt. Dni pomostowe są wykrywane także na przełomie roku.",
-        "uk": "Автовизначення країни з налаштувань ioBroker тепер працює; порожнє поле країни більше не лишає без свят. Перехідні дні визначаються й на стику років.",
-        "zh-cn": "现在可从 ioBroker 系统设置自动检测国家；国家留空不再导致没有假日。跨年度的桥接日现在也能检测到。"
-      },
-      "0.5.2": {
-        "en": "Settings dropdown placeholders now appear in all 11 supported languages, not only English and German.",
-        "de": "Auswahl-Platzhalter in den Einstellungen erscheinen jetzt in allen 11 unterstützten Sprachen, nicht nur Englisch und Deutsch.",
-        "ru": "Подсказки в выпадающих списках настроек теперь отображаются на всех 11 поддерживаемых языках, а не только на английском и немецком.",
-        "pt": "Os marcadores dos menus suspensos nas configurações agora aparecem em todos os 11 idiomas suportados, não apenas inglês e alemão.",
-        "nl": "Tijdelijke aanduidingen in keuzelijsten verschijnen nu in alle 11 ondersteunde talen, niet alleen Engels en Duits.",
-        "fr": "Les libellés des menus déroulants des réglages s'affichent désormais dans les 11 langues prises en charge, pas seulement l'anglais et l'allemand.",
-        "it": "I segnaposto dei menu a tendina nelle impostazioni ora appaiono in tutte le 11 lingue supportate, non solo inglese e tedesco.",
-        "es": "Los marcadores de los menús desplegables ahora aparecen en los 11 idiomas admitidos, no solo inglés y alemán.",
-        "pl": "Etykiety zastępcze list rozwijanych w ustawieniach pojawiają się teraz we wszystkich 11 obsługiwanych językach, nie tylko angielskim i niemieckim.",
-        "uk": "Підказки у випадаючих списках налаштувань тепер відображаються всіма 11 підтримуваними мовами, а не лише англійською та німецькою.",
-        "zh-cn": "设置中下拉菜单的占位符现在以全部 11 种受支持的语言显示，而不仅是英语和德语。"
-      },
-      "0.5.1": {
-        "en": "Removed legacy changelog entries for versions never published under this package name",
-        "de": "Veraltete Changelog-Einträge für nie unter diesem Paketnamen veröffentlichte Versionen entfernt",
-        "ru": "Удалены устаревшие записи журнала изменений для версий, которые не публиковались под этим именем пакета",
-        "pt": "Removidas entradas de changelog antigas para versões nunca publicadas sob este nome de pacote",
-        "nl": "Verouderde changelog-vermeldingen verwijderd voor versies die nooit onder deze pakketnaam zijn gepubliceerd",
-        "fr": "Suppression des entrées de changelog obsolètes pour les versions jamais publiées sous ce nom de paquet",
-        "it": "Rimosse le voci di changelog obsolete per versioni mai pubblicate con questo nome pacchetto",
-        "es": "Eliminadas entradas de changelog antiguas para versiones nunca publicadas bajo este nombre de paquete",
-        "pl": "Usunięto przestarzałe wpisy dziennika zmian dla wersji nigdy nie opublikowanych pod tą nazwą pakietu",
-        "uk": "Видалено застарілі записи журналу змін для версій, які ніколи не публікувалися під цією назвою пакету",
-        "zh-cn": "移除了从未以此包名发布的旧版本更新日志条目"
-      },
-      "0.5.0": {
-        "en": "Schedule mode restored (v0.4.0 regression). Timezone fix for non-European countries. Renamed next.duration to next.daysUntil",
-        "de": "Schedule-Modus wiederhergestellt (v0.4.0-Regression). Zeitzonen-Fix für nicht-europäische Länder. next.duration umbenannt in next.daysUntil",
-        "ru": "Восстановлен режим расписания (регрессия v0.4.0). Исправлена временная зона для неевропейских стран. next.duration переименован в next.daysUntil",
-        "pt": "Modo de agendamento restaurado (regressão v0.4.0). Correção de fuso horário para países não europeus. next.duration renomeado para next.daysUntil",
-        "nl": "Planningsmodus hersteld (v0.4.0-regressie). Tijdzone-fix voor niet-Europese landen. next.duration hernoemd naar next.daysUntil",
-        "fr": "Mode planification restauré (régression v0.4.0). Correction du fuseau horaire pour les pays non européens. next.duration renommé en next.daysUntil",
-        "it": "Modalità pianificazione ripristinata (regressione v0.4.0). Correzione fuso orario per paesi non europei. next.duration rinominato in next.daysUntil",
-        "es": "Modo programado restaurado (regresión v0.4.0). Corrección de zona horaria para países no europeos. next.duration renombrado a next.daysUntil",
-        "pl": "Przywrócono tryb harmonogramu (regresja v0.4.0). Poprawka strefy czasowej dla krajów pozaeuropejskich. next.duration zmieniono na next.daysUntil",
-        "uk": "Відновлено режим розкладу (регресія v0.4.0). Виправлення часового поясу для неєвропейських країн. next.duration перейменовано на next.daysUntil",
-        "zh-cn": "恢复计划模式（v0.4.0回退）。修复非欧洲国家的时区问题。next.duration重命名为next.daysUntil"
-      },
-      "0.4.0": {
-        "en": "Bridge day names now shown in system language. Fixed adapter not restarting on settings change",
-        "de": "Brückentag-Namen werden jetzt in der Systemsprache angezeigt. Adapter startet bei Einstellungsänderungen jetzt korrekt neu",
-        "ru": "Названия промежуточных выходных теперь отображаются на языке системы. Исправлен перезапуск адаптера при изменении настроек",
-        "pt": "Nomes dos dias de ponte agora mostrados no idioma do sistema. Corrigido reinício do adaptador ao alterar configurações",
-        "nl": "Brugdagnamen worden nu getoond in de systeemtaal. Herstart van adapter bij instellingswijziging gerepareerd",
-        "fr": "Les noms des jours de pont sont maintenant affichés dans la langue du système. Correction du redémarrage lors des changements de paramètres",
-        "it": "I nomi dei giorni ponte sono ora mostrati nella lingua del sistema. Corretto il riavvio dell'adattatore al cambio impostazioni",
-        "es": "Los nombres de los días puente ahora se muestran en el idioma del sistema. Corregido el reinicio del adaptador al cambiar configuración",
-        "pl": "Nazwy dni pomostowych wyświetlane w języku systemu. Naprawiono restart adaptera przy zmianie ustawień",
-        "uk": "Назви неробочих днів тепер відображаються мовою системи. Виправлено перезапуск адаптера при зміні налаштувань",
-        "zh-cn": "桥接日名称现在按系统语言显示。修复了更改设置后适配器未重启的问题"
-      },
-      "0.3.0": {
-        "en": "Removed ID states, slimmed state tree from 17 to 12 data points. Improved stability and reduced verbose output",
-        "de": "ID-Datenpunkte entfernt, State-Tree von 17 auf 12 Datenpunkte verschlankt. Verbesserte Stabilität und weniger Ausgaben",
-        "ru": "Удалены ID-состояния, дерево состояний уменьшено с 17 до 12 точек данных. Улучшена стабильность и сокращён вывод",
-        "pt": "Removidos estados de ID, árvore de estados reduzida de 17 para 12 pontos de dados. Melhorada a estabilidade e saída reduzida",
-        "nl": "ID-statussen verwijderd, statusboom teruggebracht van 17 naar 12 datapunten. Verbeterde stabiliteit en minder uitvoer",
-        "fr": "États d'ID supprimés, arbre d'états réduit de 17 à 12 points de données. Stabilité améliorée et sortie réduite",
-        "it": "Rimossi gli stati ID, albero degli stati ridotto da 17 a 12 punti dati. Migliorata la stabilità e output ridotto",
-        "es": "Eliminados los estados de ID, árbol de estados reducido de 17 a 12 puntos de datos. Mejorada la estabilidad y salida reducida",
-        "pl": "Usunięto stany ID, drzewo stanów zmniejszone z 17 do 12 punktów danych. Poprawiona stabilność i mniej komunikatów",
-        "uk": "Видалено стани ID, дерево станів зменшено з 17 до 12 точок даних. Покращена стабільність та зменшено вивід",
-        "zh-cn": "移除了ID状态点，状态树从17个精简至12个数据点。提升了稳定性并减少了冗余输出"
-      }
+    "common": {
+        "name": "public-holidays",
+        "version": "0.7.0",
+        "news": {
+            "NEXT": {
+                "en": "Internal refactoring. No user-facing changes.",
+                "de": "Internes Refactoring. Keine sichtbaren Änderungen.",
+                "ru": "Внутренний рефакторинг. Никаких видимых изменений.",
+                "pt": "Refatoração interna. Sem alterações visíveis.",
+                "nl": "Interne refactoring. Geen zichtbare wijzigingen.",
+                "fr": "Refactorisation interne. Aucun changement visible.",
+                "it": "Refactoring interno. Nessuna modifica visibile.",
+                "es": "Refactorización interna. Sin cambios visibles.",
+                "pl": "Wewnętrzna refaktoryzacja. Brak widocznych zmian.",
+                "uk": "Внутрішній рефакторинг. Жодних видимих змін.",
+                "zh-cn": "内部重构。无可见更改。"
+            },
+            "0.7.0": {
+                "en": "Added optional Sentry error reporting: crashes are sent to the developer so issues get fixed faster. Active only with ioBroker diagnostics enabled; anonymous.",
+                "de": "Optionale Fehlermeldung über Sentry hinzugefügt: Abstürze werden an den Entwickler gesendet, damit Probleme schneller behoben werden. Nur aktiv bei eingeschalteter ioBroker-Diagnose; anonym.",
+                "ru": "Добавлена необязательная отправка ошибок через Sentry: сбои отправляются разработчику, чтобы быстрее их устранять. Работает только при включённой диагностике ioBroker; анонимно.",
+                "pt": "Adicionado relatório de erros opcional via Sentry: as falhas são enviadas ao programador para corrigir problemas mais rápido. Ativo apenas com o diagnóstico do ioBroker ligado; anónimo.",
+                "nl": "Optionele foutrapportage via Sentry toegevoegd: crashes worden naar de ontwikkelaar gestuurd om problemen sneller op te lossen. Alleen actief met ioBroker-diagnostiek ingeschakeld; anoniem.",
+                "fr": "Rapport d'erreurs optionnel via Sentry ajouté : les plantages sont envoyés au développeur pour corriger plus vite. Actif seulement si le diagnostic ioBroker est activé ; anonyme.",
+                "it": "Aggiunta segnalazione errori opzionale via Sentry: gli arresti vengono inviati allo sviluppatore per risolvere prima i problemi. Attivo solo con la diagnostica ioBroker attiva; anonimo.",
+                "es": "Añadido informe de errores opcional mediante Sentry: los fallos se envían al desarrollador para solucionar problemas más rápido. Activo solo con el diagnóstico de ioBroker activado; anónimo.",
+                "pl": "Dodano opcjonalne raportowanie błędów przez Sentry: awarie są wysyłane do dewelopera, aby szybciej rozwiązywać problemy. Aktywne tylko przy włączonej diagnostyce ioBroker; anonimowo.",
+                "uk": "Додано необов'язкову відправку помилок через Sentry: збої надсилаються розробнику, щоб швидше їх виправляти. Працює лише з увімкненою діагностикою ioBroker; анонімно.",
+                "zh-cn": "新增可选的 Sentry 错误上报：崩溃信息会发送给开发者以更快修复问题。仅在启用 ioBroker 诊断时生效；匿名。"
+            },
+            "0.6.0": {
+                "en": "Country auto-detection from the ioBroker system settings now works; an empty country no longer means no holidays. Bridge days are now also detected across the year boundary.",
+                "de": "Länder-Autoerkennung aus den ioBroker-Systemeinstellungen funktioniert jetzt; ein leeres Land bleibt nicht ohne Feiertage. Brückentage werden auch über den Jahreswechsel erkannt.",
+                "ru": "Автоопределение страны из системных настроек ioBroker теперь работает; пустое поле страны не оставляет без праздников. Промежуточные дни определяются и на стыке годов.",
+                "pt": "A deteção automática do país nas definições do ioBroker agora funciona; um país vazio já não fica sem feriados. Os dias de ponte são detetados também na passagem de ano.",
+                "nl": "Automatische landdetectie uit de ioBroker-instellingen werkt nu; een leeg land betekent niet langer geen feestdagen. Brugdagen worden nu ook rond de jaarwisseling gedetecteerd.",
+                "fr": "La détection automatique du pays via les réglages ioBroker fonctionne ; un pays vide ne reste plus sans jours fériés. Les jours de pont sont aussi détectés au passage d'année.",
+                "it": "Il rilevamento automatico del paese dalle impostazioni di ioBroker ora funziona; un paese vuoto non resta senza festività. I giorni ponte sono rilevati anche a cavallo dell'anno.",
+                "es": "La detección automática del país desde la configuración de ioBroker ya funciona; un país vacío no se queda sin festivos. Los días puente se detectan también en el cambio de año.",
+                "pl": "Automatyczne wykrywanie kraju z ustawień ioBroker teraz działa; puste pole kraju nie oznacza już braku świąt. Dni pomostowe są wykrywane także na przełomie roku.",
+                "uk": "Автовизначення країни з налаштувань ioBroker тепер працює; порожнє поле країни більше не лишає без свят. Перехідні дні визначаються й на стику років.",
+                "zh-cn": "现在可从 ioBroker 系统设置自动检测国家；国家留空不再导致没有假日。跨年度的桥接日现在也能检测到。"
+            },
+            "0.5.2": {
+                "en": "Settings dropdown placeholders now appear in all 11 supported languages, not only English and German.",
+                "de": "Auswahl-Platzhalter in den Einstellungen erscheinen jetzt in allen 11 unterstützten Sprachen, nicht nur Englisch und Deutsch.",
+                "ru": "Подсказки в выпадающих списках настроек теперь отображаются на всех 11 поддерживаемых языках, а не только на английском и немецком.",
+                "pt": "Os marcadores dos menus suspensos nas configurações agora aparecem em todos os 11 idiomas suportados, não apenas inglês e alemão.",
+                "nl": "Tijdelijke aanduidingen in keuzelijsten verschijnen nu in alle 11 ondersteunde talen, niet alleen Engels en Duits.",
+                "fr": "Les libellés des menus déroulants des réglages s'affichent désormais dans les 11 langues prises en charge, pas seulement l'anglais et l'allemand.",
+                "it": "I segnaposto dei menu a tendina nelle impostazioni ora appaiono in tutte le 11 lingue supportate, non solo inglese e tedesco.",
+                "es": "Los marcadores de los menús desplegables ahora aparecen en los 11 idiomas admitidos, no solo inglés y alemán.",
+                "pl": "Etykiety zastępcze list rozwijanych w ustawieniach pojawiają się teraz we wszystkich 11 obsługiwanych językach, nie tylko angielskim i niemieckim.",
+                "uk": "Підказки у випадаючих списках налаштувань тепер відображаються всіма 11 підтримуваними мовами, а не лише англійською та німецькою.",
+                "zh-cn": "设置中下拉菜单的占位符现在以全部 11 种受支持的语言显示，而不仅是英语和德语。"
+            },
+            "0.5.1": {
+                "en": "Removed legacy changelog entries for versions never published under this package name",
+                "de": "Veraltete Changelog-Einträge für nie unter diesem Paketnamen veröffentlichte Versionen entfernt",
+                "ru": "Удалены устаревшие записи журнала изменений для версий, которые не публиковались под этим именем пакета",
+                "pt": "Removidas entradas de changelog antigas para versões nunca publicadas sob este nome de pacote",
+                "nl": "Verouderde changelog-vermeldingen verwijderd voor versies die nooit onder deze pakketnaam zijn gepubliceerd",
+                "fr": "Suppression des entrées de changelog obsolètes pour les versions jamais publiées sous ce nom de paquet",
+                "it": "Rimosse le voci di changelog obsolete per versioni mai pubblicate con questo nome pacchetto",
+                "es": "Eliminadas entradas de changelog antiguas para versiones nunca publicadas bajo este nombre de paquete",
+                "pl": "Usunięto przestarzałe wpisy dziennika zmian dla wersji nigdy nie opublikowanych pod tą nazwą pakietu",
+                "uk": "Видалено застарілі записи журналу змін для версій, які ніколи не публікувалися під цією назвою пакету",
+                "zh-cn": "移除了从未以此包名发布的旧版本更新日志条目"
+            },
+            "0.5.0": {
+                "en": "Schedule mode restored (v0.4.0 regression). Timezone fix for non-European countries. Renamed next.duration to next.daysUntil",
+                "de": "Schedule-Modus wiederhergestellt (v0.4.0-Regression). Zeitzonen-Fix für nicht-europäische Länder. next.duration umbenannt in next.daysUntil",
+                "ru": "Восстановлен режим расписания (регрессия v0.4.0). Исправлена временная зона для неевропейских стран. next.duration переименован в next.daysUntil",
+                "pt": "Modo de agendamento restaurado (regressão v0.4.0). Correção de fuso horário para países não europeus. next.duration renomeado para next.daysUntil",
+                "nl": "Planningsmodus hersteld (v0.4.0-regressie). Tijdzone-fix voor niet-Europese landen. next.duration hernoemd naar next.daysUntil",
+                "fr": "Mode planification restauré (régression v0.4.0). Correction du fuseau horaire pour les pays non européens. next.duration renommé en next.daysUntil",
+                "it": "Modalità pianificazione ripristinata (regressione v0.4.0). Correzione fuso orario per paesi non europei. next.duration rinominato in next.daysUntil",
+                "es": "Modo programado restaurado (regresión v0.4.0). Corrección de zona horaria para países no europeos. next.duration renombrado a next.daysUntil",
+                "pl": "Przywrócono tryb harmonogramu (regresja v0.4.0). Poprawka strefy czasowej dla krajów pozaeuropejskich. next.duration zmieniono na next.daysUntil",
+                "uk": "Відновлено режим розкладу (регресія v0.4.0). Виправлення часового поясу для неєвропейських країн. next.duration перейменовано на next.daysUntil",
+                "zh-cn": "恢复计划模式（v0.4.0回退）。修复非欧洲国家的时区问题。next.duration重命名为next.daysUntil"
+            },
+            "0.4.0": {
+                "en": "Bridge day names now shown in system language. Fixed adapter not restarting on settings change",
+                "de": "Brückentag-Namen werden jetzt in der Systemsprache angezeigt. Adapter startet bei Einstellungsänderungen jetzt korrekt neu",
+                "ru": "Названия промежуточных выходных теперь отображаются на языке системы. Исправлен перезапуск адаптера при изменении настроек",
+                "pt": "Nomes dos dias de ponte agora mostrados no idioma do sistema. Corrigido reinício do adaptador ao alterar configurações",
+                "nl": "Brugdagnamen worden nu getoond in de systeemtaal. Herstart van adapter bij instellingswijziging gerepareerd",
+                "fr": "Les noms des jours de pont sont maintenant affichés dans la langue du système. Correction du redémarrage lors des changements de paramètres",
+                "it": "I nomi dei giorni ponte sono ora mostrati nella lingua del sistema. Corretto il riavvio dell'adattatore al cambio impostazioni",
+                "es": "Los nombres de los días puente ahora se muestran en el idioma del sistema. Corregido el reinicio del adaptador al cambiar configuración",
+                "pl": "Nazwy dni pomostowych wyświetlane w języku systemu. Naprawiono restart adaptera przy zmianie ustawień",
+                "uk": "Назви неробочих днів тепер відображаються мовою системи. Виправлено перезапуск адаптера при зміні налаштувань",
+                "zh-cn": "桥接日名称现在按系统语言显示。修复了更改设置后适配器未重启的问题"
+            }
+        },
+        "plugins": {
+            "sentry": {
+                "dsn": "https://66f27ceff38c1ce1e6cdcc3095ba06d3@o4511524771266560.ingest.de.sentry.io/4511524773560400"
+            }
+        },
+        "titleLang": {
+            "en": "Public Holidays",
+            "de": "Feiertage",
+            "ru": "Государственные праздники",
+            "pt": "Feriados",
+            "nl": "Feestdagen",
+            "fr": "Jours fériés",
+            "it": "Giorni festivi",
+            "es": "Días festivos",
+            "pl": "Święta",
+            "uk": "Святкові дні",
+            "zh-cn": "公共假日"
+        },
+        "desc": {
+            "en": "Detects public holidays for 206 countries — runs offline, updates daily at midnight",
+            "de": "Erkennt Feiertage für 206 Länder — läuft offline, aktualisiert täglich um Mitternacht",
+            "ru": "Определяет государственные праздники для 206 стран — работает офлайн, обновляется ежедневно в полночь",
+            "pt": "Detecta feriados para 206 países — funciona offline, atualiza diariamente à meia-noite",
+            "nl": "Detecteert feestdagen voor 206 landen — werkt offline, vernieuwt dagelijks om middernacht",
+            "fr": "Détecte les jours fériés pour 206 pays — fonctionne hors ligne, mise à jour quotidienne à minuit",
+            "it": "Rileva i giorni festivi per 206 paesi — funziona offline, aggiornamento giornaliero a mezzanotte",
+            "es": "Detecta festivos para 206 países — funciona offline, se actualiza diariamente a medianoche",
+            "pl": "Wykrywa święta dla 206 krajów — działa offline, aktualizacja codziennie o północy",
+            "uk": "Визначає святкові дні для 206 країн — працює офлайн, оновлення щодня опівночі",
+            "zh-cn": "检测206个国家的公共假日——离线运行，每日午夜自动更新"
+        },
+        "authors": [
+            "krobi <krobi@power-dreams.com>"
+        ],
+        "licenseInformation": {
+            "license": "MIT",
+            "type": "free"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "public-holidays.svg",
+        "extIcon": "https://cdn.jsdelivr.net/gh/krobipd/ioBroker.public-holidays@main/admin/public-holidays.svg",
+        "readme": "https://github.com/krobipd/ioBroker.public-holidays/blob/main/README.md",
+        "enabled": true,
+        "tier": 2,
+        "loglevel": "info",
+        "mode": "schedule",
+        "allowInit": true,
+        "schedule": "0 0 * * *",
+        "type": "date-and-time",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "push",
+        "adminUI": {
+            "config": "json"
+        },
+        "supportedMessages": {
+            "stopInstance": true
+        },
+        "dependencies": [
+            {
+                "js-controller": ">=7.1.2"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.8.23"
+            }
+        ],
+        "keywords": [
+            "holidays",
+            "feiertage",
+            "public-holidays",
+            "public holidays",
+            "bank holidays",
+            "bridge days",
+            "calendar",
+            "date-holidays"
+        ]
     },
-    "plugins": {
-      "sentry": {
-        "dsn": "https://66f27ceff38c1ce1e6cdcc3095ba06d3@o4511524771266560.ingest.de.sentry.io/4511524773560400"
-      }
+    "native": {
+        "country": "",
+        "state": "",
+        "region": "",
+        "typePublic": true,
+        "typeBank": false,
+        "typeSchool": false,
+        "typeOptional": false,
+        "typeObservance": false,
+        "excludeHolidays": [],
+        "includeBridgeDays": false
     },
-    "titleLang": {
-      "en": "Public Holidays",
-      "de": "Feiertage",
-      "ru": "Государственные праздники",
-      "pt": "Feriados",
-      "nl": "Feestdagen",
-      "fr": "Jours fériés",
-      "it": "Giorni festivi",
-      "es": "Días festivos",
-      "pl": "Święta",
-      "uk": "Святкові дні",
-      "zh-cn": "公共假日"
-    },
-    "desc": {
-      "en": "Detects public holidays for 206 countries — runs offline, updates daily at midnight",
-      "de": "Erkennt Feiertage für 206 Länder — läuft offline, aktualisiert täglich um Mitternacht",
-      "ru": "Определяет государственные праздники для 206 стран — работает офлайн, обновляется ежедневно в полночь",
-      "pt": "Detecta feriados para 206 países — funciona offline, atualiza diariamente à meia-noite",
-      "nl": "Detecteert feestdagen voor 206 landen — werkt offline, vernieuwt dagelijks om middernacht",
-      "fr": "Détecte les jours fériés pour 206 pays — fonctionne hors ligne, mise à jour quotidienne à minuit",
-      "it": "Rileva i giorni festivi per 206 paesi — funziona offline, aggiornamento giornaliero a mezzanotte",
-      "es": "Detecta festivos para 206 países — funciona offline, se actualiza diariamente a medianoche",
-      "pl": "Wykrywa święta dla 206 krajów — działa offline, aktualizacja codziennie o północy",
-      "uk": "Визначає святкові дні для 206 країн — працює офлайн, оновлення щодня опівночі",
-      "zh-cn": "检测206个国家的公共假日——离线运行，每日午夜自动更新"
-    },
-    "authors": [
-      "krobi <krobi@power-dreams.com>"
-    ],
-    "licenseInformation": {
-      "license": "MIT",
-      "type": "free"
-    },
-    "platform": "Javascript/Node.js",
-    "icon": "public-holidays.svg",
-    "extIcon": "https://cdn.jsdelivr.net/gh/krobipd/ioBroker.public-holidays@main/admin/public-holidays.svg",
-    "readme": "https://github.com/krobipd/ioBroker.public-holidays/blob/main/README.md",
-    "enabled": true,
-    "tier": 2,
-    "loglevel": "info",
-    "mode": "schedule",
-    "allowInit": true,
-    "schedule": "0 0 * * *",
-    "type": "date-and-time",
-    "compact": true,
-    "connectionType": "local",
-    "dataSource": "push",
-    "adminUI": {
-      "config": "json"
-    },
-    "supportedMessages": {
-      "stopInstance": true
-    },
-    "dependencies": [
-      {
-        "js-controller": ">=7.1.2"
-      }
-    ],
-    "globalDependencies": [
-      {
-        "admin": ">=7.8.23"
-      }
-    ],
-    "keywords": [
-      "holidays",
-      "feiertage",
-      "public-holidays",
-      "public holidays",
-      "bank holidays",
-      "bridge days",
-      "calendar",
-      "date-holidays"
+    "instanceObjects": [
+        {
+            "_id": "today",
+            "type": "channel",
+            "common": {
+                "name": {
+                    "en": "Today",
+                    "de": "Heute",
+                    "ru": "Сегодня",
+                    "pt": "Hoje",
+                    "nl": "Vandaag",
+                    "fr": "Aujourd'hui",
+                    "it": "Oggi",
+                    "es": "Hoy",
+                    "pl": "Dzisiaj",
+                    "uk": "Сьогодні",
+                    "zh-cn": "今天"
+                }
+            },
+            "native": {}
+        },
+        {
+            "_id": "today.name",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Holiday name",
+                    "de": "Feiertagsname",
+                    "ru": "Название праздника",
+                    "pt": "Nome do feriado",
+                    "nl": "Naam feestdag",
+                    "fr": "Nom du jour férié",
+                    "it": "Nome del giorno festivo",
+                    "es": "Nombre del festivo",
+                    "pl": "Nazwa święta",
+                    "uk": "Назва свята",
+                    "zh-cn": "假日名称"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "today.boolean",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Is a holiday",
+                    "de": "Ist ein Feiertag",
+                    "ru": "Является праздником",
+                    "pt": "É feriado",
+                    "nl": "Is een feestdag",
+                    "fr": "Est un jour férié",
+                    "it": "È un giorno festivo",
+                    "es": "Es festivo",
+                    "pl": "Jest świętem",
+                    "uk": "Є святом",
+                    "zh-cn": "是假日"
+                },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "yesterday",
+            "type": "channel",
+            "common": {
+                "name": {
+                    "en": "Yesterday",
+                    "de": "Gestern",
+                    "ru": "Вчера",
+                    "pt": "Ontem",
+                    "nl": "Gisteren",
+                    "fr": "Hier",
+                    "it": "Ieri",
+                    "es": "Ayer",
+                    "pl": "Wczoraj",
+                    "uk": "Вчора",
+                    "zh-cn": "昨天"
+                }
+            },
+            "native": {}
+        },
+        {
+            "_id": "yesterday.name",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Holiday name",
+                    "de": "Feiertagsname",
+                    "ru": "Название праздника",
+                    "pt": "Nome do feriado",
+                    "nl": "Naam feestdag",
+                    "fr": "Nom du jour férié",
+                    "it": "Nome del giorno festivo",
+                    "es": "Nombre del festivo",
+                    "pl": "Nazwa święta",
+                    "uk": "Назва свята",
+                    "zh-cn": "假日名称"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "yesterday.boolean",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Is a holiday",
+                    "de": "Ist ein Feiertag",
+                    "ru": "Является праздником",
+                    "pt": "É feriado",
+                    "nl": "Is een feestdag",
+                    "fr": "Est un jour férié",
+                    "it": "È un giorno festivo",
+                    "es": "Es festivo",
+                    "pl": "Jest świętem",
+                    "uk": "Є святом",
+                    "zh-cn": "是假日"
+                },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "tomorrow",
+            "type": "channel",
+            "common": {
+                "name": {
+                    "en": "Tomorrow",
+                    "de": "Morgen",
+                    "ru": "Завтра",
+                    "pt": "Amanhã",
+                    "nl": "Morgen",
+                    "fr": "Demain",
+                    "it": "Domani",
+                    "es": "Mañana",
+                    "pl": "Jutro",
+                    "uk": "Завтра",
+                    "zh-cn": "明天"
+                }
+            },
+            "native": {}
+        },
+        {
+            "_id": "tomorrow.name",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Holiday name",
+                    "de": "Feiertagsname",
+                    "ru": "Название праздника",
+                    "pt": "Nome do feriado",
+                    "nl": "Naam feestdag",
+                    "fr": "Nom du jour férié",
+                    "it": "Nome del giorno festivo",
+                    "es": "Nombre del festivo",
+                    "pl": "Nazwa święta",
+                    "uk": "Назва свята",
+                    "zh-cn": "假日名称"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "tomorrow.boolean",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Is a holiday",
+                    "de": "Ist ein Feiertag",
+                    "ru": "Является праздником",
+                    "pt": "É feriado",
+                    "nl": "Is een feestdag",
+                    "fr": "Est un jour férié",
+                    "it": "È un giorno festivo",
+                    "es": "Es festivo",
+                    "pl": "Jest świętem",
+                    "uk": "Є святом",
+                    "zh-cn": "是假日"
+                },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "dayAfterTomorrow",
+            "type": "channel",
+            "common": {
+                "name": {
+                    "en": "Day after tomorrow",
+                    "de": "Übermorgen",
+                    "ru": "Послезавтра",
+                    "pt": "Depois de amanhã",
+                    "nl": "Overmorgen",
+                    "fr": "Après-demain",
+                    "it": "Dopodomani",
+                    "es": "Pasado mañana",
+                    "pl": "Pojutrze",
+                    "uk": "Післязавтра",
+                    "zh-cn": "后天"
+                }
+            },
+            "native": {}
+        },
+        {
+            "_id": "dayAfterTomorrow.name",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Holiday name",
+                    "de": "Feiertagsname",
+                    "ru": "Название праздника",
+                    "pt": "Nome do feriado",
+                    "nl": "Naam feestdag",
+                    "fr": "Nom du jour férié",
+                    "it": "Nome del giorno festivo",
+                    "es": "Nombre del festivo",
+                    "pl": "Nazwa święta",
+                    "uk": "Назва свята",
+                    "zh-cn": "假日名称"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "dayAfterTomorrow.boolean",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Is a holiday",
+                    "de": "Ist ein Feiertag",
+                    "ru": "Является праздником",
+                    "pt": "É feriado",
+                    "nl": "Is een feestdag",
+                    "fr": "Est un jour férié",
+                    "it": "È un giorno festivo",
+                    "es": "Es festivo",
+                    "pl": "Jest świętem",
+                    "uk": "Є святом",
+                    "zh-cn": "是假日"
+                },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "next",
+            "type": "channel",
+            "common": {
+                "name": {
+                    "en": "Next holiday",
+                    "de": "Nächster Feiertag",
+                    "ru": "Следующий праздник",
+                    "pt": "Próximo feriado",
+                    "nl": "Volgende feestdag",
+                    "fr": "Prochain jour férié",
+                    "it": "Prossimo giorno festivo",
+                    "es": "Próximo festivo",
+                    "pl": "Następne święto",
+                    "uk": "Наступне свято",
+                    "zh-cn": "下一个假日"
+                }
+            },
+            "native": {}
+        },
+        {
+            "_id": "next.name",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Holiday name",
+                    "de": "Feiertagsname",
+                    "ru": "Название праздника",
+                    "pt": "Nome do feriado",
+                    "nl": "Naam feestdag",
+                    "fr": "Nom du jour férié",
+                    "it": "Nome del giorno festivo",
+                    "es": "Nombre del festivo",
+                    "pl": "Nazwa święta",
+                    "uk": "Назва свята",
+                    "zh-cn": "假日名称"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "next.boolean",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Is a holiday",
+                    "de": "Ist ein Feiertag",
+                    "ru": "Является праздником",
+                    "pt": "É feriado",
+                    "nl": "Is een feestdag",
+                    "fr": "Est un jour férié",
+                    "it": "È un giorno festivo",
+                    "es": "Es festivo",
+                    "pl": "Jest świętem",
+                    "uk": "Є святом",
+                    "zh-cn": "是假日"
+                },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "next.date",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Date",
+                    "de": "Datum",
+                    "ru": "Дата",
+                    "pt": "Data",
+                    "nl": "Datum",
+                    "fr": "Date",
+                    "it": "Data",
+                    "es": "Fecha",
+                    "pl": "Data",
+                    "uk": "Дата",
+                    "zh-cn": "日期"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "next.daysUntil",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Days until holiday",
+                    "de": "Tage bis zum Feiertag",
+                    "ru": "Дней до праздника",
+                    "pt": "Dias até ao feriado",
+                    "nl": "Dagen tot feestdag",
+                    "fr": "Jours jusqu'au jour férié",
+                    "it": "Giorni fino al giorno festivo",
+                    "es": "Días hasta el festivo",
+                    "pl": "Dni do święta",
+                    "uk": "Днів до свята",
+                    "zh-cn": "距假日天数"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        }
     ]
-  },
-  "native": {
-    "country": "",
-    "state": "",
-    "region": "",
-    "typePublic": true,
-    "typeBank": false,
-    "typeSchool": false,
-    "typeOptional": false,
-    "typeObservance": false,
-    "excludeHolidays": [],
-    "includeBridgeDays": false
-  },
-  "instanceObjects": [
-    {
-      "_id": "today",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Today",
-          "de": "Heute",
-          "ru": "Сегодня",
-          "pt": "Hoje",
-          "nl": "Vandaag",
-          "fr": "Aujourd'hui",
-          "it": "Oggi",
-          "es": "Hoy",
-          "pl": "Dzisiaj",
-          "uk": "Сьогодні",
-          "zh-cn": "今天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "today.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "today.boolean",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "yesterday",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Yesterday",
-          "de": "Gestern",
-          "ru": "Вчера",
-          "pt": "Ontem",
-          "nl": "Gisteren",
-          "fr": "Hier",
-          "it": "Ieri",
-          "es": "Ayer",
-          "pl": "Wczoraj",
-          "uk": "Вчора",
-          "zh-cn": "昨天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "yesterday.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "yesterday.boolean",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "tomorrow",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Tomorrow",
-          "de": "Morgen",
-          "ru": "Завтра",
-          "pt": "Amanhã",
-          "nl": "Morgen",
-          "fr": "Demain",
-          "it": "Domani",
-          "es": "Mañana",
-          "pl": "Jutro",
-          "uk": "Завтра",
-          "zh-cn": "明天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "tomorrow.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "tomorrow.boolean",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "dayAfterTomorrow",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Day after tomorrow",
-          "de": "Übermorgen",
-          "ru": "Послезавтра",
-          "pt": "Depois de amanhã",
-          "nl": "Overmorgen",
-          "fr": "Après-demain",
-          "it": "Dopodomani",
-          "es": "Pasado mañana",
-          "pl": "Pojutrze",
-          "uk": "Післязавтра",
-          "zh-cn": "后天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "dayAfterTomorrow.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "dayAfterTomorrow.boolean",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "next",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Next holiday",
-          "de": "Nächster Feiertag",
-          "ru": "Следующий праздник",
-          "pt": "Próximo feriado",
-          "nl": "Volgende feestdag",
-          "fr": "Prochain jour férié",
-          "it": "Prossimo giorno festivo",
-          "es": "Próximo festivo",
-          "pl": "Następne święto",
-          "uk": "Наступне свято",
-          "zh-cn": "下一个假日"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.boolean",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.date",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Date",
-          "de": "Datum",
-          "ru": "Дата",
-          "pt": "Data",
-          "nl": "Datum",
-          "fr": "Date",
-          "it": "Data",
-          "es": "Fecha",
-          "pl": "Data",
-          "uk": "Дата",
-          "zh-cn": "日期"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.daysUntil",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Days until holiday",
-          "de": "Tage bis zum Feiertag",
-          "ru": "Дней до праздника",
-          "pt": "Dias até ao feriado",
-          "nl": "Dagen tot feestdag",
-          "fr": "Jours jusqu'au jour férié",
-          "it": "Giorni fino al giorno festivo",
-          "es": "Días hasta el festivo",
-          "pl": "Dni do święta",
-          "uk": "Днів до свята",
-          "zh-cn": "距假日天数"
-        },
-        "type": "number",
-        "role": "value",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    }
-  ]
 }

@@ -7,7 +7,8 @@ import { getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
 import type { AdapterConfig } from "./lib/types";
 
-class PublicHolidaysAdapter extends utils.Adapter {
+// Exported so the orchestration unit tests can drive onReady/validateConfig directly.
+export class PublicHolidaysAdapter extends utils.Adapter {
   constructor(options: Partial<utils.AdapterOptions> = {}) {
     super({ ...options, name: "public-holidays" });
     this.on("ready", this.onReady.bind(this));
@@ -27,11 +28,10 @@ class PublicHolidaysAdapter extends utils.Adapter {
       await I18n.init(join(this.adapterDir, "admin"), this);
 
       this.log.debug("Computing holidays...");
-      const raw = this.config as Record<string, unknown>;
       const sysConfig = await getSystemConfig(this);
 
       let detectedCountry = "";
-      const explicitCountry = typeof raw.country === "string" ? raw.country.trim() : "";
+      const explicitCountry = this.configuredCountry();
       if (!explicitCountry && sysConfig.country) {
         detectedCountry = resolveCountryCode(sysConfig.country);
         if (detectedCountry) {
@@ -74,9 +74,20 @@ class PublicHolidaysAdapter extends utils.Adapter {
     void this.stop?.();
   }
 
+  /** The raw (untyped) native config — single cast point for all config reads. */
+  private rawConfig(): Record<string, unknown> {
+    return this.config as Record<string, unknown>;
+  }
+
+  /** The explicitly configured country, trimmed; "" when unset/non-string. */
+  private configuredCountry(): string {
+    const c = this.rawConfig().country;
+    return typeof c === "string" ? c.trim() : "";
+  }
+
   private validateConfig(fallbackCountry = ""): AdapterConfig | null {
-    const raw = this.config as Record<string, unknown>;
-    const country = (typeof raw.country === "string" ? raw.country.trim() : "") || fallbackCountry;
+    const raw = this.rawConfig();
+    const country = this.configuredCountry() || fallbackCountry;
     if (!country) {
       return null;
     }
