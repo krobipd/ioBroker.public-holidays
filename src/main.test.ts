@@ -222,14 +222,18 @@ describe("onReady — daemon → schedule migration", () => {
 
 describe("onReady — country detection chain", () => {
   it("uses the system country (ISO name resolved to code) when nothing is configured", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-26T12:00:00"));
     const { internal, stub } = setup({});
     stub.objects.set("system.config", { common: { country: "Austria", language: "de" } });
 
     await internal.onReady();
 
     expect(logsOf(stub, "info").some(m => m.includes("Using system country: AT"))).toBe(true);
-    // Oct 26 (Nationalfeiertag) only exists for AT — verify AT data was really used.
-    expect(stub.states.get("public-holidays.0.next.date")?.val).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Oct 26 (Nationalfeiertag) is public in AT but not DE — asserting today=holiday
+    // proves the resolved AT data actually flowed through compute, not just detection.
+    expect(stub.states.get("public-holidays.0.today.boolean")?.val).toBe(true);
+    expect(stub.states.get("public-holidays.0.today.name")?.val).not.toBe("");
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -284,6 +288,36 @@ describe("onReady — error handling", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("onReady — diagnostics warnings", () => {
+  it("warns when the configured state is unknown for the country", async () => {
+    const { internal, stub } = setup({ country: "DE", state: "XX" });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn").some(m => m.includes("State 'XX' is unknown"))).toBe(true);
+    // Still publishes (country-level) states and stops cleanly.
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("warns when the configured region is unknown for the state", async () => {
+    const { internal, stub } = setup({ country: "DE", state: "BY", region: "ZZ" });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn").some(m => m.includes("Region 'ZZ' is unknown"))).toBe(true);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("warns when a configured exclude no longer matches any holiday", async () => {
+    const { internal, stub } = setup({ country: "DE", excludePublic: ["bogus_stale_exclude"] });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn").some(m => m.includes("no longer match any holiday"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 });

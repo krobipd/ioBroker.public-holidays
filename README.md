@@ -109,6 +109,13 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- A misconfigured region/state is now reported instead of silently using country-level holidays.
+- A holiday exclude that no longer matches after a data update is now reported.
+- On a day with two holidays, the more important one is now shown.
+- Adds an optional bridge day between two midweek holidays.
+
 ### 0.7.1 (2026-06-12)
 
 - Internal refactoring. No user-facing changes.

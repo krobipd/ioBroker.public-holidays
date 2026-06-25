@@ -23,4 +23,6 @@ export interface ComputedHolidays {
   tomorrow: DayInfo;
   dayAfterTomorrow: DayInfo;
   next: NextHoliday;
+  /** Configured exclude IDs that matched no holiday in the data (likely stale after a date-holidays update). */
+  unmatchedExcludes: string[];
 }

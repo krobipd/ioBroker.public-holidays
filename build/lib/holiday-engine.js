@@ -38,7 +38,13 @@ __export(holiday_engine_exports, {
 });
 module.exports = __toCommonJS(holiday_engine_exports);
 var import_date_holidays = __toESM(require("date-holidays"));
+var import_error_utils = require("./error-utils");
 const EMPTY_DAY = { name: "", isHoliday: false };
+const TYPE_PRIORITY = ["public", "bank", "school", "optional", "observance"];
+function typeRank(type) {
+  const i = TYPE_PRIORITY.indexOf(type);
+  return i === -1 ? TYPE_PRIORITY.length : i;
+}
 const BRIDGE_DAY_NAMES = {
   de: "Br\xFCckentag",
   en: "Bridge day",
@@ -55,22 +61,23 @@ const BRIDGE_DAY_NAMES = {
 function computeHolidays(config, languages, referenceDate, instance) {
   const now = referenceDate != null ? referenceDate : /* @__PURE__ */ new Date();
   const hd = instance != null ? instance : createHolidaysInstance(config, languages);
-  const filtered = getFilteredHolidays(hd, now, config, languages);
+  const { holidays: filtered, unmatchedExcludes } = getFilteredHolidays(hd, now, config, languages);
   const yesterday = getDayInfo(filtered, addDays(now, -1));
   const today = getDayInfo(filtered, now);
   const tomorrow = getDayInfo(filtered, addDays(now, 1));
   const dayAfterTomorrow = getDayInfo(filtered, addDays(now, 2));
   const next = getNextHoliday(filtered, now);
-  return { yesterday, today, tomorrow, dayAfterTomorrow, next };
+  return { yesterday, today, tomorrow, dayAfterTomorrow, next, unmatchedExcludes };
 }
 function logAvailableHolidays(config, languages, log, instance) {
   const hd = instance != null ? instance : createHolidaysInstance(config, languages);
   const year = (/* @__PURE__ */ new Date()).getFullYear();
   const holidays = hd.getHolidays(year);
-  const matching = holidays.filter((h) => config.holidayTypes.includes(h.type)).map((h) => `${toHolidayId(h.name, h.rule)} (${h.name}, ${h.type})`);
-  log(
-    `${config.country}${config.state ? `/${config.state}` : ""}${config.region ? `/${config.region}` : ""}: ${matching.length} holidays for ${year} \u2014 IDs: ${matching.join(", ")}`
+  const matching = holidays.filter((h) => config.holidayTypes.includes(h.type)).map((h) => `${toHolidayId(h.name, h.rule)} (${(0, import_error_utils.oneLine)(h.name)}, ${h.type})`);
+  const scope = (0, import_error_utils.oneLine)(
+    `${config.country}${config.state ? `/${config.state}` : ""}${config.region ? `/${config.region}` : ""}`
   );
+  log(`${scope}: ${matching.length} holidays for ${year} \u2014 IDs: ${matching.join(", ")}`);
 }
 function createHolidaysInstance(config, languages) {
   let hd;
@@ -88,18 +95,21 @@ function getFilteredHolidays(hd, referenceDate, config, languages) {
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
   const result = /* @__PURE__ */ new Map();
+  const allIds = /* @__PURE__ */ new Set();
   for (const y of years) {
     const holidays = hd.getHolidays(y);
     for (const h of holidays) {
+      const id = toHolidayId(h.name, h.rule);
+      allIds.add(id);
       if (!config.holidayTypes.includes(h.type)) {
         continue;
       }
-      const id = toHolidayId(h.name, h.rule);
       if (config.excludeHolidays.includes(id)) {
         continue;
       }
       const dateKey = h.date.substring(0, 10);
-      if (!result.has(dateKey)) {
+      const existing = result.get(dateKey);
+      if (!existing || typeRank(h.type) < typeRank(existing.type)) {
         result.set(dateKey, h);
       }
     }
@@ -109,7 +119,8 @@ function getFilteredHolidays(hd, referenceDate, config, languages) {
       addBridgeDays(result, y, languages);
     }
   }
-  return result;
+  const unmatchedExcludes = config.excludeHolidays.filter((id) => !allIds.has(id));
+  return { holidays: result, unmatchedExcludes };
 }
 function getDayInfo(holidays, date) {
   const key = toDateKey(date);
@@ -159,16 +170,19 @@ function detectBridgeDays(holidays, year) {
     const dow = holidayDate.getDay();
     if (dow === 4) {
       const friday = addDays(holidayDate, 1);
-      const fridayKey = toDateKey(friday);
-      if (!holidays.has(fridayKey) && friday.getDay() === 5) {
+      if (!holidays.has(toDateKey(friday))) {
         bridgeDays.push(friday);
       }
     }
     if (dow === 2) {
       const monday = addDays(holidayDate, -1);
-      const mondayKey = toDateKey(monday);
-      if (!holidays.has(mondayKey) && monday.getDay() === 1) {
+      if (!holidays.has(toDateKey(monday))) {
         bridgeDays.push(monday);
+      }
+      const wednesday = addDays(holidayDate, 1);
+      const thursday = addDays(holidayDate, 2);
+      if (!holidays.has(toDateKey(wednesday)) && holidays.has(toDateKey(thursday))) {
+        bridgeDays.push(wednesday);
       }
     }
   }

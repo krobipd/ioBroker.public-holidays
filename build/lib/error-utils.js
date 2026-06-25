@@ -18,20 +18,25 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var error_utils_exports = {};
 __export(error_utils_exports, {
-  errText: () => errText
+  errText: () => errText,
+  oneLine: () => oneLine
 });
 module.exports = __toCommonJS(error_utils_exports);
 function errText(err) {
   if (err instanceof Error) {
-    return err.message;
+    return oneLine(err.message);
   }
   if (typeof err === "string") {
-    return err;
+    return oneLine(err);
   }
-  return String(err);
+  return oneLine(String(err));
+}
+function oneLine(s) {
+  return s.replace(/[\r\n\t]+/g, " ").trim();
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  errText
+  errText,
+  oneLine
 });
 //# sourceMappingURL=error-utils.js.map

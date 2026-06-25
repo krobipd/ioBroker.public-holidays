@@ -37,11 +37,11 @@ scripts/
 ## Design-Entscheidungen
 
 1. **Schedule-Mode mit `allowInit: true`** — js-controller triggert per Cron (`0 0 * * *`) und einmalig bei Config-Änderung/Start. Adapter berechnet, publiziert, ruft `this.stop?.()` und beendet sich. Kein Daemon, kein Timer, kein Speicherverbrauch zwischen Runs.
-2. **date-holidays als einzige Engine** — 206 Länder, offline, stabile API seit 5+ Jahren, ISC-Lizenz
+2. **date-holidays als einzige Engine** — 206 Länder, offline, stabile API seit 5+ Jahren, ISC-Lizenz (Daten CC-BY-SA-3.0 laut LICENSE-Datei; die package.json-SPDX `(ISC AND CC-BY-3.0)` understatet das ShareAlike — wir geben es korrekt an, ein Auto-SPDX-Check darf das nicht „korrigieren")
 3. **Panel-per-Country Dropdowns** — Country/State/Region/Exclude als statische Selects, per-Country Panels mit hidden-Condition
 4. **Individuelle Type-Booleans in native** statt `holidayTypes: string[]` — sauberes jsonConfig-Mapping (5 Checkboxen)
 5. **referenceDate-Parameter** in computeHolidays — deterministische Tests ohne Mocking
-6. **Brückentag nur Do→Fr und Di→Mo** — Mi→Wochenende braucht 2 Fehltage, kein Brückentag
+6. **Brückentag Do→Fr, Di→Mo, plus Mi zwischen Di+Do-Feiertag** — Mi→Wochenende braucht 2 Fehltage (kein Brückentag); ein Mi, der beidseitig von einem Di- und einem Do-Feiertag eingeklemmt ist, wird gebrückt (v0.8.0)
 
 ## State Tree
 

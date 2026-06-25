@@ -38,6 +38,7 @@ function makeComputed(): ComputedHolidays {
       date: "2026-04-03",
       daysUntil: 92,
     },
+    unmatchedExcludes: [],
   };
 }
 

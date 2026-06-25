@@ -48,10 +48,13 @@ describe("config: country/state/region", () => {
     expect(nw.today.isHoliday).toBe(false);
   });
 
-  it("country + state works (IT/BZ — South Tyrol)", () => {
-    const config = makeConfig({ country: "IT", state: "BZ" });
-    const result = computeHolidays(config, ["de"], makeDate("2026-01-01"));
-    expect(result.today.isHoliday).toBe(true);
+  it("state config narrows holidays (IT/32 Alto Adige has Pentecost Monday, plain IT does not)", () => {
+    // date-holidays codes the Italian autonomous provinces numerically; 32 = Alto Adige
+    // (South Tyrol). Lunedì di Pentecoste (May 25 2026) is public there, not in the rest of Italy.
+    const altoAdige = computeHolidays(makeConfig({ country: "IT", state: "32" }), ["it"], makeDate("2026-05-25"));
+    const plainIt = computeHolidays(makeConfig({ country: "IT" }), ["it"], makeDate("2026-05-25"));
+    expect(altoAdige.today.isHoliday).toBe(true);
+    expect(plainIt.today.isHoliday).toBe(false);
   });
 
   it("full country/state/region config works (DE/BY/A — Augsburger Friedensfest Aug 8)", () => {
@@ -68,16 +71,18 @@ describe("config: country/state/region", () => {
     expect(withoutRegion.today.isHoliday).toBe(false);
   });
 
-  it("country + state works (CH/BE)", () => {
-    const config = makeConfig({ country: "CH", state: "BE" });
-    const result = computeHolidays(config, ["de"], makeDate("2026-01-02"));
-    expect(result.today.isHoliday).toBe(true);
+  it("state config narrows holidays (CH/BE has Berchtoldstag Jan 2, plain CH does not)", () => {
+    const bern = computeHolidays(makeConfig({ country: "CH", state: "BE" }), ["de"], makeDate("2026-01-02"));
+    const plainCh = computeHolidays(makeConfig({ country: "CH" }), ["de"], makeDate("2026-01-02"));
+    expect(bern.today.isHoliday).toBe(true);
+    expect(plainCh.today.isHoliday).toBe(false);
   });
 
-  it("country + state works (US/CA)", () => {
-    const config = makeConfig({ country: "US", state: "CA" });
-    const result = computeHolidays(config, ["en"], makeDate("2026-01-01"));
-    expect(result.today.isHoliday).toBe(true);
+  it("state config narrows holidays (US/CA has César Chávez Day Mar 31, plain US does not)", () => {
+    const california = computeHolidays(makeConfig({ country: "US", state: "CA" }), ["en"], makeDate("2026-03-31"));
+    const plainUs = computeHolidays(makeConfig({ country: "US" }), ["en"], makeDate("2026-03-31"));
+    expect(california.today.isHoliday).toBe(true);
+    expect(plainUs.today.isHoliday).toBe(false);
   });
 
   it("different countries differ on same date (DE vs AT on Oct 26)", () => {
@@ -600,5 +605,79 @@ describe("logAvailableHolidays", () => {
     const msgs: string[] = [];
     logAvailableHolidays(makeConfig({ country: "DE", holidayTypes: [] }), ["de"], m => msgs.push(m));
     expect(msgs[0]).toContain("0 holidays");
+  });
+});
+
+// ─── Same-date collision priority ───────────────────────────────────
+
+describe("same-date collision priority", () => {
+  it("shows the higher-priority (public) holiday when several types collide on one day", () => {
+    // American Samoa 2027-12-24: a public substitute day collides with bank/optional Christmas Eve.
+    const allTypes = computeHolidays(
+      makeConfig({ country: "AS", holidayTypes: ["public", "bank", "optional"] }),
+      ["en"],
+      makeDate("2027-12-24"),
+    );
+    const publicOnly = computeHolidays(
+      makeConfig({ country: "AS", holidayTypes: ["public"] }),
+      ["en"],
+      makeDate("2027-12-24"),
+    );
+    expect(publicOnly.today.isHoliday).toBe(true);
+    // The surviving name is the public one, not whichever type date-holidays emitted first.
+    expect(allTypes.today.name).toBe(publicOnly.today.name);
+  });
+});
+
+// ─── Midweek bridge day ─────────────────────────────────────────────
+
+describe("midweek bridge day", () => {
+  it("bridges a free Wednesday between a Tuesday and a Thursday holiday", () => {
+    // 2026-05-12 is a Tuesday, 2026-05-14 a Thursday, 2026-05-13 the free Wednesday between.
+    const holidays = new Map<string, RawHoliday>();
+    holidays.set("2026-05-12", { date: "2026-05-12", name: "Tue", type: "public" });
+    holidays.set("2026-05-14", { date: "2026-05-14", name: "Thu", type: "public" });
+    const bridges = detectBridgeDays(holidays, 2026).map(toDateKey);
+    expect(bridges).toContain("2026-05-13");
+  });
+
+  it("does not bridge the Wednesday when only the Tuesday is a holiday", () => {
+    const holidays = new Map<string, RawHoliday>();
+    holidays.set("2026-05-12", { date: "2026-05-12", name: "Tue", type: "public" });
+    const bridges = detectBridgeDays(holidays, 2026).map(toDateKey);
+    expect(bridges).not.toContain("2026-05-13");
+  });
+});
+
+// ─── Stale exclude detection ────────────────────────────────────────
+
+describe("unmatched excludes", () => {
+  it("reports an exclude ID that matches no holiday in the data", () => {
+    const result = computeHolidays(
+      makeConfig({ excludeHolidays: ["definitely_not_a_real_holiday"] }),
+      ["de"],
+      makeDate("2026-01-01"),
+    );
+    expect(result.unmatchedExcludes).toContain("definitely_not_a_real_holiday");
+  });
+
+  it("does not report an exclude that matches a real holiday", () => {
+    const result = computeHolidays(
+      makeConfig({ excludeHolidays: [toHolidayId("Neujahr", "01-01")] }),
+      ["de"],
+      makeDate("2026-01-01"),
+    );
+    expect(result.unmatchedExcludes).toHaveLength(0);
+  });
+
+  it("does not flag a still-valid exclude whose holiday type is currently disabled", () => {
+    // Neujahr (id "01-01") is public; with only 'bank' enabled it is filtered out, but its
+    // ID still exists in the data → it must NOT be reported as stale (false-positive guard).
+    const result = computeHolidays(
+      makeConfig({ holidayTypes: ["bank"], excludeHolidays: [toHolidayId("Neujahr", "01-01")] }),
+      ["de"],
+      makeDate("2026-01-01"),
+    );
+    expect(result.unmatchedExcludes).toHaveLength(0);
   });
 });

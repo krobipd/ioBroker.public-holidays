@@ -45,7 +45,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
   async onReady() {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     try {
       const instanceObj = await this.getForeignObjectAsync(`system.adapter.${this.namespace}`);
       if (((_a = instanceObj == null ? void 0 : instanceObj.common) == null ? void 0 : _a.mode) === "daemon") {
@@ -72,15 +72,30 @@ class PublicHolidaysAdapter extends utils.Adapter {
         return;
       }
       const languages = (0, import_i18n.resolveLanguages)(sysConfig.language, config.country);
-      this.log.debug(`System language: ${sysConfig.language}, holiday languages: [${languages.join(", ")}]`);
+      this.log.debug(`System language: ${(0, import_error_utils.oneLine)(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
       const hd = (0, import_holiday_engine.createHolidaysInstance)(config, languages);
       if (hd.getHolidays((/* @__PURE__ */ new Date()).getFullYear()).length === 0) {
-        this.log.warn(`Country '${config.country}' is not recognized \u2014 check the country setting`);
+        this.log.warn(`Country '${(0, import_error_utils.oneLine)(config.country)}' is not recognized \u2014 check the country setting`);
+      } else if (config.state && !((_c = hd.getStates(config.country)) == null ? void 0 : _c[config.state])) {
+        this.log.warn(
+          `State '${(0, import_error_utils.oneLine)(config.state)}' is unknown for ${(0, import_error_utils.oneLine)(config.country)} \u2014 using country-level holidays`
+        );
+      } else if (config.region && !((_d = hd.getRegions(config.country, config.state)) == null ? void 0 : _d[config.region])) {
+        this.log.warn(
+          `Region '${(0, import_error_utils.oneLine)(config.region)}' is unknown for ${(0, import_error_utils.oneLine)(config.country)}/${(0, import_error_utils.oneLine)(config.state)} \u2014 using broader holidays`
+        );
       }
       const computed = (0, import_holiday_engine.computeHolidays)(config, languages, void 0, hd);
+      if (computed.unmatchedExcludes.length > 0) {
+        this.log.warn(
+          `These excluded holidays no longer match any holiday (possibly renamed by a date-holidays update): ${(0, import_error_utils.oneLine)(
+            computed.unmatchedExcludes.join(", ")
+          )}`
+        );
+      }
       (0, import_holiday_engine.logAvailableHolidays)(config, languages, (msg) => this.log.debug(msg), hd);
       this.log.info(
-        `Today: ${computed.today.isHoliday ? computed.today.name : "no holiday"}, next: ${computed.next.name} in ${computed.next.daysUntil} days`
+        `Today: ${computed.today.isHoliday ? (0, import_error_utils.oneLine)(computed.today.name) : "no holiday"}, next: ${(0, import_error_utils.oneLine)(computed.next.name)} in ${computed.next.daysUntil} days`
       );
       await (0, import_state_publisher.cleanupDeprecatedStates)(this);
       await (0, import_state_publisher.ensureObjects)(this);
@@ -89,7 +104,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
     } catch (err) {
       this.log.error(`onReady failed: ${(0, import_error_utils.errText)(err)}`);
     }
-    void ((_c = this.stop) == null ? void 0 : _c.call(this));
+    void ((_e = this.stop) == null ? void 0 : _e.call(this));
   }
   /** The raw (untyped) native config — single cast point for all config reads. */
   rawConfig() {

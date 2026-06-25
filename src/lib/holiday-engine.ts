@@ -1,5 +1,6 @@
 import Holidays from "date-holidays";
 import type { AdapterConfig, ComputedHolidays, DayInfo, NextHoliday } from "./types";
+import { oneLine } from "./error-utils";
 
 // Exported for unit tests only — production callers stay inside this module.
 export interface RawHoliday {
@@ -10,6 +11,15 @@ export interface RawHoliday {
 }
 
 const EMPTY_DAY: DayInfo = { name: "", isHoliday: false };
+
+// Same-date collision priority: the higher-priority (lower index) type wins, so the
+// surviving name is deterministic instead of depending on date-holidays' emit order.
+// Unknown types rank last.
+const TYPE_PRIORITY = ["public", "bank", "school", "optional", "observance"];
+function typeRank(type: string): number {
+  const i = TYPE_PRIORITY.indexOf(type);
+  return i === -1 ? TYPE_PRIORITY.length : i;
+}
 
 export const BRIDGE_DAY_NAMES: Record<string, string> = {
   de: "Brückentag",
@@ -33,7 +43,7 @@ export function computeHolidays(
 ): ComputedHolidays {
   const now = referenceDate ?? new Date();
   const hd = instance ?? createHolidaysInstance(config, languages);
-  const filtered = getFilteredHolidays(hd, now, config, languages);
+  const { holidays: filtered, unmatchedExcludes } = getFilteredHolidays(hd, now, config, languages);
 
   const yesterday = getDayInfo(filtered, addDays(now, -1));
   const today = getDayInfo(filtered, now);
@@ -41,7 +51,7 @@ export function computeHolidays(
   const dayAfterTomorrow = getDayInfo(filtered, addDays(now, 2));
   const next = getNextHoliday(filtered, now);
 
-  return { yesterday, today, tomorrow, dayAfterTomorrow, next };
+  return { yesterday, today, tomorrow, dayAfterTomorrow, next, unmatchedExcludes };
 }
 
 export function logAvailableHolidays(
@@ -55,10 +65,11 @@ export function logAvailableHolidays(
   const holidays = hd.getHolidays(year) as RawHoliday[];
   const matching = holidays
     .filter(h => config.holidayTypes.includes(h.type))
-    .map(h => `${toHolidayId(h.name, h.rule)} (${h.name}, ${h.type})`);
-  log(
-    `${config.country}${config.state ? `/${config.state}` : ""}${config.region ? `/${config.region}` : ""}: ${matching.length} holidays for ${year} — IDs: ${matching.join(", ")}`,
+    .map(h => `${toHolidayId(h.name, h.rule)} (${oneLine(h.name)}, ${h.type})`);
+  const scope = oneLine(
+    `${config.country}${config.state ? `/${config.state}` : ""}${config.region ? `/${config.region}` : ""}`,
   );
+  log(`${scope}: ${matching.length} holidays for ${year} — IDs: ${matching.join(", ")}`);
 }
 
 export function createHolidaysInstance(config: AdapterConfig, languages: string[]): Holidays {
@@ -74,28 +85,39 @@ export function createHolidaysInstance(config: AdapterConfig, languages: string[
   return hd;
 }
 
+interface FilteredHolidays {
+  holidays: Map<string, RawHoliday>;
+  unmatchedExcludes: string[];
+}
+
 function getFilteredHolidays(
   hd: Holidays,
   referenceDate: Date,
   config: AdapterConfig,
   languages: string[],
-): Map<string, RawHoliday> {
+): FilteredHolidays {
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
   const result = new Map<string, RawHoliday>();
+  // Every holiday id seen in the data (all types, all years) — used to detect
+  // configured excludes that match nothing. Built BEFORE the type filter so a
+  // disabled type does not make a still-valid exclude look stale.
+  const allIds = new Set<string>();
 
   for (const y of years) {
     const holidays = hd.getHolidays(y) as RawHoliday[];
     for (const h of holidays) {
+      const id = toHolidayId(h.name, h.rule);
+      allIds.add(id);
       if (!config.holidayTypes.includes(h.type)) {
         continue;
       }
-      const id = toHolidayId(h.name, h.rule);
       if (config.excludeHolidays.includes(id)) {
         continue;
       }
       const dateKey = h.date.substring(0, 10);
-      if (!result.has(dateKey)) {
+      const existing = result.get(dateKey);
+      if (!existing || typeRank(h.type) < typeRank(existing.type)) {
         result.set(dateKey, h);
       }
     }
@@ -107,7 +129,8 @@ function getFilteredHolidays(
     }
   }
 
-  return result;
+  const unmatchedExcludes = config.excludeHolidays.filter(id => !allIds.has(id));
+  return { holidays: result, unmatchedExcludes };
 }
 
 function getDayInfo(holidays: Map<string, RawHoliday>, date: Date): DayInfo {
@@ -164,18 +187,24 @@ export function detectBridgeDays(holidays: Map<string, RawHoliday>, year: number
     const dow = holidayDate.getDay();
 
     if (dow === 4) {
+      // Thursday holiday → bridge the Friday before the weekend.
       const friday = addDays(holidayDate, 1);
-      const fridayKey = toDateKey(friday);
-      if (!holidays.has(fridayKey) && friday.getDay() === 5) {
+      if (!holidays.has(toDateKey(friday))) {
         bridgeDays.push(friday);
       }
     }
 
     if (dow === 2) {
+      // Tuesday holiday → bridge the Monday after the weekend.
       const monday = addDays(holidayDate, -1);
-      const mondayKey = toDateKey(monday);
-      if (!holidays.has(mondayKey) && monday.getDay() === 1) {
+      if (!holidays.has(toDateKey(monday))) {
         bridgeDays.push(monday);
+      }
+      // …and a free Wednesday bracketed by this Tuesday holiday and a Thursday holiday.
+      const wednesday = addDays(holidayDate, 1);
+      const thursday = addDays(holidayDate, 2);
+      if (!holidays.has(toDateKey(wednesday)) && holidays.has(toDateKey(thursday))) {
+        bridgeDays.push(wednesday);
       }
     }
   }
