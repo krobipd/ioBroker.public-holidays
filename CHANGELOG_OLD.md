@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.5.1 (2026-05-25)
+
+- Removed legacy changelog entries for versions never published under this package name (repochecker E2004)
+
 ## 0.5.0 (2026-05-25)
 
 - Schedule mode restored — adapter no longer runs as daemon (v0.4.0 regression)

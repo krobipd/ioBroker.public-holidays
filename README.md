@@ -32,7 +32,7 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 
 ## Requirements
 
-- ioBroker js-controller >= 7.1.2
+- ioBroker js-controller >= 7.2.2
 - Admin >= 7.8.23
 - Node.js >= 22
 
@@ -109,7 +109,7 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.8.0 (2026-06-25)
 
 - A misconfigured region/state is now reported instead of silently using country-level holidays.
 - A holiday exclude that no longer matches after a data update is now reported.
@@ -132,10 +132,6 @@ Bridge days appear in the state tree with the localized name matching the system
 ### 0.5.2 (2026-05-30)
 
 - Admin settings: country, state and region dropdown placeholders now appear in all 11 supported languages instead of only English and German
-
-### 0.5.1 (2026-05-25)
-
-- Removed legacy changelog entries for versions never published under this package name (repochecker E2004)
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

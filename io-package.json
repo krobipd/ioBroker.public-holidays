@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "news": {
-      "NEXT": {
+      "0.8.0": {
         "en": "Surfaces a misconfigured region/state and a stale holiday exclude, prefers the more important holiday when two collide, and adds an optional midweek bridge day.",
         "de": "Erkennt ein falsch konfiguriertes Bundesland/Region und einen veralteten Feiertags-Ausschluss, zeigt am selben Tag den wichtigeren Feiertag und ergänzt einen optionalen Brückentag.",
         "ru": "Обнаруживает неверно настроенный регион/штат и устаревшее исключение праздника, при совпадении двух праздников выбирает более важный и добавляет необязательный мостовой день среди недели.",
@@ -155,7 +155,7 @@
     },
     "dependencies": [
       {
-        "js-controller": ">=7.1.2"
+        "js-controller": ">=7.2.2"
       }
     ],
     "globalDependencies": [
