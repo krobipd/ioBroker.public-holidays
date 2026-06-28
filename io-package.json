@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "news": {
+      "0.9.0": {
+        "en": "The holiday exclude list now shows only your selected region's holidays, localized and sorted by date. A false startup warning about excludes is fixed.",
+        "de": "Die Feiertags-Ausschlussliste zeigt jetzt nur die Feiertage deiner Region, lokalisiert und nach Datum sortiert. Eine falsche Startwarnung zu Ausschlüssen ist behoben.",
+        "ru": "Список исключаемых праздников теперь показывает только праздники вашего региона, локализован и отсортирован по дате. Исправлено ложное предупреждение при запуске.",
+        "pt": "A lista de exclusão de feriados agora mostra apenas os feriados da sua região, localizada e ordenada por data. Foi corrigido um aviso falso no arranque.",
+        "nl": "De uitsluitlijst voor feestdagen toont nu alleen de feestdagen van je regio, gelokaliseerd en op datum gesorteerd. Een onterechte startwaarschuwing is verholpen.",
+        "fr": "La liste d'exclusion des jours fériés n'affiche que ceux de votre région, localisée et triée par date. Un faux avertissement au démarrage est corrigé.",
+        "it": "L'elenco di esclusione delle festività ora mostra solo quelle della tua regione, localizzato e ordinato per data. Corretto un falso avviso all'avvio.",
+        "es": "La lista de exclusión de festivos ahora muestra solo los de tu región, localizada y ordenada por fecha. Se ha corregido un aviso falso al inicio.",
+        "pl": "Lista wykluczeń świąt pokazuje teraz tylko święta twojego regionu, zlokalizowana i posortowana według daty. Naprawiono fałszywe ostrzeżenie przy starcie.",
+        "uk": "Список виключених свят тепер показує лише свята вашого регіону, локалізований і відсортований за датою. Виправлено хибне попередження при запуску.",
+        "zh-cn": "节假日排除列表现在仅显示所选地区的节假日，已本地化并按日期排序。修复了启动时的错误警告。"
+      },
       "0.8.0": {
         "en": "Surfaces a misconfigured region/state and a stale holiday exclude, prefers the more important holiday when two collide, and adds an optional midweek bridge day.",
         "de": "Erkennt ein falsch konfiguriertes Bundesland/Region und einen veralteten Feiertags-Ausschluss, zeigt am selben Tag den wichtigeren Feiertag und ergänzt einen optionalen Brückentag.",
@@ -80,19 +93,6 @@
         "pl": "Usunięto przestarzałe wpisy dziennika zmian dla wersji nigdy nie opublikowanych pod tą nazwą pakietu",
         "uk": "Видалено застарілі записи журналу змін для версій, які ніколи не публікувалися під цією назвою пакету",
         "zh-cn": "移除了从未以此包名发布的旧版本更新日志条目"
-      },
-      "0.5.0": {
-        "en": "Schedule mode restored (v0.4.0 regression). Timezone fix for non-European countries. Renamed next.duration to next.daysUntil",
-        "de": "Schedule-Modus wiederhergestellt (v0.4.0-Regression). Zeitzonen-Fix für nicht-europäische Länder. next.duration umbenannt in next.daysUntil",
-        "ru": "Восстановлен режим расписания (регрессия v0.4.0). Исправлена временная зона для неевропейских стран. next.duration переименован в next.daysUntil",
-        "pt": "Modo de agendamento restaurado (regressão v0.4.0). Correção de fuso horário para países não europeus. next.duration renomeado para next.daysUntil",
-        "nl": "Planningsmodus hersteld (v0.4.0-regressie). Tijdzone-fix voor niet-Europese landen. next.duration hernoemd naar next.daysUntil",
-        "fr": "Mode planification restauré (régression v0.4.0). Correction du fuseau horaire pour les pays non européens. next.duration renommé en next.daysUntil",
-        "it": "Modalità pianificazione ripristinata (regressione v0.4.0). Correzione fuso orario per paesi non europei. next.duration rinominato in next.daysUntil",
-        "es": "Modo programado restaurado (regresión v0.4.0). Corrección de zona horaria para países no europeos. next.duration renombrado a next.daysUntil",
-        "pl": "Przywrócono tryb harmonogramu (regresja v0.4.0). Poprawka strefy czasowej dla krajów pozaeuropejskich. next.duration zmieniono na next.daysUntil",
-        "uk": "Відновлено режим розкладу (регресія v0.4.0). Виправлення часового поясу для неєвропейських країн. next.duration перейменовано на next.daysUntil",
-        "zh-cn": "恢复计划模式（v0.4.0回退）。修复非欧洲国家的时区问题。next.duration重命名为next.daysUntil"
       }
     },
     "plugins": {

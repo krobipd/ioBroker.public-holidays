@@ -207,6 +207,51 @@ describe("exclude list", () => {
   });
 });
 
+// ─── Exclude warning (unmatchedExcludes) ────────────────────────────
+
+describe("exclude warning (unmatchedExcludes)", () => {
+  it("does not warn for an exclude that is only valid in a sibling state of the same country", () => {
+    // Martinstag (11-11, Burgenland) and Rupert (09-24, Salzburg) do not occur in
+    // Kärnten (AT/2). A user who carried them over must NOT be warned — the dropdown
+    // used to offer the whole country, and such an exclude is a harmless no-op.
+    const result = computeHolidays(
+      makeConfig({ country: "AT", state: "2", excludeHolidays: ["11-11", "09-24"] }),
+      ["de"],
+      makeDate("2026-06-28"),
+    );
+    expect(result.unmatchedExcludes).toEqual([]);
+  });
+
+  it("warns only for an id that exists nowhere in the country (genuine rename/removal)", () => {
+    const result = computeHolidays(
+      makeConfig({ country: "AT", state: "2", excludeHolidays: ["11-11", "total_fake_xyz"] }),
+      ["de"],
+      makeDate("2026-06-28"),
+    );
+    expect(result.unmatchedExcludes).toEqual(["total_fake_xyz"]);
+  });
+
+  it("does not warn for an exclude that is valid in the user's own scope", () => {
+    const result = computeHolidays(
+      makeConfig({ country: "AT", state: "2", excludeHolidays: [toHolidayId("Neujahr", "01-01")] }),
+      ["de"],
+      makeDate("2026-06-28"),
+    );
+    expect(result.unmatchedExcludes).toEqual([]);
+  });
+
+  it("a disabled holiday type does not make a still-valid exclude look unmatched", () => {
+    // No types enabled → nothing is shown, but the exclude still exists in the country
+    // and must not be reported as unmatched.
+    const result = computeHolidays(
+      makeConfig({ country: "DE", holidayTypes: [], excludeHolidays: [toHolidayId("Neujahr", "01-01")] }),
+      ["de"],
+      makeDate("2026-01-01"),
+    );
+    expect(result.unmatchedExcludes).toEqual([]);
+  });
+});
+
 // ─── Bridge days ────────────────────────────────────────────────────
 
 describe("bridge days", () => {

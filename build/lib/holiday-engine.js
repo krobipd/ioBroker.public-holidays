@@ -95,15 +95,13 @@ function getFilteredHolidays(hd, referenceDate, config, languages) {
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
   const result = /* @__PURE__ */ new Map();
-  const allIds = /* @__PURE__ */ new Set();
   for (const y of years) {
     const holidays = hd.getHolidays(y);
     for (const h of holidays) {
-      const id = toHolidayId(h.name, h.rule);
-      allIds.add(id);
       if (!config.holidayTypes.includes(h.type)) {
         continue;
       }
+      const id = toHolidayId(h.name, h.rule);
       if (config.excludeHolidays.includes(id)) {
         continue;
       }
@@ -119,8 +117,34 @@ function getFilteredHolidays(hd, referenceDate, config, languages) {
       addBridgeDays(result, y, languages);
     }
   }
-  const unmatchedExcludes = config.excludeHolidays.filter((id) => !allIds.has(id));
+  const countryWideIds = collectCountryWideIds(config.country, years);
+  const unmatchedExcludes = config.excludeHolidays.filter((id) => !countryWideIds.has(id));
   return { holidays: result, unmatchedExcludes };
+}
+function collectCountryWideIds(country, years) {
+  const ids = /* @__PURE__ */ new Set();
+  const base = new import_date_holidays.default();
+  const add = (instance) => {
+    for (const y of years) {
+      for (const h of instance.getHolidays(y) || []) {
+        ids.add(toHolidayId(h.name, h.rule));
+      }
+    }
+  };
+  add(new import_date_holidays.default(country));
+  const states = base.getStates(country);
+  if (states) {
+    for (const st of Object.keys(states)) {
+      add(new import_date_holidays.default(country, st));
+      const regions = base.getRegions(country, st);
+      if (regions) {
+        for (const rg of Object.keys(regions)) {
+          add(new import_date_holidays.default(country, st, rg));
+        }
+      }
+    }
+  }
+  return ids;
 }
 function getDayInfo(holidays, date) {
   const key = toDateKey(date);

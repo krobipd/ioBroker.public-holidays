@@ -10,6 +10,7 @@
       "python3 ../scripts/fix-changelog-footer.py",
       "npm test",
       "npm run build",
+      "npm run build:admin",
       "git add admin/jsonConfig.json build/"
     ]
   }

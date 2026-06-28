@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.5.2 (2026-05-30)
+
+- Admin settings: country, state and region dropdown placeholders now appear in all 11 supported languages instead of only English and German
+
 ## 0.5.1 (2026-05-25)
 
 - Removed legacy changelog entries for versions never published under this package name (repochecker E2004)

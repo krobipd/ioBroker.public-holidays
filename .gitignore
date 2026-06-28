@@ -29,3 +29,10 @@ coverage/
 # Environment
 .env
 .env.local
+
+# Admin custom component (built at release, published to npm)
+/admin/custom
+/src-admin/build
+/src-admin/node_modules
+/src-admin/package-lock.json
+.dev-server/

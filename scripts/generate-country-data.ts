@@ -2,7 +2,6 @@
 import Holidays from "date-holidays";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { toHolidayId } from "../src/lib/holiday-engine";
 
 interface SelectOption {
   label: string | Record<string, string>;
@@ -125,95 +124,6 @@ for (const cc of Object.keys(countries)) {
         xl: 12,
       },
     },
-  };
-}
-
-const HOLIDAY_TYPES = ["public", "bank", "school", "optional", "observance"] as const;
-const TYPE_CONFIG_KEYS: Record<string, string> = {
-  public: "typePublic",
-  bank: "typeBank",
-  school: "typeSchool",
-  optional: "typeOptional",
-  observance: "typeObservance",
-};
-const TYPE_NATIVE_KEYS: Record<string, string> = {
-  public: "excludePublic",
-  bank: "excludeBank",
-  school: "excludeSchool",
-  optional: "excludeOptional",
-  observance: "excludeObservance",
-};
-const TYPE_LABELS: Record<string, string> = {
-  public: "label_excludePublic",
-  bank: "label_excludeBank",
-  school: "label_excludeSchool",
-  optional: "label_excludeOptional",
-  observance: "label_excludeObservance",
-};
-
-const excludePanels: Items = {};
-const year = new Date().getFullYear();
-
-function collectHolidays(hdInstance: Holidays, holidaysByType: Map<string, Map<string, string>>): void {
-  for (const h of hdInstance.getHolidays(year)) {
-    const bucket = holidaysByType.get(h.type);
-    if (!bucket) continue;
-    const id = toHolidayId(h.name, h.rule);
-    if (!bucket.has(id)) bucket.set(id, h.name);
-  }
-}
-
-for (const cc of Object.keys(countries)) {
-  const holidaysByType = new Map<string, Map<string, string>>();
-  for (const t of HOLIDAY_TYPES) holidaysByType.set(t, new Map());
-
-  collectHolidays(new Holidays(cc), holidaysByType);
-
-  const states = hd.getStates(cc);
-  if (states) {
-    for (const st of Object.keys(states)) {
-      collectHolidays(new Holidays(cc, st), holidaysByType);
-      const regions = hd.getRegions(cc, st);
-      if (regions) {
-        for (const rg of Object.keys(regions)) {
-          collectHolidays(new Holidays(cc, st, rg), holidaysByType);
-        }
-      }
-    }
-  }
-
-  const items: Items = {};
-  for (const t of HOLIDAY_TYPES) {
-    const bucket = holidaysByType.get(t)!;
-    if (bucket.size === 0) continue;
-    const options = Array.from(bucket.entries())
-      .sort((a, b) => a[1].localeCompare(b[1]))
-      .map(([id, name]) => ({ label: `${name.replace(/\\/g, "")} (${id})`, value: id }));
-    items[TYPE_NATIVE_KEYS[t]] = {
-      type: "select",
-      multiple: true,
-      hidden: `!data.${TYPE_CONFIG_KEYS[t]}`,
-      label: TYPE_LABELS[t],
-      options,
-      xs: 12,
-      sm: 12,
-      md: 12,
-      lg: 12,
-      xl: 12,
-    };
-  }
-
-  if (Object.keys(items).length === 0) continue;
-
-  excludePanels[`_excludePanel_${cc}`] = {
-    type: "panel",
-    hidden: `data.country !== '${cc}'`,
-    xs: 12,
-    sm: 12,
-    md: 12,
-    lg: 12,
-    xl: 12,
-    items,
   };
 }
 
@@ -340,7 +250,18 @@ const jsonConfig = {
           lg: 12,
           xl: 12,
         },
-        ...excludePanels,
+        excludeHolidays: {
+          type: "custom",
+          i18n: true,
+          url: "custom/customComponents.js",
+          name: "PublicHolidaysComponentSet/Components/ExcludeSelector",
+          bundlerType: "module",
+          xs: 12,
+          sm: 12,
+          md: 12,
+          lg: 12,
+          xl: 12,
+        },
       },
     },
   },
@@ -353,10 +274,9 @@ const stats = {
   countries: countryOptions.length - 1,
   statePanels: Object.keys(statePanels).length,
   regionPanels: Object.keys(regionPanels).length,
-  excludePanels: Object.keys(excludePanels).length,
 };
 console.log(
   `Updated jsonConfig.json: ${stats.countries} countries, ` +
-    `${stats.statePanels} state panels, ${stats.regionPanels} region panels, ` +
-    `${stats.excludePanels} exclude panels`,
+    `${stats.statePanels} state panels, ${stats.regionPanels} region panels ` +
+    `(exclude list served by the custom admin component)`,
 );

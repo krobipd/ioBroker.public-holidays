@@ -99,19 +99,14 @@ function getFilteredHolidays(
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
   const result = new Map<string, RawHoliday>();
-  // Every holiday id seen in the data (all types, all years) — used to detect
-  // configured excludes that match nothing. Built BEFORE the type filter so a
-  // disabled type does not make a still-valid exclude look stale.
-  const allIds = new Set<string>();
 
   for (const y of years) {
     const holidays = hd.getHolidays(y) as RawHoliday[];
     for (const h of holidays) {
-      const id = toHolidayId(h.name, h.rule);
-      allIds.add(id);
       if (!config.holidayTypes.includes(h.type)) {
         continue;
       }
+      const id = toHolidayId(h.name, h.rule);
       if (config.excludeHolidays.includes(id)) {
         continue;
       }
@@ -129,8 +124,46 @@ function getFilteredHolidays(
     }
   }
 
-  const unmatchedExcludes = config.excludeHolidays.filter(id => !allIds.has(id));
+  // An exclude counts as "unmatched" only when its id exists NOWHERE in the country —
+  // across the country baseline and every state/region (the same aggregation the exclude
+  // dropdown is generated from). A leftover that is still valid in a sibling state (e.g.
+  // kept after narrowing state/region) is a harmless no-op and must not warn; only a
+  // genuine date-holidays rename/removal should. All types are aggregated so a disabled
+  // type does not make a still-valid exclude look stale.
+  const countryWideIds = collectCountryWideIds(config.country, years);
+  const unmatchedExcludes = config.excludeHolidays.filter(id => !countryWideIds.has(id));
   return { holidays: result, unmatchedExcludes };
+}
+
+// Every holiday id that occurs anywhere in a country: the baseline plus every state and
+// region. Mirrors scripts/generate-country-data.ts so the runtime "unmatched exclude"
+// check stays consistent with the options the admin dropdown offers. Uses date-holidays'
+// default language, exactly like the generator, so name-derived ids line up.
+function collectCountryWideIds(country: string, years: number[]): Set<string> {
+  const ids = new Set<string>();
+  const base = new Holidays();
+  const add = (instance: Holidays): void => {
+    for (const y of years) {
+      for (const h of instance.getHolidays(y) || []) {
+        ids.add(toHolidayId(h.name, h.rule));
+      }
+    }
+  };
+
+  add(new Holidays(country));
+  const states = base.getStates(country);
+  if (states) {
+    for (const st of Object.keys(states)) {
+      add(new Holidays(country, st));
+      const regions = base.getRegions(country, st);
+      if (regions) {
+        for (const rg of Object.keys(regions)) {
+          add(new Holidays(country, st, rg));
+        }
+      }
+    }
+  }
+  return ids;
 }
 
 function getDayInfo(holidays: Map<string, RawHoliday>, date: Date): DayInfo {
