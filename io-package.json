@@ -9,7 +9,7 @@
         "ru": "Дата и количество дней до следующего праздника теперь корректно отображаются в VIS и скриптах как дата и число, а список исключений также предлагает праздники следующего года.",
         "pt": "A data e os dias até ao próximo feriado são agora apresentados corretamente como data e número no VIS e em scripts, e a lista de exclusão também oferece os feriados do próximo ano.",
         "nl": "De datum en dagen tot de volgende feestdag worden nu correct weergegeven als datum en getal in VIS en scripts, en de uitsluitingslijst biedt ook feestdagen van volgend jaar.",
-        "fr": "La date et les jours jusqu'au prochain jour férié s'affichent désormais correctement comme date et nombre dans VIS et les scripts, et la liste d'exclusion propose aussi les jours fériés de l'année prochaine.",
+        "fr": "La date et les jours jusqu'au prochain jour férié s'affichent correctement comme date et nombre dans VIS et les scripts ; la liste d'exclusion propose aussi les jours fériés de l'an prochain.",
         "it": "La data e i giorni al prossimo giorno festivo ora si visualizzano correttamente come data e numero in VIS e negli script, e l'elenco di esclusione offre anche le festività del prossimo anno.",
         "es": "La fecha y los días hasta el próximo festivo ahora se muestran correctamente como fecha y número en VIS y scripts, y la lista de exclusión también ofrece los festivos del próximo año.",
         "pl": "Data i dni do następnego święta są teraz poprawnie wyświetlane jako data i liczba w VIS i skryptach, a lista wykluczeń oferuje także święta przyszłego roku.",

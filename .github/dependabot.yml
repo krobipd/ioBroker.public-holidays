@@ -6,7 +6,6 @@ version: 2
 updates:
 
   - package-ecosystem: 'npm'
-    directory: '/'
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -27,6 +26,15 @@ updates:
       - dependency-name: 'eslint'
         update-types:
           - 'version-update:semver-major'
+      # Module-Federation admin component (src-admin): hand-tuned compat matrix —
+      # npm latest breaks the MF build (MF-vite 1.8+ crashes), date-holidays must match
+      # the runtime. Exact-pinned; block all updates so automerge cannot move them.
+      # No-op in adapters without these deps.
+      - dependency-name: '@module-federation/vite'
+      - dependency-name: 'vite'
+      - dependency-name: 'date-holidays'
+    directories:
+      - '**/*'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
