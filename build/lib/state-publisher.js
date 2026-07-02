@@ -30,8 +30,8 @@ const NEXT_FIELDS = ["name", "boolean", "date", "daysUntil"];
 const FIELD_SPECS = {
   name: { type: "string", role: "text", read: true, write: false },
   boolean: { type: "boolean", role: "indicator", read: true, write: false },
-  date: { type: "string", role: "text", read: true, write: false },
-  daysUntil: { type: "number", role: "value", read: true, write: false }
+  date: { type: "string", role: "date", read: true, write: false },
+  daysUntil: { type: "number", role: "value.interval", read: true, write: false, unit: "days" }
 };
 const DEPRECATED_STATES = [
   "today.region",
@@ -97,7 +97,8 @@ async function ensureState(adapter, channel, field) {
         type: spec.type,
         role: spec.role,
         read: spec.read,
-        write: spec.write
+        write: spec.write,
+        ...spec.unit ? { unit: spec.unit } : {}
       },
       native: {}
     },

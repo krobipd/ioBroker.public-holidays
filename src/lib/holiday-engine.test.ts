@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeHolidays,
   detectBridgeDays,
+  detectScopeIssues,
   logAvailableHolidays,
   toHolidayId,
   toDateKey,
@@ -724,5 +725,27 @@ describe("unmatched excludes", () => {
       makeDate("2026-01-01"),
     );
     expect(result.unmatchedExcludes).toHaveLength(0);
+  });
+});
+
+// ─── detectScopeIssues (SoC: date-holidays scope lookups live in the engine) ─
+
+describe("detectScopeIssues", () => {
+  it("flags an unrecognized country (no holidays at all)", () => {
+    expect(detectScopeIssues(makeConfig({ country: "XX" }), ["en"])).toEqual([{ kind: "country" }]);
+  });
+
+  it("flags an unknown state for a valid country", () => {
+    expect(detectScopeIssues(makeConfig({ country: "DE", state: "XX" }), ["en"])).toEqual([{ kind: "state" }]);
+  });
+
+  it("flags an unknown region for a valid state", () => {
+    expect(detectScopeIssues(makeConfig({ country: "DE", state: "BY", region: "ZZ" }), ["en"])).toEqual([
+      { kind: "region" },
+    ]);
+  });
+
+  it("returns no issues for a fully valid scope", () => {
+    expect(detectScopeIssues(makeConfig({ country: "DE", state: "BY" }), ["en"])).toEqual([]);
   });
 });

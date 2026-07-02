@@ -24,10 +24,5 @@
   "name": "Naam feestdag",
   "boolean": "Is een feestdag",
   "date": "Datum",
-  "daysUntil": "Dagen tot feestdag",
-  "label_excludePublic": "Feestdagen uitsluiten",
-  "label_excludeBank": "Bankfeestdagen uitsluiten",
-  "label_excludeSchool": "Schoolvakanties uitsluiten",
-  "label_excludeOptional": "Optionele feestdagen uitsluiten",
-  "label_excludeObservance": "Herdenkingsdagen uitsluiten"
+  "daysUntil": "Dagen tot feestdag"
 }

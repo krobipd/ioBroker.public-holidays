@@ -3,7 +3,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
-window.adapterName = "adapter-component-template";
+window.adapterName = "public-holidays";
 
 const container = document.getElementById("root");
 if (container) {

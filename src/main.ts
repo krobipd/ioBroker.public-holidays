@@ -2,10 +2,10 @@ import * as utils from "@iobroker/adapter-core";
 import { I18n } from "@iobroker/adapter-core";
 import { join } from "node:path";
 import { errText, oneLine } from "./lib/error-utils";
-import { computeHolidays, createHolidaysInstance, logAvailableHolidays } from "./lib/holiday-engine";
+import { computeHolidays, createHolidaysInstance, detectScopeIssues, logAvailableHolidays } from "./lib/holiday-engine";
 import { getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
-import type { AdapterConfig } from "./lib/types";
+import { HOLIDAY_TYPES, type AdapterConfig } from "./lib/types";
 
 // Exported so the orchestration unit tests can drive onReady/validateConfig directly.
 export class PublicHolidaysAdapter extends utils.Adapter {
@@ -50,16 +50,18 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       this.log.debug(`System language: ${oneLine(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
 
       const hd = createHolidaysInstance(config, languages);
-      if (hd.getHolidays(new Date().getFullYear()).length === 0) {
-        this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
-      } else if (config.state && !hd.getStates(config.country)?.[config.state]) {
-        this.log.warn(
-          `State '${oneLine(config.state)}' is unknown for ${oneLine(config.country)} — using country-level holidays`,
-        );
-      } else if (config.region && !hd.getRegions(config.country, config.state)?.[config.region]) {
-        this.log.warn(
-          `Region '${oneLine(config.region)}' is unknown for ${oneLine(config.country)}/${oneLine(config.state)} — using broader holidays`,
-        );
+      for (const issue of detectScopeIssues(config, languages, hd)) {
+        if (issue.kind === "country") {
+          this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
+        } else if (issue.kind === "state") {
+          this.log.warn(
+            `State '${oneLine(config.state)}' is unknown for ${oneLine(config.country)} — using country-level holidays`,
+          );
+        } else {
+          this.log.warn(
+            `Region '${oneLine(config.region)}' is unknown for ${oneLine(config.country)}/${oneLine(config.state)} — using broader holidays`,
+          );
+        }
       }
 
       const computed = computeHolidays(config, languages, undefined, hd);
@@ -73,9 +75,11 @@ export class PublicHolidaysAdapter extends utils.Adapter {
 
       logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
 
+      const nextText = computed.next.isHoliday
+        ? `${oneLine(computed.next.name)} in ${computed.next.daysUntil} days`
+        : "no upcoming holiday";
       this.log.info(
-        `Today: ${computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"}, ` +
-          `next: ${oneLine(computed.next.name)} in ${computed.next.daysUntil} days`,
+        `Today: ${computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"}, next: ${nextText}`,
       );
 
       await cleanupDeprecatedStates(this);
@@ -107,36 +111,16 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       return null;
     }
 
-    const holidayTypes: string[] = [];
-    if (raw.typePublic !== false) {
-      holidayTypes.push("public");
-    }
-    if (raw.typeBank === true) {
-      holidayTypes.push("bank");
-    }
-    if (raw.typeSchool === true) {
-      holidayTypes.push("school");
-    }
-    if (raw.typeOptional === true) {
-      holidayTypes.push("optional");
-    }
-    if (raw.typeObservance === true) {
-      holidayTypes.push("observance");
-    }
+    const holidayTypes = HOLIDAY_TYPES.filter(t => (t.defaultOn ? raw[t.flag] !== false : raw[t.flag] === true)).map(
+      t => t.key,
+    );
 
     return {
       country,
       state: typeof raw.state === "string" ? raw.state.trim() : "",
       region: typeof raw.region === "string" ? raw.region.trim() : "",
       holidayTypes,
-      excludeHolidays: [
-        ...PublicHolidaysAdapter.toStringArray(raw.excludePublic),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeBank),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeSchool),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeOptional),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeObservance),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeHolidays),
-      ],
+      excludeHolidays: PublicHolidaysAdapter.toStringArray(raw.excludeHolidays),
       includeBridgeDays: raw.includeBridgeDays === true,
     };
   }

@@ -24,10 +24,5 @@
   "name": "Название праздника",
   "boolean": "Является праздником",
   "date": "Дата",
-  "daysUntil": "Дней до праздника",
-  "label_excludePublic": "Исключить государственные праздники",
-  "label_excludeBank": "Исключить банковские праздники",
-  "label_excludeSchool": "Исключить школьные каникулы",
-  "label_excludeOptional": "Исключить необязательные праздники",
-  "label_excludeObservance": "Исключить памятные дни"
+  "daysUntil": "Дней до праздника"
 }

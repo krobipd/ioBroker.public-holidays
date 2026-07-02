@@ -24,10 +24,5 @@
   "name": "Nombre del festivo",
   "boolean": "Es festivo",
   "date": "Fecha",
-  "daysUntil": "Días hasta el festivo",
-  "label_excludePublic": "Excluir festivos públicos",
-  "label_excludeBank": "Excluir festivos bancarios",
-  "label_excludeSchool": "Excluir vacaciones escolares",
-  "label_excludeOptional": "Excluir festivos opcionales",
-  "label_excludeObservance": "Excluir días conmemorativos"
+  "daysUntil": "Días hasta el festivo"
 }

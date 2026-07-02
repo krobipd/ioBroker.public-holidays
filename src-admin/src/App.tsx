@@ -13,7 +13,7 @@ import {
   type GenericAppState,
 } from "@iobroker/adapter-react-v5";
 
-import ExampleComponent from "./ExampleComponent";
+import ExcludeSelector from "./ExcludeSelector";
 
 import enLocal from "./i18n/en.json";
 import deLocal from "./i18n/de.json";
@@ -39,6 +39,9 @@ const styles: Record<string, any> = {
   },
 };
 
+// A realistic scope so the exclude selector actually lists holidays in the simulator.
+const DEMO_DATA = { country: "DE", state: "", region: "", typePublic: true, excludeHolidays: [] as string[] };
+
 interface AppState extends GenericAppState {
   data: Record<string, any>;
   originalData: Record<string, any>;
@@ -51,8 +54,8 @@ class App extends GenericApp<GenericAppProps, AppState> {
 
     this.state = {
       ...this.state,
-      data: { myCustomAttribute: "red" },
-      originalData: { myCustomAttribute: "red" },
+      data: { ...DEMO_DATA },
+      originalData: { ...DEMO_DATA },
       theme: this.createTheme(),
     };
     const translations = {
@@ -71,7 +74,10 @@ class App extends GenericApp<GenericAppProps, AppState> {
 
     I18n.setTranslations(translations);
     // @ts-expect-error userLanguage could exist
-    I18n.setLanguage((navigator.language || navigator.userLanguage || "en").substring(0, 2).toLowerCase());
+    const browserLang = (navigator.language || navigator.userLanguage || "en").toLowerCase();
+    // Chinese translations live under the full "zh-cn" key; every other language under its
+    // 2-letter code — so don't blindly truncate "zh-cn" to "zh".
+    I18n.setLanguage(browserLang.startsWith("zh") ? "zh-cn" : browserLang.substring(0, 2));
   }
 
   render(): React.JSX.Element {
@@ -90,9 +96,9 @@ class App extends GenericApp<GenericAppProps, AppState> {
         <ThemeProvider theme={this.state.theme}>
           <Box sx={styles.app}>
             <div style={styles.item}>
-              <ExampleComponent
+              <ExcludeSelector
                 oContext={{
-                  adapterName: "telegram",
+                  adapterName: "public-holidays",
                   socket: this.socket,
                   instance: 0,
                   themeType: this.state.theme.palette.mode,
@@ -108,14 +114,14 @@ class App extends GenericApp<GenericAppProps, AppState> {
                 changed={JSON.stringify(this.state.originalData) !== JSON.stringify(this.state.data)}
                 themeName={this.state.theme.palette.mode}
                 common={{} as ioBroker.InstanceCommon}
-                attr="myCustomAttribute"
+                attr="excludeHolidays"
                 data={this.state.data}
                 originalData={this.state.originalData}
                 onError={() => {}}
                 schema={{
-                  url: "",
+                  url: "custom/customComponents.js",
                   i18n: true,
-                  name: "AdminComponentEasyAccessSet/Components/ExampleComponent",
+                  name: "PublicHolidaysComponentSet/Components/ExcludeSelector",
                   type: "custom",
                 }}
                 onChange={data => this.setState({ data: data as Record<string, any> })}

@@ -94,9 +94,12 @@ describe("ensureObjects", () => {
   it("state objects have correct roles", async () => {
     await ensureObjects(adapter as any);
     const dateObj = adapter.objects["next.date"] as any;
-    expect(dateObj.common.role).toBe("text");
+    expect(dateObj.common.role).toBe("date");
     const boolObj = adapter.objects["today.boolean"] as any;
     expect(boolObj.common.role).toBe("indicator");
+    const daysObj = adapter.objects["next.daysUntil"] as any;
+    expect(daysObj.common.role).toBe("value.interval");
+    expect(daysObj.common.unit).toBe("days");
   });
 
   it("state objects have read=true, write=false", async () => {
@@ -237,6 +240,7 @@ describe("io-package consistency", () => {
         expect(io.common.role, `${id} role`).toBe((obj as any).common.role);
         expect(io.common.read, `${id} read`).toBe((obj as any).common.read);
         expect(io.common.write, `${id} write`).toBe((obj as any).common.write);
+        expect(io.common.unit, `${id} unit`).toBe((obj as any).common.unit);
       }
     }
   });

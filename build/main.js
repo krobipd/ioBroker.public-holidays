@@ -38,6 +38,7 @@ var import_error_utils = require("./lib/error-utils");
 var import_holiday_engine = require("./lib/holiday-engine");
 var import_i18n = require("./lib/i18n");
 var import_state_publisher = require("./lib/state-publisher");
+var import_types = require("./lib/types");
 class PublicHolidaysAdapter extends utils.Adapter {
   constructor(options = {}) {
     super({ ...options, name: "public-holidays" });
@@ -45,7 +46,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
   async onReady() {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c;
     try {
       const instanceObj = await this.getForeignObjectAsync(`system.adapter.${this.namespace}`);
       if (((_a = instanceObj == null ? void 0 : instanceObj.common) == null ? void 0 : _a.mode) === "daemon") {
@@ -74,16 +75,18 @@ class PublicHolidaysAdapter extends utils.Adapter {
       const languages = (0, import_i18n.resolveLanguages)(sysConfig.language, config.country);
       this.log.debug(`System language: ${(0, import_error_utils.oneLine)(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
       const hd = (0, import_holiday_engine.createHolidaysInstance)(config, languages);
-      if (hd.getHolidays((/* @__PURE__ */ new Date()).getFullYear()).length === 0) {
-        this.log.warn(`Country '${(0, import_error_utils.oneLine)(config.country)}' is not recognized \u2014 check the country setting`);
-      } else if (config.state && !((_c = hd.getStates(config.country)) == null ? void 0 : _c[config.state])) {
-        this.log.warn(
-          `State '${(0, import_error_utils.oneLine)(config.state)}' is unknown for ${(0, import_error_utils.oneLine)(config.country)} \u2014 using country-level holidays`
-        );
-      } else if (config.region && !((_d = hd.getRegions(config.country, config.state)) == null ? void 0 : _d[config.region])) {
-        this.log.warn(
-          `Region '${(0, import_error_utils.oneLine)(config.region)}' is unknown for ${(0, import_error_utils.oneLine)(config.country)}/${(0, import_error_utils.oneLine)(config.state)} \u2014 using broader holidays`
-        );
+      for (const issue of (0, import_holiday_engine.detectScopeIssues)(config, languages, hd)) {
+        if (issue.kind === "country") {
+          this.log.warn(`Country '${(0, import_error_utils.oneLine)(config.country)}' is not recognized \u2014 check the country setting`);
+        } else if (issue.kind === "state") {
+          this.log.warn(
+            `State '${(0, import_error_utils.oneLine)(config.state)}' is unknown for ${(0, import_error_utils.oneLine)(config.country)} \u2014 using country-level holidays`
+          );
+        } else {
+          this.log.warn(
+            `Region '${(0, import_error_utils.oneLine)(config.region)}' is unknown for ${(0, import_error_utils.oneLine)(config.country)}/${(0, import_error_utils.oneLine)(config.state)} \u2014 using broader holidays`
+          );
+        }
       }
       const computed = (0, import_holiday_engine.computeHolidays)(config, languages, void 0, hd);
       if (computed.unmatchedExcludes.length > 0) {
@@ -94,8 +97,9 @@ class PublicHolidaysAdapter extends utils.Adapter {
         );
       }
       (0, import_holiday_engine.logAvailableHolidays)(config, languages, (msg) => this.log.debug(msg), hd);
+      const nextText = computed.next.isHoliday ? `${(0, import_error_utils.oneLine)(computed.next.name)} in ${computed.next.daysUntil} days` : "no upcoming holiday";
       this.log.info(
-        `Today: ${computed.today.isHoliday ? (0, import_error_utils.oneLine)(computed.today.name) : "no holiday"}, next: ${(0, import_error_utils.oneLine)(computed.next.name)} in ${computed.next.daysUntil} days`
+        `Today: ${computed.today.isHoliday ? (0, import_error_utils.oneLine)(computed.today.name) : "no holiday"}, next: ${nextText}`
       );
       await (0, import_state_publisher.cleanupDeprecatedStates)(this);
       await (0, import_state_publisher.ensureObjects)(this);
@@ -104,7 +108,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
     } catch (err) {
       this.log.error(`onReady failed: ${(0, import_error_utils.errText)(err)}`);
     }
-    void ((_e = this.stop) == null ? void 0 : _e.call(this));
+    void ((_c = this.stop) == null ? void 0 : _c.call(this));
   }
   /** The raw (untyped) native config — single cast point for all config reads. */
   rawConfig() {
@@ -121,35 +125,15 @@ class PublicHolidaysAdapter extends utils.Adapter {
     if (!country) {
       return null;
     }
-    const holidayTypes = [];
-    if (raw.typePublic !== false) {
-      holidayTypes.push("public");
-    }
-    if (raw.typeBank === true) {
-      holidayTypes.push("bank");
-    }
-    if (raw.typeSchool === true) {
-      holidayTypes.push("school");
-    }
-    if (raw.typeOptional === true) {
-      holidayTypes.push("optional");
-    }
-    if (raw.typeObservance === true) {
-      holidayTypes.push("observance");
-    }
+    const holidayTypes = import_types.HOLIDAY_TYPES.filter((t) => t.defaultOn ? raw[t.flag] !== false : raw[t.flag] === true).map(
+      (t) => t.key
+    );
     return {
       country,
       state: typeof raw.state === "string" ? raw.state.trim() : "",
       region: typeof raw.region === "string" ? raw.region.trim() : "",
       holidayTypes,
-      excludeHolidays: [
-        ...PublicHolidaysAdapter.toStringArray(raw.excludePublic),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeBank),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeSchool),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeOptional),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeObservance),
-        ...PublicHolidaysAdapter.toStringArray(raw.excludeHolidays)
-      ],
+      excludeHolidays: PublicHolidaysAdapter.toStringArray(raw.excludeHolidays),
       includeBridgeDays: raw.includeBridgeDays === true
     };
   }

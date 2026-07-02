@@ -24,10 +24,5 @@
   "name": "Feiertagsname",
   "boolean": "Ist ein Feiertag",
   "date": "Datum",
-  "daysUntil": "Tage bis zum Feiertag",
-  "label_excludePublic": "Gesetzliche Feiertage ausschließen",
-  "label_excludeBank": "Bankfeiertage ausschließen",
-  "label_excludeSchool": "Schulferien ausschließen",
-  "label_excludeOptional": "Optionale Feiertage ausschließen",
-  "label_excludeObservance": "Gedenktage ausschließen"
+  "daysUntil": "Tage bis zum Feiertag"
 }

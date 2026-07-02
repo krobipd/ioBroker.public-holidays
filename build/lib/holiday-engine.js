@@ -32,15 +32,17 @@ __export(holiday_engine_exports, {
   computeHolidays: () => computeHolidays,
   createHolidaysInstance: () => createHolidaysInstance,
   detectBridgeDays: () => detectBridgeDays,
+  detectScopeIssues: () => detectScopeIssues,
   logAvailableHolidays: () => logAvailableHolidays,
   toDateKey: () => toDateKey,
   toHolidayId: () => toHolidayId
 });
 module.exports = __toCommonJS(holiday_engine_exports);
 var import_date_holidays = __toESM(require("date-holidays"));
+var import_types = require("./types");
 var import_error_utils = require("./error-utils");
 const EMPTY_DAY = { name: "", isHoliday: false };
-const TYPE_PRIORITY = ["public", "bank", "school", "optional", "observance"];
+const TYPE_PRIORITY = import_types.HOLIDAY_TYPES.map((t) => t.key);
 function typeRank(type) {
   const i = TYPE_PRIORITY.indexOf(type);
   return i === -1 ? TYPE_PRIORITY.length : i;
@@ -91,6 +93,20 @@ function createHolidaysInstance(config, languages) {
   hd.setLanguages(languages);
   return hd;
 }
+function detectScopeIssues(config, languages, instance) {
+  var _a, _b;
+  const hd = instance != null ? instance : createHolidaysInstance(config, languages);
+  if (hd.getHolidays((/* @__PURE__ */ new Date()).getFullYear()).length === 0) {
+    return [{ kind: "country" }];
+  }
+  if (config.state && !((_a = hd.getStates(config.country)) == null ? void 0 : _a[config.state])) {
+    return [{ kind: "state" }];
+  }
+  if (config.region && !((_b = hd.getRegions(config.country, config.state)) == null ? void 0 : _b[config.region])) {
+    return [{ kind: "region" }];
+  }
+  return [];
+}
 function getFilteredHolidays(hd, referenceDate, config, languages) {
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
@@ -117,8 +133,11 @@ function getFilteredHolidays(hd, referenceDate, config, languages) {
       addBridgeDays(result, y, languages);
     }
   }
-  const countryWideIds = collectCountryWideIds(config.country, years);
-  const unmatchedExcludes = config.excludeHolidays.filter((id) => !countryWideIds.has(id));
+  let unmatchedExcludes = [];
+  if (config.excludeHolidays.length) {
+    const countryWideIds = collectCountryWideIds(config.country, years);
+    unmatchedExcludes = config.excludeHolidays.filter((id) => !countryWideIds.has(id));
+  }
   return { holidays: result, unmatchedExcludes };
 }
 function collectCountryWideIds(country, years) {
@@ -255,6 +274,7 @@ function addDays(date, days) {
   computeHolidays,
   createHolidaysInstance,
   detectBridgeDays,
+  detectScopeIssues,
   logAvailableHolidays,
   toDateKey,
   toHolidayId

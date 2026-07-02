@@ -68,21 +68,26 @@ export default class ExcludeSelector extends ConfigGeneric<ConfigGenericProps, C
     }
     hd.setLanguages([I18n.getLanguage()]);
 
-    const year = new Date().getFullYear();
+    // Cover the same window the runtime evaluates (this year + next) so a holiday that only
+    // exists in the coming year can still be picked; dedupe by id, first (earlier year) wins.
+    const thisYear = new Date().getFullYear();
     const seen = new Map<string, { name: string; date: string }>();
-    for (const h of hd.getHolidays(year) || []) {
-      if (enabledTypes.length && !enabledTypes.includes(h.type)) {
-        continue;
-      }
-      const id = toHolidayId(h.name, h.rule);
-      if (!seen.has(id)) {
-        seen.set(id, { name: h.name, date: (h.date || "").substring(0, 10) });
+    for (const year of [thisYear, thisYear + 1]) {
+      for (const h of hd.getHolidays(year) || []) {
+        if (enabledTypes.length && !enabledTypes.includes(h.type)) {
+          continue;
+        }
+        const id = toHolidayId(h.name, h.rule);
+        if (!seen.has(id)) {
+          seen.set(id, { name: h.name, date: (h.date || "").substring(0, 10) });
+        }
       }
     }
-    // Chronological order (date within the year) — far less confusing than alphabetical,
+    // Chronological order by month/day (ignoring year) so next-year-only holidays slot into
+    // the calendar instead of landing at the end — far less confusing than alphabetical,
     // which e.g. starts with "2. Weihnachtstag". The date is shown in the label too.
     return Array.from(seen.entries())
-      .sort((a, b) => a[1].date.localeCompare(b[1].date))
+      .sort((a, b) => a[1].date.substring(5).localeCompare(b[1].date.substring(5)))
       .map(([id, v]) => {
         const [, month, day] = v.date.split("-");
         const dateLabel = month && day ? `${day}.${month}.` : "";

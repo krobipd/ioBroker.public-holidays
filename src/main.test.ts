@@ -313,7 +313,7 @@ describe("onReady — diagnostics warnings", () => {
   });
 
   it("warns when a configured exclude no longer matches any holiday", async () => {
-    const { internal, stub } = setup({ country: "DE", excludePublic: ["bogus_stale_exclude"] });
+    const { internal, stub } = setup({ country: "DE", excludeHolidays: ["bogus_stale_exclude"] });
 
     await internal.onReady();
 
@@ -360,17 +360,16 @@ describe("validateConfig", () => {
     expect(internal.validateConfig()?.holidayTypes).toEqual(["public"]);
   });
 
-  it("merges all 6 exclude sources and drops non-string entries", () => {
+  it("takes excludeHolidays only (legacy per-type exclude keys are ignored) and drops non-strings", () => {
     const { internal } = setup({
       country: "DE",
-      excludePublic: ["a", 42],
-      excludeBank: ["b"],
-      excludeSchool: "not-an-array",
-      excludeOptional: ["c", null],
-      excludeObservance: [],
-      excludeHolidays: ["d"],
+      // Legacy keys from the pre-0.9.0 per-type exclude UI — no admin field writes these
+      // anymore; validateConfig must NOT merge them back in.
+      excludePublic: ["legacy_ignored"],
+      excludeBank: ["legacy_ignored_too"],
+      excludeHolidays: ["a", 42, "b", null],
     });
-    expect(internal.validateConfig()?.excludeHolidays).toEqual(["a", "b", "c", "d"]);
+    expect(internal.validateConfig()?.excludeHolidays).toEqual(["a", "b"]);
   });
 
   it("state/region default to empty strings and get trimmed", () => {

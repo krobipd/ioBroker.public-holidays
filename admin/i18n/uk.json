@@ -24,10 +24,5 @@
   "name": "Назва свята",
   "boolean": "Є святом",
   "date": "Дата",
-  "daysUntil": "Днів до свята",
-  "label_excludePublic": "Виключити державні свята",
-  "label_excludeBank": "Виключити банківські свята",
-  "label_excludeSchool": "Виключити шкільні канікули",
-  "label_excludeOptional": "Виключити необов'язкові свята",
-  "label_excludeObservance": "Виключити пам'ятні дні"
+  "daysUntil": "Днів до свята"
 }

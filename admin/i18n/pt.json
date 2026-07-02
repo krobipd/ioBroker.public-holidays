@@ -24,10 +24,5 @@
   "name": "Nome do feriado",
   "boolean": "É feriado",
   "date": "Data",
-  "daysUntil": "Dias até ao feriado",
-  "label_excludePublic": "Excluir feriados públicos",
-  "label_excludeBank": "Excluir feriados bancários",
-  "label_excludeSchool": "Excluir feriados escolares",
-  "label_excludeOptional": "Excluir feriados opcionais",
-  "label_excludeObservance": "Excluir dias de observância"
+  "daysUntil": "Dias até ao feriado"
 }

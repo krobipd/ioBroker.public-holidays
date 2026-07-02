@@ -1,5 +1,6 @@
 import Holidays from "date-holidays";
 import type { AdapterConfig, ComputedHolidays, DayInfo, NextHoliday } from "./types";
+import { HOLIDAY_TYPES } from "./types";
 import { oneLine } from "./error-utils";
 
 // Exported for unit tests only — production callers stay inside this module.
@@ -14,8 +15,8 @@ const EMPTY_DAY: DayInfo = { name: "", isHoliday: false };
 
 // Same-date collision priority: the higher-priority (lower index) type wins, so the
 // surviving name is deterministic instead of depending on date-holidays' emit order.
-// Unknown types rank last.
-const TYPE_PRIORITY = ["public", "bank", "school", "optional", "observance"];
+// Unknown types rank last. Order comes from HOLIDAY_TYPES (single source shared with main.ts).
+const TYPE_PRIORITY = HOLIDAY_TYPES.map(t => t.key);
 function typeRank(type: string): number {
   const i = TYPE_PRIORITY.indexOf(type);
   return i === -1 ? TYPE_PRIORITY.length : i;
@@ -85,6 +86,30 @@ export function createHolidaysInstance(config: AdapterConfig, languages: string[
   return hd;
 }
 
+export interface ScopeIssue {
+  kind: "country" | "state" | "region";
+}
+
+// Diagnostic check for a misconfigured scope: an unrecognized country (date-holidays returns
+// no holidays at all), or a state/region that does not exist for the selection (date-holidays
+// would silently fall back to a broader scope). Keeps the date-holidays lookups
+// (getHolidays/getStates/getRegions) inside the engine — main.ts only turns the result into a
+// log line. Mirrors the previous inline behaviour: at most one issue, a broken broader level
+// (country) suppresses the more specific checks.
+export function detectScopeIssues(config: AdapterConfig, languages: string[], instance?: Holidays): ScopeIssue[] {
+  const hd = instance ?? createHolidaysInstance(config, languages);
+  if (hd.getHolidays(new Date().getFullYear()).length === 0) {
+    return [{ kind: "country" }];
+  }
+  if (config.state && !hd.getStates(config.country)?.[config.state]) {
+    return [{ kind: "state" }];
+  }
+  if (config.region && !hd.getRegions(config.country, config.state)?.[config.region]) {
+    return [{ kind: "region" }];
+  }
+  return [];
+}
+
 interface FilteredHolidays {
   holidays: Map<string, RawHoliday>;
   unmatchedExcludes: string[];
@@ -130,8 +155,15 @@ function getFilteredHolidays(
   // kept after narrowing state/region) is a harmless no-op and must not warn; only a
   // genuine date-holidays rename/removal should. All types are aggregated so a disabled
   // type does not make a still-valid exclude look stale.
-  const countryWideIds = collectCountryWideIds(config.country, years);
-  const unmatchedExcludes = config.excludeHolidays.filter(id => !countryWideIds.has(id));
+  // Skip the country-wide aggregation (dozens of Holidays instances across every state and
+  // region) entirely when there is nothing to validate — the common case of no excludes.
+  // When there ARE excludes, build the id set ONCE (hoisted out of the filter, not rebuilt
+  // once per exclude id).
+  let unmatchedExcludes: string[] = [];
+  if (config.excludeHolidays.length) {
+    const countryWideIds = collectCountryWideIds(config.country, years);
+    unmatchedExcludes = config.excludeHolidays.filter(id => !countryWideIds.has(id));
+  }
   return { holidays: result, unmatchedExcludes };
 }
 

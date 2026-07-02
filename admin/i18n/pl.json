@@ -24,10 +24,5 @@
   "name": "Nazwa święta",
   "boolean": "Jest świętem",
   "date": "Data",
-  "daysUntil": "Dni do święta",
-  "label_excludePublic": "Wyklucz święta państwowe",
-  "label_excludeBank": "Wyklucz święta bankowe",
-  "label_excludeSchool": "Wyklucz ferie szkolne",
-  "label_excludeOptional": "Wyklucz święta opcjonalne",
-  "label_excludeObservance": "Wyklucz dni pamięci"
+  "daysUntil": "Dni do święta"
 }

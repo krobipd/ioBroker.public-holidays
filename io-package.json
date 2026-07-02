@@ -3,6 +3,19 @@
     "name": "public-holidays",
     "version": "0.9.0",
     "news": {
+      "NEXT": {
+        "en": "The next-holiday date and days-until now show correctly as a date and a day count in VIS and scripts, and the settings exclude list also offers next year's holidays.",
+        "de": "Datum und Tage bis zum nächsten Feiertag werden nun in VIS und Skripten korrekt als Datum und Zahl angezeigt, und die Ausschlussliste bietet auch Feiertage des nächsten Jahres.",
+        "ru": "Дата и количество дней до следующего праздника теперь корректно отображаются в VIS и скриптах как дата и число, а список исключений также предлагает праздники следующего года.",
+        "pt": "A data e os dias até ao próximo feriado são agora apresentados corretamente como data e número no VIS e em scripts, e a lista de exclusão também oferece os feriados do próximo ano.",
+        "nl": "De datum en dagen tot de volgende feestdag worden nu correct weergegeven als datum en getal in VIS en scripts, en de uitsluitingslijst biedt ook feestdagen van volgend jaar.",
+        "fr": "La date et les jours jusqu'au prochain jour férié s'affichent désormais correctement comme date et nombre dans VIS et les scripts, et la liste d'exclusion propose aussi les jours fériés de l'année prochaine.",
+        "it": "La data e i giorni al prossimo giorno festivo ora si visualizzano correttamente come data e numero in VIS e negli script, e l'elenco di esclusione offre anche le festività del prossimo anno.",
+        "es": "La fecha y los días hasta el próximo festivo ahora se muestran correctamente como fecha y número en VIS y scripts, y la lista de exclusión también ofrece los festivos del próximo año.",
+        "pl": "Data i dni do następnego święta są teraz poprawnie wyświetlane jako data i liczba w VIS i skryptach, a lista wykluczeń oferuje także święta przyszłego roku.",
+        "uk": "Дата та кількість днів до наступного свята тепер коректно відображаються як дата й число у VIS і скриптах, а список винятків також пропонує свята наступного року.",
+        "zh-cn": "下一个假日的日期和剩余天数现在在 VIS 和脚本中正确显示为日期和数字，设置中的排除列表也会提供明年的假日。"
+      },
       "0.9.0": {
         "en": "The holiday exclude list now shows only your selected region's holidays, localized and sorted by date. A false startup warning about excludes is fixed.",
         "de": "Die Feiertags-Ausschlussliste zeigt jetzt nur die Feiertage deiner Region, lokalisiert und nach Datum sortiert. Eine falsche Startwarnung zu Ausschlüssen ist behoben.",
@@ -80,19 +93,6 @@
         "pl": "Etykiety zastępcze list rozwijanych w ustawieniach pojawiają się teraz we wszystkich 11 obsługiwanych językach, nie tylko angielskim i niemieckim.",
         "uk": "Підказки у випадаючих списках налаштувань тепер відображаються всіма 11 підтримуваними мовами, а не лише англійською та німецькою.",
         "zh-cn": "设置中下拉菜单的占位符现在以全部 11 种受支持的语言显示，而不仅是英语和德语。"
-      },
-      "0.5.1": {
-        "en": "Removed legacy changelog entries for versions never published under this package name",
-        "de": "Veraltete Changelog-Einträge für nie unter diesem Paketnamen veröffentlichte Versionen entfernt",
-        "ru": "Удалены устаревшие записи журнала изменений для версий, которые не публиковались под этим именем пакета",
-        "pt": "Removidas entradas de changelog antigas para versões nunca publicadas sob este nome de pacote",
-        "nl": "Verouderde changelog-vermeldingen verwijderd voor versies die nooit onder deze pakketnaam zijn gepubliceerd",
-        "fr": "Suppression des entrées de changelog obsolètes pour les versions jamais publiées sous ce nom de paquet",
-        "it": "Rimosse le voci di changelog obsolete per versioni mai pubblicate con questo nome pacchetto",
-        "es": "Eliminadas entradas de changelog antiguas para versiones nunca publicadas bajo este nombre de paquete",
-        "pl": "Usunięto przestarzałe wpisy dziennika zmian dla wersji nigdy nie opublikowanych pod tą nazwą pakietu",
-        "uk": "Видалено застарілі записи журналу змін для версій, які ніколи не публікувалися під цією назвою пакету",
-        "zh-cn": "移除了从未以此包名发布的旧版本更新日志条目"
       }
     },
     "plugins": {
@@ -555,7 +555,7 @@
           "zh-cn": "日期"
         },
         "type": "string",
-        "role": "text",
+        "role": "date",
         "read": true,
         "write": false,
         "def": ""
@@ -580,9 +580,10 @@
           "zh-cn": "距假日天数"
         },
         "type": "number",
-        "role": "value",
+        "role": "value.interval",
         "read": true,
         "write": false,
+        "unit": "days",
         "def": 0
       },
       "native": {}

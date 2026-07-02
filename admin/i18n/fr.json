@@ -24,10 +24,5 @@
   "name": "Nom du jour férié",
   "boolean": "Est un jour férié",
   "date": "Date",
-  "daysUntil": "Jours jusqu'au jour férié",
-  "label_excludePublic": "Exclure les jours fériés",
-  "label_excludeBank": "Exclure les jours bancaires",
-  "label_excludeSchool": "Exclure les vacances scolaires",
-  "label_excludeOptional": "Exclure les jours facultatifs",
-  "label_excludeObservance": "Exclure les jours commémoratifs"
+  "daysUntil": "Jours jusqu'au jour férié"
 }

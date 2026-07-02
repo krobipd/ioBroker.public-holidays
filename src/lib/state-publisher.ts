@@ -10,13 +10,14 @@ interface StateSpec {
   role: string;
   read: boolean;
   write: boolean;
+  unit?: string;
 }
 
 const FIELD_SPECS: Record<string, StateSpec> = {
   name: { type: "string", role: "text", read: true, write: false },
   boolean: { type: "boolean", role: "indicator", read: true, write: false },
-  date: { type: "string", role: "text", read: true, write: false },
-  daysUntil: { type: "number", role: "value", read: true, write: false },
+  date: { type: "string", role: "date", read: true, write: false },
+  daysUntil: { type: "number", role: "value.interval", read: true, write: false, unit: "days" },
 };
 
 const DEPRECATED_STATES = [
@@ -90,6 +91,7 @@ async function ensureState(adapter: ioBroker.Adapter, channel: string, field: st
         role: spec.role,
         read: spec.read,
         write: spec.write,
+        ...(spec.unit ? { unit: spec.unit } : {}),
       },
       native: {},
     },
