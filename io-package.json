@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "news": {
-      "NEXT": {
+      "0.10.0": {
         "en": "The next-holiday date and days-until now show correctly as a date and a day count in VIS and scripts, and the settings exclude list also offers next year's holidays.",
         "de": "Datum und Tage bis zum nächsten Feiertag werden nun in VIS und Skripten korrekt als Datum und Zahl angezeigt, und die Ausschlussliste bietet auch Feiertage des nächsten Jahres.",
         "ru": "Дата и количество дней до следующего праздника теперь корректно отображаются в VIS и скриптах как дата и число, а список исключений также предлагает праздники следующего года.",

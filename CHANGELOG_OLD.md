@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.6.0 (2026-05-31)
+
+- Country auto-detection now works reliably: if the country field is left empty, the country is taken from your ioBroker system settings. Previously this could leave all states empty.
+- Bridge days are now also detected across the year boundary (for example a bridge day in early January).
+
 ## 0.5.2 (2026-05-30)
 
 - Admin settings: country, state and region dropdown placeholders now appear in all 11 supported languages instead of only English and German

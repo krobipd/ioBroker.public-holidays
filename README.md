@@ -109,7 +109,7 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.10.0 (2026-07-02)
 
 - The "next holiday" date and days-until states now show up correctly as a date and a day count in VIS widgets and scripts (they carry the proper ioBroker role and a "days" unit).
 - The exclude-holidays list in the settings now also offers holidays that only occur in the coming year, not just the current one.
@@ -133,11 +133,6 @@ Bridge days appear in the state tree with the localized name matching the system
 ### 0.7.0 (2026-06-07)
 
 - Added optional Sentry error reporting: crashes are sent to the developer so issues get fixed faster. Active only with ioBroker diagnostics enabled; anonymous.
-
-### 0.6.0 (2026-05-31)
-
-- Country auto-detection now works reliably: if the country field is left empty, the country is taken from your ioBroker system settings. Previously this could leave all states empty.
-- Bridge days are now also detected across the year boundary (for example a bridge day in early January).
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
