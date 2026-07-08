@@ -69,6 +69,7 @@
     "generate": "tsx scripts/generate-country-data.ts",
     "check": "tsc --noEmit",
     "test:ts": "vitest run",
+    "test:unit": "vitest run",
     "test:package": "mocha test/package --exit",
     "test:integration": "mocha test/integration --exit",
     "test": "npm run test:ts && npm run test:package",
