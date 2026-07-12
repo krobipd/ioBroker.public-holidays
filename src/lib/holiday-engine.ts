@@ -305,7 +305,7 @@ export function toHolidayId(name: string, rule?: string): string {
   }
   return name
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9\s]/g, "")
     .replace(/\s+/g, "_")
     .toLowerCase();

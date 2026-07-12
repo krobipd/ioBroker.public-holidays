@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// The exclude ids stored by the admin component (src-admin/src/ExcludeSelector.tsx)
+// The exclude ids stored by the admin component (src-admin/src/exclude-options.ts)
 // are matched verbatim against the ids the runtime computes (src/lib/holiday-engine.ts).
 // Both files carry their own copy of toHolidayId() because src-admin is an isolated
 // Module-Federation/Vite bundle that cannot import from src/ without risking the MF build.
@@ -42,9 +42,9 @@ function extractToHolidayId(source: string): string {
 }
 
 describe("toHolidayId parity (runtime engine vs admin bundle)", () => {
-  it("holiday-engine.ts and ExcludeSelector.tsx define an identical toHolidayId", () => {
+  it("holiday-engine.ts and exclude-options.ts define an identical toHolidayId", () => {
     const engine = readFileSync(join(__dirname, "holiday-engine.ts"), "utf8");
-    const admin = readFileSync(join(__dirname, "../../src-admin/src/ExcludeSelector.tsx"), "utf8");
+    const admin = readFileSync(join(__dirname, "../../src-admin/src/exclude-options.ts"), "utf8");
     expect(extractToHolidayId(admin)).toBe(extractToHolidayId(engine));
   });
 });
