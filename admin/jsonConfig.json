@@ -1372,6 +1372,14 @@
                   "value": "DF"
                 },
                 {
+                  "label": "Espírito Santo (ES)",
+                  "value": "ES"
+                },
+                {
+                  "label": "Goiás (GO)",
+                  "value": "GO"
+                },
+                {
                   "label": "Maranhão (MA)",
                   "value": "MA"
                 },
@@ -3548,6 +3556,48 @@
                 {
                   "label": "Western Herzegovina (W)",
                   "value": "W"
+                }
+              ],
+              "xs": 12,
+              "sm": 12,
+              "md": 12,
+              "lg": 12,
+              "xl": 12
+            }
+          }
+        },
+        "_regionPanel_BR_GO": {
+          "type": "panel",
+          "hidden": "data.country !== 'BR' || data.state !== 'GO'",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 4,
+          "xl": 4,
+          "items": {
+            "region": {
+              "type": "select",
+              "label": "label_region",
+              "options": [
+                {
+                  "label": {
+                    "en": "— (none) —",
+                    "de": "— (keine) —",
+                    "es": "— (ninguna) —",
+                    "fr": "— (aucune) —",
+                    "it": "— (nessuna) —",
+                    "nl": "— (geen) —",
+                    "pl": "— (brak) —",
+                    "pt": "— (nenhuma) —",
+                    "ru": "— (нет) —",
+                    "uk": "— (немає) —",
+                    "zh-cn": "— (无) —"
+                  },
+                  "value": ""
+                },
+                {
+                  "label": "Goiânia (GOIANIA)",
+                  "value": "GOIANIA"
                 }
               ],
               "xs": 12,
