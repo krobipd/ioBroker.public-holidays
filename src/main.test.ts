@@ -178,10 +178,21 @@ describe("onReady — happy path", () => {
     expect(own).toHaveLength(17);
   });
 
-  it("logs the Today/next summary line", async () => {
+  it("logs the Today/next summary at info on a holiday", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
     const { internal, stub } = setup({ country: "DE" });
     await internal.onReady();
     expect(logsOf(stub, "info").some(m => m.startsWith("Today: ") && m.includes("next: "))).toBe(true);
+  });
+
+  it("keeps the summary at debug on a normal workday (not an info heartbeat)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-03-10T12:00:00"));
+    const { internal, stub } = setup({ country: "DE" });
+    await internal.onReady();
+    expect(logsOf(stub, "info").some(m => m.startsWith("Today: "))).toBe(false);
+    expect(logsOf(stub, "debug").some(m => m.startsWith("Today: ") && m.includes("next: "))).toBe(true);
   });
 
   it("removes deprecated states left over from older versions", async () => {

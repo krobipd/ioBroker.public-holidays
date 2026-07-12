@@ -78,9 +78,16 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       const nextText = computed.next.isHoliday
         ? `${oneLine(computed.next.name)} in ${computed.next.daysUntil} days`
         : "no upcoming holiday";
-      this.log.info(
-        `Today: ${computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"}, next: ${nextText}`,
-      );
+      const summary = `Today: ${
+        computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"
+      }, next: ${nextText}`;
+      // Only a day that is actually a holiday is a noteworthy event; the daily "no holiday" run
+      // stays at debug so the log is not a routine heartbeat (audit finding L3).
+      if (computed.today.isHoliday) {
+        this.log.info(summary);
+      } else {
+        this.log.debug(summary);
+      }
 
       await cleanupDeprecatedStates(this);
       await ensureObjects(this);
