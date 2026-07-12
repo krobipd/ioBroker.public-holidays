@@ -60,9 +60,10 @@ const BRIDGE_DAY_NAMES = {
   uk: "\u041D\u0435\u0440\u043E\u0431\u043E\u0447\u0438\u0439 \u0434\u0435\u043D\u044C",
   zh: "\u6865\u63A5\u65E5"
 };
-function computeHolidays(config, languages, referenceDate, instance) {
-  const now = referenceDate != null ? referenceDate : /* @__PURE__ */ new Date();
-  const hd = instance != null ? instance : createHolidaysInstance(config, languages);
+function computeHolidays(config, languages, options = {}) {
+  var _a, _b;
+  const now = (_a = options.referenceDate) != null ? _a : /* @__PURE__ */ new Date();
+  const hd = (_b = options.instance) != null ? _b : createHolidaysInstance(config, languages);
   const { holidays: filtered, unmatchedExcludes } = getFilteredHolidays(hd, now, config, languages);
   const yesterday = getDayInfo(filtered, addDays(now, -1));
   const today = getDayInfo(filtered, now);
@@ -90,7 +91,9 @@ function createHolidaysInstance(config, languages) {
   } else {
     hd = new import_date_holidays.default(config.country);
   }
-  hd.setLanguages(languages);
+  if (languages) {
+    hd.setLanguages(languages);
+  }
   return hd;
 }
 function detectScopeIssues(config, languages, instance) {
@@ -255,7 +258,7 @@ function toHolidayId(name, rule) {
       return clean;
     }
   }
-  return name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "_").toLowerCase();
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "_").toLowerCase();
 }
 function toDateKey(date) {
   const y = date.getFullYear();

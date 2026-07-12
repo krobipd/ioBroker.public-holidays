@@ -42,14 +42,12 @@ const SUPPORTED_LANGS = ["de", "en", "es", "fr", "it", "nl", "pl", "pt", "ru", "
 function tName(key) {
   return import_adapter_core.I18n.getTranslatedObject(key);
 }
-function resolveLanguages(systemLang, country) {
+function resolveLanguages(systemLang, holidays) {
   const lang = systemLang.toLowerCase().split("-")[0];
   if (!SUPPORTED_LANGS.includes(lang)) {
     return ["en"];
   }
-  const h = new import_date_holidays.default(country);
-  const available = h.getLanguages();
-  if (available.includes(lang)) {
+  if (holidays.getLanguages().includes(lang)) {
     return lang === "en" ? ["en"] : [lang, "en"];
   }
   return ["en"];

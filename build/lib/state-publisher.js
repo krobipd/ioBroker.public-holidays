@@ -25,11 +25,11 @@ __export(state_publisher_exports, {
 module.exports = __toCommonJS(state_publisher_exports);
 var import_i18n = require("./i18n");
 const DAY_CHANNELS = ["today", "yesterday", "tomorrow", "dayAfterTomorrow"];
-const DAY_FIELDS = ["name", "boolean"];
-const NEXT_FIELDS = ["name", "boolean", "date", "daysUntil"];
+const DAY_FIELDS = ["name", "isHoliday"];
+const NEXT_FIELDS = ["name", "isHoliday", "date", "daysUntil"];
 const FIELD_SPECS = {
   name: { type: "string", role: "text", read: true, write: false },
-  boolean: { type: "boolean", role: "indicator", read: true, write: false },
+  isHoliday: { type: "boolean", role: "indicator", read: true, write: false },
   date: { type: "string", role: "date", read: true, write: false },
   daysUntil: { type: "number", role: "value.interval", read: true, write: false, unit: "days" }
 };
@@ -49,7 +49,13 @@ const DEPRECATED_STATES = [
   "next.region",
   "next.type",
   "next.id",
-  "next.duration"
+  "next.duration",
+  // Renamed to *.isHoliday in v0.11.0 (state named for its meaning, not its type).
+  "today.boolean",
+  "yesterday.boolean",
+  "tomorrow.boolean",
+  "dayAfterTomorrow.boolean",
+  "next.boolean"
 ];
 async function cleanupDeprecatedStates(adapter) {
   for (const id of DEPRECATED_STATES) {
@@ -107,11 +113,11 @@ async function ensureState(adapter, channel, field) {
 }
 const DAY_VALUE = {
   name: (d) => d.name,
-  boolean: (d) => d.isHoliday
+  isHoliday: (d) => d.isHoliday
 };
 const NEXT_VALUE = {
   name: (n) => n.name,
-  boolean: (n) => n.isHoliday,
+  isHoliday: (n) => n.isHoliday,
   date: (n) => n.date,
   daysUntil: (n) => n.daysUntil
 };

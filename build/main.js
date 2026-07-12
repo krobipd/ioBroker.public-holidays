@@ -72,9 +72,10 @@ class PublicHolidaysAdapter extends utils.Adapter {
         void ((_b = this.stop) == null ? void 0 : _b.call(this));
         return;
       }
-      const languages = (0, import_i18n.resolveLanguages)(sysConfig.language, config.country);
+      const hd = (0, import_holiday_engine.createHolidaysInstance)(config);
+      const languages = (0, import_i18n.resolveLanguages)(sysConfig.language, hd);
+      hd.setLanguages(languages);
       this.log.debug(`System language: ${(0, import_error_utils.oneLine)(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
-      const hd = (0, import_holiday_engine.createHolidaysInstance)(config, languages);
       for (const issue of (0, import_holiday_engine.detectScopeIssues)(config, languages, hd)) {
         if (issue.kind === "country") {
           this.log.warn(`Country '${(0, import_error_utils.oneLine)(config.country)}' is not recognized \u2014 check the country setting`);
@@ -88,7 +89,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
           );
         }
       }
-      const computed = (0, import_holiday_engine.computeHolidays)(config, languages, void 0, hd);
+      const computed = (0, import_holiday_engine.computeHolidays)(config, languages, { instance: hd });
       if (computed.unmatchedExcludes.length > 0) {
         this.log.warn(
           `These excluded holidays no longer match any holiday (possibly renamed by a date-holidays update): ${(0, import_error_utils.oneLine)(
@@ -98,9 +99,12 @@ class PublicHolidaysAdapter extends utils.Adapter {
       }
       (0, import_holiday_engine.logAvailableHolidays)(config, languages, (msg) => this.log.debug(msg), hd);
       const nextText = computed.next.isHoliday ? `${(0, import_error_utils.oneLine)(computed.next.name)} in ${computed.next.daysUntil} days` : "no upcoming holiday";
-      this.log.info(
-        `Today: ${computed.today.isHoliday ? (0, import_error_utils.oneLine)(computed.today.name) : "no holiday"}, next: ${nextText}`
-      );
+      const summary = `Today: ${computed.today.isHoliday ? (0, import_error_utils.oneLine)(computed.today.name) : "no holiday"}, next: ${nextText}`;
+      if (computed.today.isHoliday) {
+        this.log.info(summary);
+      } else {
+        this.log.debug(summary);
+      }
       await (0, import_state_publisher.cleanupDeprecatedStates)(this);
       await (0, import_state_publisher.ensureObjects)(this);
       await (0, import_state_publisher.publishStates)(this, computed);
