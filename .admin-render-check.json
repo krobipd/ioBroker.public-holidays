@@ -1,0 +1,5 @@
+{
+  "instance": "public-holidays.0",
+  "tab": "Holiday",
+  "mountSelectors": [".MuiAutocomplete-root"]
+}
