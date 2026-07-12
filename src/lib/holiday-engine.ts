@@ -36,14 +36,20 @@ export const BRIDGE_DAY_NAMES: Record<string, string> = {
   zh: "桥接日",
 };
 
+export interface ComputeOptions {
+  /** Reference "today" for deterministic tests; defaults to the current date. */
+  referenceDate?: Date;
+  /** Pre-built date-holidays instance to reuse instead of constructing a fresh one. */
+  instance?: Holidays;
+}
+
 export function computeHolidays(
   config: AdapterConfig,
   languages: string[],
-  referenceDate?: Date,
-  instance?: Holidays,
+  options: ComputeOptions = {},
 ): ComputedHolidays {
-  const now = referenceDate ?? new Date();
-  const hd = instance ?? createHolidaysInstance(config, languages);
+  const now = options.referenceDate ?? new Date();
+  const hd = options.instance ?? createHolidaysInstance(config, languages);
   const { holidays: filtered, unmatchedExcludes } = getFilteredHolidays(hd, now, config, languages);
 
   const yesterday = getDayInfo(filtered, addDays(now, -1));
@@ -73,7 +79,14 @@ export function logAvailableHolidays(
   log(`${scope}: ${matching.length} holidays for ${year} — IDs: ${matching.join(", ")}`);
 }
 
-export function createHolidaysInstance(config: AdapterConfig, languages: string[]): Holidays {
+// Construct the date-holidays instance for a scope. `languages` is optional so a caller can build
+// the instance first, read getLanguages() off it, then set the resolved languages afterwards
+// (main.ts) instead of constructing a throwaway second instance just for language detection
+// (audit finding L4). No try/catch here on purpose: the only production caller (onReady) wraps the
+// whole run in one, so a bogus country surfaces as a logged error + stop(). The admin component
+// guards its own `new Holidays()` because it has no such outer handler — the asymmetry is
+// intentional (audit finding L4).
+export function createHolidaysInstance(config: AdapterConfig, languages?: string[]): Holidays {
   let hd: Holidays;
   if (config.state && config.region) {
     hd = new Holidays(config.country, config.state, config.region);
@@ -82,7 +95,9 @@ export function createHolidaysInstance(config: AdapterConfig, languages: string[
   } else {
     hd = new Holidays(config.country);
   }
-  hd.setLanguages(languages);
+  if (languages) {
+    hd.setLanguages(languages);
+  }
   return hd;
 }
 

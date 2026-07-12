@@ -11,15 +11,15 @@ export function tName(key: I18nKey): ioBroker.StringOrTranslated {
   return I18n.getTranslatedObject(key);
 }
 
-export function resolveLanguages(systemLang: string, country: string): string[] {
+// Takes the already-built date-holidays instance (its getLanguages() is country-scoped) so the
+// caller need not construct a throwaway second instance just to detect languages (audit L4).
+export function resolveLanguages(systemLang: string, holidays: Holidays): string[] {
   const lang = systemLang.toLowerCase().split("-")[0];
   if (!SUPPORTED_LANGS.includes(lang)) {
     return ["en"];
   }
 
-  const h = new Holidays(country);
-  const available = h.getLanguages();
-  if (available.includes(lang)) {
+  if (holidays.getLanguages().includes(lang)) {
     return lang === "en" ? ["en"] : [lang, "en"];
   }
   return ["en"];

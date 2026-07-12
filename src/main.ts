@@ -46,10 +46,14 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         return;
       }
 
-      const languages = resolveLanguages(sysConfig.language, config.country);
+      // Build the date-holidays instance once and reuse it for language detection, scope checks
+      // and computation. getLanguages() is country-scoped, so the full-scope instance answers it
+      // just as well — no throwaway second instance (audit finding L4).
+      const hd = createHolidaysInstance(config);
+      const languages = resolveLanguages(sysConfig.language, hd);
+      hd.setLanguages(languages);
       this.log.debug(`System language: ${oneLine(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
 
-      const hd = createHolidaysInstance(config, languages);
       for (const issue of detectScopeIssues(config, languages, hd)) {
         if (issue.kind === "country") {
           this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
@@ -64,7 +68,7 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         }
       }
 
-      const computed = computeHolidays(config, languages, undefined, hd);
+      const computed = computeHolidays(config, languages, { instance: hd });
       if (computed.unmatchedExcludes.length > 0) {
         this.log.warn(
           `These excluded holidays no longer match any holiday (possibly renamed by a date-holidays update): ${oneLine(

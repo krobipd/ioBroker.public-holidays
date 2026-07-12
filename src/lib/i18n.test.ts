@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import Holidays from "date-holidays";
 
 vi.mock("@iobroker/adapter-core", () => ({
   I18n: {
@@ -50,79 +51,79 @@ describe("i18n completeness", () => {
 
 describe("resolveLanguages", () => {
   it("returns [de, en] for German system with DE country", () => {
-    const langs = resolveLanguages("de", "DE");
+    const langs = resolveLanguages("de", new Holidays("DE"));
     expect(langs).toEqual(["de", "en"]);
   });
 
   it("returns [en] for English system", () => {
-    const langs = resolveLanguages("en", "DE");
+    const langs = resolveLanguages("en", new Holidays("DE"));
     expect(langs).toEqual(["en"]);
   });
 
   it("returns [en] for unsupported language", () => {
-    const langs = resolveLanguages("ja", "JP");
+    const langs = resolveLanguages("ja", new Holidays("JP"));
     expect(langs).toEqual(["en"]);
   });
 
   it("handles language with region code (de-AT)", () => {
-    const langs = resolveLanguages("de-AT", "AT");
+    const langs = resolveLanguages("de-AT", new Holidays("AT"));
     expect(langs).toEqual(["de", "en"]);
   });
 
   it("returns [fr, en] for French system with FR country", () => {
-    const langs = resolveLanguages("fr", "FR");
+    const langs = resolveLanguages("fr", new Holidays("FR"));
     expect(langs).toEqual(["fr", "en"]);
   });
 
   it("returns [it, en] for Italian system with IT country", () => {
-    const langs = resolveLanguages("it", "IT");
+    const langs = resolveLanguages("it", new Holidays("IT"));
     expect(langs).toEqual(["it", "en"]);
   });
 
   it("returns [es, en] for Spanish system with ES country", () => {
-    const langs = resolveLanguages("es", "ES");
+    const langs = resolveLanguages("es", new Holidays("ES"));
     expect(langs).toEqual(["es", "en"]);
   });
 
   it("handles empty language string", () => {
-    const langs = resolveLanguages("", "DE");
+    const langs = resolveLanguages("", new Holidays("DE"));
     expect(langs).toEqual(["en"]);
   });
 
   it("handles uppercase language", () => {
-    const langs = resolveLanguages("DE", "DE");
+    const langs = resolveLanguages("DE", new Holidays("DE"));
     expect(langs).toEqual(["de", "en"]);
   });
 
   it("returns [en] when country doesn't support requested language", () => {
     // Chinese for a country that might not have zh translations
-    const langs = resolveLanguages("zh", "DE");
+    const langs = resolveLanguages("zh", new Holidays("DE"));
     // date-holidays for DE only has de+en
     expect(langs).toEqual(["en"]);
   });
 
   it("returns [en] as fallback for unknown language code", () => {
-    const langs = resolveLanguages("xx", "DE");
+    const langs = resolveLanguages("xx", new Holidays("DE"));
     expect(langs).toEqual(["en"]);
   });
 
   it("pt supported for PT country", () => {
-    const langs = resolveLanguages("pt", "PT");
+    const langs = resolveLanguages("pt", new Holidays("PT"));
     expect(langs[0]).toBe("pt");
   });
 
   it("nl supported for NL country", () => {
-    const langs = resolveLanguages("nl", "NL");
+    const langs = resolveLanguages("nl", new Holidays("NL"));
     expect(langs[0]).toBe("nl");
   });
 
   it("pl supported for PL country", () => {
-    const langs = resolveLanguages("pl", "PL");
+    const langs = resolveLanguages("pl", new Holidays("PL"));
     expect(langs[0]).toBe("pl");
   });
 
   it("ru supported for RU country", () => {
-    const langs = resolveLanguages("ru", "RU");
+    const langs = resolveLanguages("ru", new Holidays("RU"));
     expect(langs[0]).toBe("ru");
   });
 });
