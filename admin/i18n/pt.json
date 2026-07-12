@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Depois de amanhã",
   "next": "Próximo feriado",
   "name": "Nome do feriado",
-  "boolean": "É feriado",
+  "isHoliday": "É feriado",
   "date": "Data",
   "daysUntil": "Dias até ao feriado"
 }

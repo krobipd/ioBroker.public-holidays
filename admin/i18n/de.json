@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Übermorgen",
   "next": "Nächster Feiertag",
   "name": "Feiertagsname",
-  "boolean": "Ist ein Feiertag",
+  "isHoliday": "Ist ein Feiertag",
   "date": "Datum",
   "daysUntil": "Tage bis zum Feiertag"
 }

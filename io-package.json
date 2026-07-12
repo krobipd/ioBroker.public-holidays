@@ -233,7 +233,7 @@
       "native": {}
     },
     {
-      "_id": "today.boolean",
+      "_id": "today.isHoliday",
       "type": "state",
       "common": {
         "name": {
@@ -303,7 +303,7 @@
       "native": {}
     },
     {
-      "_id": "yesterday.boolean",
+      "_id": "yesterday.isHoliday",
       "type": "state",
       "common": {
         "name": {
@@ -373,7 +373,7 @@
       "native": {}
     },
     {
-      "_id": "tomorrow.boolean",
+      "_id": "tomorrow.isHoliday",
       "type": "state",
       "common": {
         "name": {
@@ -443,7 +443,7 @@
       "native": {}
     },
     {
-      "_id": "dayAfterTomorrow.boolean",
+      "_id": "dayAfterTomorrow.isHoliday",
       "type": "state",
       "common": {
         "name": {
@@ -513,7 +513,7 @@
       "native": {}
     },
     {
-      "_id": "next.boolean",
+      "_id": "next.isHoliday",
       "type": "state",
       "common": {
         "name": {

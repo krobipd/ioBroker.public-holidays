@@ -2,8 +2,8 @@ import type { ComputedHolidays, DayInfo, NextHoliday } from "./types";
 import { tName, type I18nKey } from "./i18n";
 
 const DAY_CHANNELS = ["today", "yesterday", "tomorrow", "dayAfterTomorrow"] as const;
-const DAY_FIELDS = ["name", "boolean"] as const;
-const NEXT_FIELDS = ["name", "boolean", "date", "daysUntil"] as const;
+const DAY_FIELDS = ["name", "isHoliday"] as const;
+const NEXT_FIELDS = ["name", "isHoliday", "date", "daysUntil"] as const;
 
 interface StateSpec {
   type: ioBroker.CommonType;
@@ -15,7 +15,7 @@ interface StateSpec {
 
 const FIELD_SPECS: Record<string, StateSpec> = {
   name: { type: "string", role: "text", read: true, write: false },
-  boolean: { type: "boolean", role: "indicator", read: true, write: false },
+  isHoliday: { type: "boolean", role: "indicator", read: true, write: false },
   date: { type: "string", role: "date", read: true, write: false },
   daysUntil: { type: "number", role: "value.interval", read: true, write: false, unit: "days" },
 };
@@ -37,6 +37,12 @@ const DEPRECATED_STATES = [
   "next.type",
   "next.id",
   "next.duration",
+  // Renamed to *.isHoliday in v0.11.0 (state named for its meaning, not its type).
+  "today.boolean",
+  "yesterday.boolean",
+  "tomorrow.boolean",
+  "dayAfterTomorrow.boolean",
+  "next.boolean",
 ];
 
 export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter): Promise<void> {
@@ -99,15 +105,15 @@ async function ensureState(adapter: ioBroker.Adapter, channel: string, field: st
   );
 }
 
-// Map state-field name → value getter (bridges field id "boolean" ↔ property "isHoliday").
+// Map state-field name → value getter.
 const DAY_VALUE: Record<string, (d: DayInfo) => string | boolean> = {
   name: d => d.name,
-  boolean: d => d.isHoliday,
+  isHoliday: d => d.isHoliday,
 };
 
 const NEXT_VALUE: Record<string, (n: NextHoliday) => string | boolean | number> = {
   name: n => n.name,
-  boolean: n => n.isHoliday,
+  isHoliday: n => n.isHoliday,
   date: n => n.date,
   daysUntil: n => n.daysUntil,
 };

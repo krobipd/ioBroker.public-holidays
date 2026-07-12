@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Day after tomorrow",
   "next": "Next holiday",
   "name": "Holiday name",
-  "boolean": "Is a holiday",
+  "isHoliday": "Is a holiday",
   "date": "Date",
   "daysUntil": "Days until holiday"
 }

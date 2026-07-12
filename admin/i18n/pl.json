@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Pojutrze",
   "next": "Następne święto",
   "name": "Nazwa święta",
-  "boolean": "Jest świętem",
+  "isHoliday": "Jest świętem",
   "date": "Data",
   "daysUntil": "Dni do święta"
 }

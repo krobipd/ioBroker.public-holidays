@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Overmorgen",
   "next": "Volgende feestdag",
   "name": "Naam feestdag",
-  "boolean": "Is een feestdag",
+  "isHoliday": "Is een feestdag",
   "date": "Datum",
   "daysUntil": "Dagen tot feestdag"
 }

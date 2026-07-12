@@ -66,19 +66,19 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 public-holidays.0.
 ├── today.
 │   ├── name         string    "Karfreitag" / "Good Friday"
-│   └── boolean      boolean   true / false
+│   └── isHoliday    boolean   true / false
 ├── yesterday.
 │   ├── name         string
-│   └── boolean      boolean
+│   └── isHoliday    boolean
 ├── tomorrow.
 │   ├── name         string
-│   └── boolean      boolean
+│   └── isHoliday    boolean
 ├── dayAfterTomorrow.
 │   ├── name         string
-│   └── boolean      boolean
+│   └── isHoliday    boolean
 └── next.
     ├── name         string    next holiday name (localized)
-    ├── boolean      boolean   true when an upcoming holiday exists
+    ├── isHoliday    boolean   true when an upcoming holiday exists
     ├── date         string    "2026-12-25" (ISO date)
     └── daysUntil    number    days until holiday
 ```

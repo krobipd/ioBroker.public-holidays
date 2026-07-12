@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Післязавтра",
   "next": "Наступне свято",
   "name": "Назва свята",
-  "boolean": "Є святом",
+  "isHoliday": "Є святом",
   "date": "Дата",
   "daysUntil": "Днів до свята"
 }

@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "后天",
   "next": "下一个假日",
   "name": "假日名称",
-  "boolean": "是假日",
+  "isHoliday": "是假日",
   "date": "日期",
   "daysUntil": "距假日天数"
 }

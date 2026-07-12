@@ -60,10 +60,10 @@ describe("ensureObjects", () => {
     expect(channelIds.length).toBe(5);
   });
 
-  it("creates today states (name, boolean)", async () => {
+  it("creates today states (name, isHoliday)", async () => {
     await ensureObjects(adapter as any);
     expect(adapter.objects["today.name"]).toBeDefined();
-    expect(adapter.objects["today.boolean"]).toBeDefined();
+    expect(adapter.objects["today.isHoliday"]).toBeDefined();
     expect(adapter.objects["today.id"]).toBeUndefined();
     expect(adapter.objects["today.region"]).toBeUndefined();
     expect(adapter.objects["today.type"]).toBeUndefined();
@@ -85,8 +85,8 @@ describe("ensureObjects", () => {
     await ensureObjects(adapter as any);
     const nameObj = adapter.objects["today.name"] as any;
     expect(nameObj.common.type).toBe("string");
-    const boolObj = adapter.objects["today.boolean"] as any;
-    expect(boolObj.common.type).toBe("boolean");
+    const holidayObj = adapter.objects["today.isHoliday"] as any;
+    expect(holidayObj.common.type).toBe("boolean");
     const durObj = adapter.objects["next.daysUntil"] as any;
     expect(durObj.common.type).toBe("number");
   });
@@ -95,8 +95,8 @@ describe("ensureObjects", () => {
     await ensureObjects(adapter as any);
     const dateObj = adapter.objects["next.date"] as any;
     expect(dateObj.common.role).toBe("date");
-    const boolObj = adapter.objects["today.boolean"] as any;
-    expect(boolObj.common.role).toBe("indicator");
+    const holidayObj = adapter.objects["today.isHoliday"] as any;
+    expect(holidayObj.common.role).toBe("indicator");
     const daysObj = adapter.objects["next.daysUntil"] as any;
     expect(daysObj.common.role).toBe("value.interval");
     expect(daysObj.common.unit).toBe("days");
@@ -160,6 +160,33 @@ describe("cleanupDeprecatedStates", () => {
     expect(deleted.length).toBe(3);
   });
 
+  it("removes the pre-0.11.0 *.boolean states on upgrade (renamed to *.isHoliday)", async () => {
+    // Upgrade path: a v0.10.0 install carries the old today.boolean … next.boolean.
+    // They must be deleted so only the renamed *.isHoliday states remain.
+    const oldBooleanStates = [
+      "today.boolean",
+      "yesterday.boolean",
+      "tomorrow.boolean",
+      "dayAfterTomorrow.boolean",
+      "next.boolean",
+    ];
+    const existingObjects: Record<string, unknown> = Object.fromEntries(
+      oldBooleanStates.map(id => [id, { type: "state" }]),
+    );
+    const deleted: string[] = [];
+    const adapter = {
+      getObjectAsync: vi.fn(async (id: string) => existingObjects[id] ?? null),
+      delObjectAsync: vi.fn(async (id: string) => {
+        deleted.push(id);
+      }),
+      log: { debug: vi.fn() },
+    };
+    await cleanupDeprecatedStates(adapter as any);
+    for (const id of oldBooleanStates) {
+      expect(deleted, `${id} must be removed on upgrade`).toContain(id);
+    }
+  });
+
   it("does nothing when no deprecated states exist", async () => {
     const adapter = {
       getObjectAsync: vi.fn(async () => null),
@@ -183,15 +210,15 @@ describe("publishStates", () => {
     expect(adapter.states["today.name"]).toEqual({ val: "Neujahr", ack: true });
   });
 
-  it("publishes today boolean", async () => {
+  it("publishes today isHoliday", async () => {
     await publishStates(adapter as any, makeComputed());
-    expect(adapter.states["today.boolean"]).toEqual({ val: true, ack: true });
+    expect(adapter.states["today.isHoliday"]).toEqual({ val: true, ack: true });
   });
 
   it("publishes empty yesterday", async () => {
     await publishStates(adapter as any, makeComputed());
     expect(adapter.states["yesterday.name"]).toEqual({ val: "", ack: true });
-    expect(adapter.states["yesterday.boolean"]).toEqual({ val: false, ack: true });
+    expect(adapter.states["yesterday.isHoliday"]).toEqual({ val: false, ack: true });
   });
 
   it("publishes next holiday date", async () => {

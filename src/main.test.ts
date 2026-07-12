@@ -150,7 +150,7 @@ describe("onReady — happy path", () => {
 
     await internal.onReady();
 
-    expect(stub.states.get("public-holidays.0.today.boolean")).toEqual({ val: true, ack: true });
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: true, ack: true });
     expect(stub.states.get("public-holidays.0.today.name")?.val).toBe("Neujahr");
     expect(stub.states.get("public-holidays.0.next.date")?.val).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(typeof stub.states.get("public-holidays.0.next.daysUntil")?.val).toBe("number");
@@ -166,9 +166,9 @@ describe("onReady — happy path", () => {
 
     await internal.onReady();
 
-    expect(stub.states.get("public-holidays.0.today.boolean")).toEqual({ val: false, ack: true });
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
     expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
-    expect(stub.states.get("public-holidays.0.next.boolean")?.val).toBe(true);
+    expect(stub.states.get("public-holidays.0.next.isHoliday")?.val).toBe(true);
   });
 
   it("creates all 17 objects (5 channels + 12 states)", async () => {
@@ -232,7 +232,7 @@ describe("onReady — country detection chain", () => {
     expect(logsOf(stub, "info").some(m => m.includes("Using system country: AT"))).toBe(true);
     // Oct 26 (Nationalfeiertag) is public in AT but not DE — asserting today=holiday
     // proves the resolved AT data actually flowed through compute, not just detection.
-    expect(stub.states.get("public-holidays.0.today.boolean")?.val).toBe(true);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")?.val).toBe(true);
     expect(stub.states.get("public-holidays.0.today.name")?.val).not.toBe("");
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });

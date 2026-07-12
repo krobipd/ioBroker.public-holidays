@@ -22,7 +22,7 @@
   "dayAfterTomorrow": "Pasado mañana",
   "next": "Próximo festivo",
   "name": "Nombre del festivo",
-  "boolean": "Es festivo",
+  "isHoliday": "Es festivo",
   "date": "Fecha",
   "daysUntil": "Días hasta el festivo"
 }
