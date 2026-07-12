@@ -33,6 +33,7 @@ coverage/
 # Admin custom component (built at release, published to npm)
 /admin/custom
 /src-admin/build
+/src-admin/.__mf__temp
 /src-admin/node_modules
 /src-admin/package-lock.json
 .dev-server/
