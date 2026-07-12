@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "news": {
+      "0.11.0": {
+        "en": "Breaking change: the states that flag whether each day is a holiday were renamed for clarity. Update any scripts or views that read them.",
+        "de": "Breaking Change: Die Datenpunkte, die anzeigen ob ein Tag ein Feiertag ist, wurden zur Klarheit umbenannt. Passe Skripte oder Ansichten an, die sie lesen.",
+        "ru": "Важное изменение: состояния, показывающие, является ли день праздником, переименованы для ясности. Обновите скрипты, которые их читают.",
+        "pt": "Alteração incompatível: os estados que indicam se um dia é feriado foram renomeados para maior clareza. Atualize scripts ou vistas que os leem.",
+        "nl": "Ingrijpende wijziging: de states die aangeven of een dag een feestdag is, zijn hernoemd voor de duidelijkheid. Pas scripts of weergaven aan die ze lezen.",
+        "fr": "Changement incompatible : les états indiquant si un jour est férié ont été renommés pour plus de clarté. Adaptez les scripts qui les lisent.",
+        "it": "Modifica incompatibile: gli stati che indicano se un giorno è festivo sono stati rinominati per chiarezza. Aggiorna gli script o le viste che li leggono.",
+        "es": "Cambio incompatible: los estados que indican si un día es festivo se renombraron para mayor claridad. Actualiza los scripts o vistas que los leen.",
+        "pl": "Zmiana niekompatybilna: stany wskazujące, czy dzień jest świętem, zmieniono dla jasności. Zaktualizuj skrypty lub widoki, które je odczytują.",
+        "uk": "Несумісна зміна: стани, що вказують, чи є день святом, перейменовано для ясності. Оновіть скрипти, що їх читають.",
+        "zh-cn": "重大变更：用于标识某天是否为假日的状态已重命名以更清晰。请更新读取它们的脚本或视图。"
+      },
       "0.10.0": {
         "en": "The next-holiday date and days-until now show correctly as a date and a day count in VIS and scripts, and the settings exclude list also offers next year's holidays.",
         "de": "Datum und Tage bis zum nächsten Feiertag werden nun in VIS und Skripten korrekt als Datum und Zahl angezeigt, und die Ausschlussliste bietet auch Feiertage des nächsten Jahres.",
@@ -80,19 +93,6 @@
         "pl": "Automatyczne wykrywanie kraju z ustawień ioBroker teraz działa; puste pole kraju nie oznacza już braku świąt. Dni pomostowe są wykrywane także na przełomie roku.",
         "uk": "Автовизначення країни з налаштувань ioBroker тепер працює; порожнє поле країни більше не лишає без свят. Перехідні дні визначаються й на стику років.",
         "zh-cn": "现在可从 ioBroker 系统设置自动检测国家；国家留空不再导致没有假日。跨年度的桥接日现在也能检测到。"
-      },
-      "0.5.2": {
-        "en": "Settings dropdown placeholders now appear in all 11 supported languages, not only English and German.",
-        "de": "Auswahl-Platzhalter in den Einstellungen erscheinen jetzt in allen 11 unterstützten Sprachen, nicht nur Englisch und Deutsch.",
-        "ru": "Подсказки в выпадающих списках настроек теперь отображаются на всех 11 поддерживаемых языках, а не только на английском и немецком.",
-        "pt": "Os marcadores dos menus suspensos nas configurações agora aparecem em todos os 11 idiomas suportados, não apenas inglês e alemão.",
-        "nl": "Tijdelijke aanduidingen in keuzelijsten verschijnen nu in alle 11 ondersteunde talen, niet alleen Engels en Duits.",
-        "fr": "Les libellés des menus déroulants des réglages s'affichent désormais dans les 11 langues prises en charge, pas seulement l'anglais et l'allemand.",
-        "it": "I segnaposto dei menu a tendina nelle impostazioni ora appaiono in tutte le 11 lingue supportate, non solo inglese e tedesco.",
-        "es": "Los marcadores de los menús desplegables ahora aparecen en los 11 idiomas admitidos, no solo inglés y alemán.",
-        "pl": "Etykiety zastępcze list rozwijanych w ustawieniach pojawiają się teraz we wszystkich 11 obsługiwanych językach, nie tylko angielskim i niemieckim.",
-        "uk": "Підказки у випадаючих списках налаштувань тепер відображаються всіма 11 підтримуваними мовами, а не лише англійською та німецькою.",
-        "zh-cn": "设置中下拉菜单的占位符现在以全部 11 种受支持的语言显示，而不仅是英语和德语。"
       }
     },
     "plugins": {

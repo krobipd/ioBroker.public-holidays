@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.7.0 (2026-06-07)
+
+- Added optional Sentry error reporting: crashes are sent to the developer so issues get fixed faster. Active only with ioBroker diagnostics enabled; anonymous.
+
 ## 0.6.0 (2026-05-31)
 
 - Country auto-detection now works reliably: if the country field is left empty, the country is taken from your ioBroker system settings. Previously this could leave all states empty.
