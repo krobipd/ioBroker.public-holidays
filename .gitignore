@@ -37,3 +37,8 @@ coverage/
 /src-admin/node_modules
 /src-admin/package-lock.json
 .dev-server/
+
+# Claude Code local files (not published)
+.claude/settings.local.json
+.claude/dev-history.md
+CLAUDE.local.md
