@@ -139,7 +139,7 @@ Bridge days appear in the state tree with the localized name matching the system
 
 ## Credits
 
-npm package originally registered by [Jey Cee](https://github.com/Jey-Cee). This adapter is a complete rewrite with no shared code.
+The idea goes back to the `feiertage` adapter by pix, which brought holiday data to ioBroker in the first place. Thanks to [Jey Cee](https://github.com/Jey-Cee) for handing over the `public-holidays` package name. This adapter is an independent implementation and shares no code with either.
 
 ## Support
 
