@@ -58,14 +58,3 @@ tasks.js                            → Komponenten-Build (@iobroker/build-tools
 Seit v0.11.0 zusätzlich: `exclude-options.test.ts` (pure ExcludeSelector-Logik: buildExcludeOptions/computeOrphanIds/enabledTypes, 12 Tests) + `exclude-type-flags-parity.test.ts` (Drift-Guard TYPE_FLAGS↔HOLIDAY_TYPES). `holiday-id-parity.test.ts` liest jetzt `exclude-options.ts` statt `ExcludeSelector.tsx`.
 
 Test-Breakdown: holiday-engine 110, i18n 39, main 25, state-publisher 23, error-utils 7 = 204 vitest. Ehrliche Coverage (`coverage.include`): 98,7 %.
-
-## Befehle
-
-```bash
-npm run build         # Production (esbuild)
-npm test              # vitest + @iobroker/testing packageFiles
-npm run coverage      # vitest run --coverage
-npm run lint          # ESLint
-npm run format:check  # Prettier --check
-npm run check         # tsc --noEmit
-```
