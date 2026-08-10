@@ -109,7 +109,7 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.12.0 (2026-08-10)
 
 - The holiday exclusion selector in the settings now works on Admin 8 — it was blank there since Admin 8.0.1, so this version requires Admin 8.
 - The next holiday — its name, date and days until — now appears in the log on every run, not only on a day that is itself a holiday.
@@ -135,10 +135,6 @@ Bridge days appear in the state tree with the localized name matching the system
 - A holiday exclude that no longer matches after a data update is now reported.
 - On a day with two holidays, the more important one is now shown.
 - Adds an optional bridge day between two midweek holidays.
-
-### 0.7.1 (2026-06-12)
-
-- Internal refactoring. No user-facing changes.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

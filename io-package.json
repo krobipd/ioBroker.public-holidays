@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.11.0",
+    "version": "0.12.0",
     "news": {
-      "NEXT": {
+      "0.12.0": {
         "en": "The holiday exclusion selector now works on Admin 8.",
         "de": "Die Feiertags-Ausschlussauswahl in den Einstellungen funktioniert wieder unter Admin 8.",
         "ru": "Селектор исключения праздников в настройках снова работает в Admin 8.",
