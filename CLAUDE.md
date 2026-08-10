@@ -59,6 +59,10 @@ Seit v0.11.0 zusätzlich: `exclude-options.test.ts` (pure ExcludeSelector-Logik:
 
 Test-Breakdown: holiday-engine 110, i18n 39, main 25, state-publisher 23, error-utils 7 = 204 vitest. Ehrliche Coverage (`coverage.include`): 98,7 %.
 
+## Versionshistorie
+
+Aktuelle Version: `io-package.json`. **User-facing Changelog:** `README.md` + `io-package.json:common.news` (11 Sprachen, handgeschrieben). **Interne Entwicklungs-Historie** (Findings, Root-Causes, verworfene Wege): `.claude/dev-history.md` — lokal, nicht git-getrackt, bewusst aus dieser Datei ausgelagert um sie schlank zu halten.
+
 ## Befehle
 
 ```bash
