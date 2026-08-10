@@ -255,7 +255,10 @@ const jsonConfig = {
           i18n: true,
           url: "custom/customComponents.js",
           name: "PublicHolidaysComponentSet/Components/ExcludeSelector",
-          bundlerType: "module",
+          // GUI API generation 2: the component is built against @iobroker/gui-components (React 19),
+          // and admin 8 reads mf-manifest.json to verify that. No bundlerType — generation-2 components
+          // are always ES modules — and the adapter requires admin >= 8.0.1 (admin-8-only, like govee).
+          guiApi: 2,
           xs: 12,
           sm: 12,
           md: 12,

@@ -3,7 +3,7 @@ import React from "react";
 import { Autocomplete, Box, Chip, TextField } from "@mui/material";
 
 import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from "@iobroker/json-config";
-import { I18n } from "@iobroker/adapter-react-v5";
+import { I18n } from "@iobroker/gui-components";
 
 import { buildExcludeOptions, computeOrphanIds, enabledTypes, type ExcludeOption } from "./exclude-options";
 
@@ -32,7 +32,7 @@ export default class ExcludeSelector extends ConfigGeneric<ConfigGenericProps, C
 
   renderItem(_error: string, disabled: boolean): React.JSX.Element {
     const options = this.buildOptions();
-    const value = (ConfigGeneric.getValue(this.props.data, this.props.attr!) as string[]) || [];
+    const value = (ConfigGeneric.getValue(this.props.data, this.props.attr) as string[]) || [];
     const selected = options.filter(o => value.includes(o.id));
     const orphanIds = computeOrphanIds(value, options);
 
@@ -48,7 +48,7 @@ export default class ExcludeSelector extends ConfigGeneric<ConfigGenericProps, C
           isOptionEqualToValue={(o, v) => o.id === v.id}
           onChange={(_e, newValue) => {
             const ids = newValue.map(o => o.id);
-            void this.onChange(this.props.attr!, [...ids, ...orphanIds]);
+            void this.onChange(this.props.attr, [...ids, ...orphanIds]);
           }}
           renderInput={params => (
             <TextField
@@ -69,7 +69,7 @@ export default class ExcludeSelector extends ConfigGeneric<ConfigGenericProps, C
                 size="small"
                 onDelete={() =>
                   void this.onChange(
-                    this.props.attr!,
+                    this.props.attr,
                     value.filter(v => v !== id),
                   )
                 }

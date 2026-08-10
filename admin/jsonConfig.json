@@ -4999,7 +4999,7 @@
           "i18n": true,
           "url": "custom/customComponents.js",
           "name": "PublicHolidaysComponentSet/Components/ExcludeSelector",
-          "bundlerType": "module",
+          "guiApi": 2,
           "xs": 12,
           "sm": 12,
           "md": 12,

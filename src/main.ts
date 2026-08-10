@@ -80,18 +80,16 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
 
       const nextText = computed.next.isHoliday
-        ? `${oneLine(computed.next.name)} in ${computed.next.daysUntil} days`
+        ? `${oneLine(computed.next.name)} on ${computed.next.date} (in ${computed.next.daysUntil} days)`
         : "no upcoming holiday";
       const summary = `Today: ${
         computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"
-      }, next: ${nextText}`;
-      // Only a day that is actually a holiday is a noteworthy event; the daily "no holiday" run
-      // stays at debug so the log is not a routine heartbeat (audit finding L3).
-      if (computed.today.isHoliday) {
-        this.log.info(summary);
-      } else {
-        this.log.debug(summary);
-      }
+      }, next holiday: ${nextText}`;
+      // Logged at info on every run — the start run and each daily schedule run — so the next
+      // holiday is always visible in the log (krobi 2026-08-10). This supersedes the earlier
+      // "no-holiday day stays at debug" choice (audit L3): on an adapter that runs once a day the
+      // single line is wanted, not a noisy heartbeat.
+      this.log.info(summary);
 
       await cleanupDeprecatedStates(this);
       await ensureObjects(this);

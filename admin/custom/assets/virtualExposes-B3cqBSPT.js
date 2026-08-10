@@ -1,0 +1,1 @@
+import{t as e}from"./virtual_mf-exposes___mfe_internal__PublicHolidaysComponentSet__customComponents_js-B8RFb_rQ.js";export{e as default};

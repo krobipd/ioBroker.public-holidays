@@ -11,7 +11,7 @@ import {
   Loader,
   type GenericAppProps,
   type GenericAppState,
-} from "@iobroker/adapter-react-v5";
+} from "@iobroker/gui-components";
 
 import ExcludeSelector from "./ExcludeSelector";
 
@@ -72,7 +72,11 @@ class App extends GenericApp<GenericAppProps, AppState> {
       "zh-cn": zhCNLocal,
     };
 
-    I18n.setTranslations(translations);
+    // setTranslations is deprecated and no longer registers anything; extendTranslations takes a
+    // FLAT dictionary plus the language it belongs to, so feed it one language at a time.
+    for (const [lang, dict] of Object.entries(translations)) {
+      I18n.extendTranslations(dict, lang as ioBroker.Languages);
+    }
     // @ts-expect-error userLanguage could exist
     const browserLang = (navigator.language || navigator.userLanguage || "en").toLowerCase();
     // Chinese translations live under the full "zh-cn" key; every other language under its

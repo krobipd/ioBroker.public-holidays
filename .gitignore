@@ -30,8 +30,9 @@ coverage/
 .env
 .env.local
 
-# Admin custom component (built at release, published to npm)
-/admin/custom
+# Admin custom component: the BUILT admin/custom/ is tracked (like build/) so a GitHub-URL install
+# carries the component — needed for this admin-8-only release, whose npm deploy stays blocked by
+# the version-gate until admin 8 is stable. Only the src-admin work dirs stay ignored.
 /src-admin/build
 /src-admin/.__mf__temp
 /src-admin/node_modules

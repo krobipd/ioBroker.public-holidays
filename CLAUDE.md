@@ -26,14 +26,14 @@ src/lib/
 └── error-utils.ts                 → errText + oneLine (Log/Sentry-Newline-Hygiene)
 admin/
 ├── jsonConfig.json                → 2 Tabs (Region + Holidays); Exclude-Feld = Custom-Komponente (type:custom), generiert durch generate-country-data.ts
-├── custom/                        → generierte MF-Komponente (customComponents.js + assets + i18n); .gitignore'd, via files[] im npm-Tarball
+├── custom/                        → generierte MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (admin-8-only, Verteilung per GitHub-URL bis Admin 8 stable)
 ├── i18n/<lang>.json               → Single-Source-of-Truth für UI- + State-Translations (31 Keys × 11 Sprachen)
 ├── public-holidays.svg            → Icon (SVG 256×256, transparent)
 src-admin/                          → Custom-Admin-Komponente (Module-Federation/Vite Remote, eigenes package.json + vite.config.ts)
 ├── src/ExcludeSelector.tsx        → dünner ConfigGeneric-Wrapper: liest Scope aus props.data, memoisiert die Optionsliste per Scope/Typ/Sprache, rendert Autocomplete + Orphan-Chips
 ├── src/exclude-options.ts         → PURE Logik (kein React/MUI): buildExcludeOptions (scope-exakt, date-holidays client-seitig, dedupe+MM-DD-Sort), computeOrphanIds, enabledTypes (defaultOn-Semantik = validateConfig), toHolidayId. Von vitest aus src/ importierbar → echte Unit-Tests (exclude-options.test.ts) + Drift-Guards (holiday-id-parity, exclude-type-flags-parity)
 ├── src/i18n/<lang>.json           → Komponenten-Übersetzungen (11 Sprachen)
-├── package.json                   → @module-federation/vite EXAKT 1.2.6 (Pin! Memory reference_iobroker_mf_custom_component)
+├── package.json                   → Gen-2/Admin-8-Stack (Migration 2026-08-10): @iobroker/gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType)
 scripts/
 ├── generate-country-data.ts       → Regeneriert jsonConfig: 206 Countries, 35 State-Panels, 29 Region-Panels + 1 Exclude-Custom-Komponente
 tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); prepublishOnly + before_commit + CI-Job admin-component
