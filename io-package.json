@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.12.0",
+    "version": "0.13.0",
     "news": {
-      "NEXT": {
+      "0.13.0": {
         "en": "The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the detected holidays.",
         "de": "Die Adapter-Einstellungen sind jetzt eine geführte Karte — Land, Region, Feiertagstypen und Ausschlüsse auf einer Seite, mit einer Live-Vorschau der erkannten Feiertage.",
         "ru": "Настройки адаптера теперь единая карточка — страна, регион, типы праздников и исключения на одной странице, с предпросмотром обнаруживаемых праздников.",

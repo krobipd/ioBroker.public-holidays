@@ -99,7 +99,7 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.13.0 (2026-08-13)
 
 - The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the holidays that will be detected.
 
@@ -121,13 +121,6 @@ Bridge days appear in the state tree with the localized name matching the system
 
 - The holiday exclude list now shows only your selected region's holidays, in your admin language and sorted by date — no longer every region of a country mixed alphabetically.
 - The false "excluded holidays no longer match" warning at startup is fixed; it now fires only for a holiday that genuinely no longer exists.
-
-### 0.8.0 (2026-06-25)
-
-- A misconfigured region/state is now reported instead of silently using country-level holidays.
-- A holiday exclude that no longer matches after a data update is now reported.
-- On a day with two holidays, the more important one is now shown.
-- Adds an optional bridge day between two midweek holidays.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
