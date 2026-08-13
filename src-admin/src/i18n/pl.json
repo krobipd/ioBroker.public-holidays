@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Lokalizacja",
+  "ph_hc_country_label": "Kraj",
+  "ph_hc_country_ph": "Wybierz kraj",
+  "ph_hc_state_label": "Województwo / Prowincja",
+  "ph_hc_region_label": "Region",
+  "ph_hc_autodetect": "Nie wybrano kraju — używany jest domyślny kraj systemu ioBroker: %s",
+  "ph_hc_types_title": "Rodzaje świąt",
+  "ph_hc_type_public": "Święta ustawowe",
+  "ph_hc_type_bank": "Święta bankowe",
+  "ph_hc_type_school": "Ferie szkolne",
+  "ph_hc_type_optional": "Święta opcjonalne",
+  "ph_hc_type_observance": "Dni pamięci",
+  "ph_hc_bridge_title": "Dni pomostowe",
+  "ph_hc_bridge_label": "Wykrywaj dni pomostowe",
+  "ph_hc_bridge_desc": "Dzień pomostowy to dzień roboczy między świętem a weekendem (np. piątek po święcie w czwartek)",
+  "ph_hc_exclude_title": "Wyklucz święta",
   "ph_excludeLabel": "Wykluczone święta",
   "ph_excludeSelectCountry": "Najpierw wybierz kraj",
-  "ph_excludeOrphans": "Poza bieżącym wyborem (kliknij, aby usunąć):"
+  "ph_excludeOrphans": "Poza bieżącym wyborem (kliknij, aby usunąć):",
+  "ph_hc_preview_title": "Wykryte święta",
+  "ph_hc_preview_count": "Wykryto %s świąt dla %s",
+  "ph_hc_preview_none": "Wybierz kraj, aby zobaczyć wykryte święta",
+  "ph_hc_bridge_day": "Dzień pomostowy"
 }

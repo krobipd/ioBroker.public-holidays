@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Locatie",
+  "ph_hc_country_label": "Land",
+  "ph_hc_country_ph": "Selecteer een land",
+  "ph_hc_state_label": "Provincie / Deelstaat",
+  "ph_hc_region_label": "Regio",
+  "ph_hc_autodetect": "Geen land geselecteerd — de ioBroker-systeemstandaard wordt gebruikt: %s",
+  "ph_hc_types_title": "Soorten feestdagen",
+  "ph_hc_type_public": "Officiële feestdagen",
+  "ph_hc_type_bank": "Bankfeestdagen",
+  "ph_hc_type_school": "Schoolvakanties",
+  "ph_hc_type_optional": "Optionele feestdagen",
+  "ph_hc_type_observance": "Herdenkingsdagen",
+  "ph_hc_bridge_title": "Brugdagen",
+  "ph_hc_bridge_label": "Brugdagen detecteren",
+  "ph_hc_bridge_desc": "Een brugdag is een werkdag tussen een feestdag en het weekend (bijv. vrijdag na een feestdag op donderdag)",
+  "ph_hc_exclude_title": "Feestdagen uitsluiten",
   "ph_excludeLabel": "Uitgesloten feestdagen",
   "ph_excludeSelectCountry": "Selecteer eerst een land",
-  "ph_excludeOrphans": "Niet in de huidige selectie (klik om te verwijderen):"
+  "ph_excludeOrphans": "Niet in de huidige selectie (klik om te verwijderen):",
+  "ph_hc_preview_title": "Gedetecteerde feestdagen",
+  "ph_hc_preview_count": "%s feestdagen gedetecteerd voor %s",
+  "ph_hc_preview_none": "Selecteer een land om gedetecteerde feestdagen te zien",
+  "ph_hc_bridge_day": "Brugdag"
 }

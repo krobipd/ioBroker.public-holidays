@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Местоположение",
+  "ph_hc_country_label": "Страна",
+  "ph_hc_country_ph": "Выберите страну",
+  "ph_hc_state_label": "Область / Провинция",
+  "ph_hc_region_label": "Регион",
+  "ph_hc_autodetect": "Страна не выбрана — используется системное значение ioBroker по умолчанию: %s",
+  "ph_hc_types_title": "Типы праздников",
+  "ph_hc_type_public": "Государственные праздники",
+  "ph_hc_type_bank": "Банковские праздники",
+  "ph_hc_type_school": "Школьные каникулы",
+  "ph_hc_type_optional": "Необязательные праздники",
+  "ph_hc_type_observance": "Памятные дни",
+  "ph_hc_bridge_title": "Промежуточные дни",
+  "ph_hc_bridge_label": "Определять промежуточные дни",
+  "ph_hc_bridge_desc": "Промежуточный день — рабочий день между праздником и выходными (напр. пятница после праздника в четверг)",
+  "ph_hc_exclude_title": "Исключить праздники",
   "ph_excludeLabel": "Исключённые праздники",
   "ph_excludeSelectCountry": "Сначала выберите страну",
-  "ph_excludeOrphans": "Нет в текущем выборе (нажмите, чтобы удалить):"
+  "ph_excludeOrphans": "Нет в текущем выборе (нажмите, чтобы удалить):",
+  "ph_hc_preview_title": "Обнаруженные праздники",
+  "ph_hc_preview_count": "Обнаружено праздников: %s за %s",
+  "ph_hc_preview_none": "Выберите страну, чтобы увидеть обнаруженные праздники",
+  "ph_hc_bridge_day": "Нерабочий день"
 }

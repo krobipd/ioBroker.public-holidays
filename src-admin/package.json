@@ -9,7 +9,7 @@
         "build": "tsc && vite build"
     },
     "dependencies": {
-        "date-holidays": "3.30.2"
+        "date-holidays": "3.34.1"
     },
     "devDependencies": {
         "@iobroker/build-tools": "^2.0.15",

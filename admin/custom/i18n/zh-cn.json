@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "位置",
+  "ph_hc_country_label": "国家",
+  "ph_hc_country_ph": "选择国家",
+  "ph_hc_state_label": "州 / 省",
+  "ph_hc_region_label": "地区",
+  "ph_hc_autodetect": "未选择国家 — 使用 ioBroker 系统默认值：%s",
+  "ph_hc_types_title": "节假日类型",
+  "ph_hc_type_public": "法定假日",
+  "ph_hc_type_bank": "银行假日",
+  "ph_hc_type_school": "学校假期",
+  "ph_hc_type_optional": "可选假日",
+  "ph_hc_type_observance": "纪念日",
+  "ph_hc_bridge_title": "桥接日",
+  "ph_hc_bridge_label": "检测桥接日",
+  "ph_hc_bridge_desc": "桥接日是介于假日和周末之间的工作日（例如周四假日后的周五）",
+  "ph_hc_exclude_title": "排除节假日",
   "ph_excludeLabel": "排除的节假日",
   "ph_excludeSelectCountry": "请先选择国家",
-  "ph_excludeOrphans": "不在当前选择中（点击删除）："
+  "ph_excludeOrphans": "不在当前选择中（点击删除）：",
+  "ph_hc_preview_title": "检测到的节假日",
+  "ph_hc_preview_count": "检测到 %s 个节假日（%s）",
+  "ph_hc_preview_none": "选择国家以查看检测到的节假日",
+  "ph_hc_bridge_day": "桥接日"
 }

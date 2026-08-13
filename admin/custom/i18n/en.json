@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Location",
+  "ph_hc_country_label": "Country",
+  "ph_hc_country_ph": "Select a country",
+  "ph_hc_state_label": "State / Province",
+  "ph_hc_region_label": "Region",
+  "ph_hc_autodetect": "No country selected — using the ioBroker system default: %s",
+  "ph_hc_types_title": "Holiday types",
+  "ph_hc_type_public": "Public holidays",
+  "ph_hc_type_bank": "Bank holidays",
+  "ph_hc_type_school": "School holidays",
+  "ph_hc_type_optional": "Optional holidays",
+  "ph_hc_type_observance": "Observance days",
+  "ph_hc_bridge_title": "Bridge days",
+  "ph_hc_bridge_label": "Detect bridge days",
+  "ph_hc_bridge_desc": "A bridge day is a working day between a holiday and a weekend (e.g. Friday after a Thursday holiday)",
+  "ph_hc_exclude_title": "Exclude holidays",
   "ph_excludeLabel": "Excluded holidays",
   "ph_excludeSelectCountry": "Select a country first",
-  "ph_excludeOrphans": "Not in the current selection (click to remove):"
+  "ph_excludeOrphans": "Not in the current selection (click to remove):",
+  "ph_hc_preview_title": "Detected holidays",
+  "ph_hc_preview_count": "%s holidays detected for %s",
+  "ph_hc_preview_none": "Select a country to see detected holidays",
+  "ph_hc_bridge_day": "Bridge day"
 }

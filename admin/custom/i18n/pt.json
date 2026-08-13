@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Localização",
+  "ph_hc_country_label": "País",
+  "ph_hc_country_ph": "Selecionar um país",
+  "ph_hc_state_label": "Estado / Província",
+  "ph_hc_region_label": "Região",
+  "ph_hc_autodetect": "Nenhum país selecionado — a usar a predefinição do sistema ioBroker: %s",
+  "ph_hc_types_title": "Tipos de feriados",
+  "ph_hc_type_public": "Feriados nacionais",
+  "ph_hc_type_bank": "Feriados bancários",
+  "ph_hc_type_school": "Férias escolares",
+  "ph_hc_type_optional": "Feriados opcionais",
+  "ph_hc_type_observance": "Dias comemorativos",
+  "ph_hc_bridge_title": "Dias ponte",
+  "ph_hc_bridge_label": "Detectar dias ponte",
+  "ph_hc_bridge_desc": "Um dia ponte é um dia útil entre um feriado e o fim de semana (ex. sexta-feira após um feriado na quinta-feira)",
+  "ph_hc_exclude_title": "Excluir feriados",
   "ph_excludeLabel": "Feriados excluídos",
   "ph_excludeSelectCountry": "Selecione primeiro um país",
-  "ph_excludeOrphans": "Fora da seleção atual (clique para remover):"
+  "ph_excludeOrphans": "Fora da seleção atual (clique para remover):",
+  "ph_hc_preview_title": "Feriados detetados",
+  "ph_hc_preview_count": "%s feriados detetados para %s",
+  "ph_hc_preview_none": "Selecione um país para ver os feriados detetados",
+  "ph_hc_bridge_day": "Dia de ponte"
 }

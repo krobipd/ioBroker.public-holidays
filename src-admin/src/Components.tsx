@@ -1,3 +1,3 @@
-import ExcludeSelector from "./ExcludeSelector";
+import HolidayConfig from "./HolidayConfig";
 
-export default { ExcludeSelector };
+export default { HolidayConfig };

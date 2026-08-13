@@ -183,9 +183,10 @@ function getFilteredHolidays(
 }
 
 // Every holiday id that occurs anywhere in a country: the baseline plus every state and
-// region. Mirrors scripts/generate-country-data.ts so the runtime "unmatched exclude"
-// check stays consistent with the options the admin dropdown offers. Uses date-holidays'
-// default language, exactly like the generator, so name-derived ids line up.
+// region. Aggregates the same scopes the admin exclude tier offers (src-admin
+// buildExcludeOptions across all state/region combinations) so the runtime "unmatched exclude"
+// check stays consistent with what the card lets the user pick. Ids are rule-based
+// (language-independent), so this default-language instance lines up with the card's localized one.
 function collectCountryWideIds(country: string, years: number[]): Set<string> {
   const ids = new Set<string>();
   const base = new Holidays();

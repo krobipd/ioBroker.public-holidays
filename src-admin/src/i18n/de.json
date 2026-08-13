@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Standort",
+  "ph_hc_country_label": "Land",
+  "ph_hc_country_ph": "Land auswählen",
+  "ph_hc_state_label": "Bundesland / Kanton",
+  "ph_hc_region_label": "Region",
+  "ph_hc_autodetect": "Kein Land gewählt — es wird der ioBroker-Systemstandard verwendet: %s",
+  "ph_hc_types_title": "Feiertagstypen",
+  "ph_hc_type_public": "Gesetzliche Feiertage",
+  "ph_hc_type_bank": "Bankfeiertage",
+  "ph_hc_type_school": "Schulferien",
+  "ph_hc_type_optional": "Optionale Feiertage",
+  "ph_hc_type_observance": "Gedenktage",
+  "ph_hc_bridge_title": "Brückentage",
+  "ph_hc_bridge_label": "Brückentage erkennen",
+  "ph_hc_bridge_desc": "Ein Brückentag ist ein Arbeitstag zwischen einem Feiertag und dem Wochenende (z.B. Freitag nach einem Donnerstags-Feiertag)",
+  "ph_hc_exclude_title": "Feiertage ausschließen",
   "ph_excludeLabel": "Ausgeschlossene Feiertage",
   "ph_excludeSelectCountry": "Zuerst ein Land wählen",
-  "ph_excludeOrphans": "Nicht in der aktuellen Auswahl (zum Entfernen klicken):"
+  "ph_excludeOrphans": "Nicht in der aktuellen Auswahl (zum Entfernen klicken):",
+  "ph_hc_preview_title": "Erkannte Feiertage",
+  "ph_hc_preview_count": "%s Feiertage für %s erkannt",
+  "ph_hc_preview_none": "Land auswählen, um erkannte Feiertage zu sehen",
+  "ph_hc_bridge_day": "Brückentag"
 }

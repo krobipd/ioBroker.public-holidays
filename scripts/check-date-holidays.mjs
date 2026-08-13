@@ -1,41 +1,62 @@
 #!/usr/bin/env node
-// Release check: surface whether the bundled `date-holidays` library is the latest
-// published version. date-holidays ships holiday DATA (new countries, changed dates)
-// in patch/minor releases — those are kept current automatically by pre-release's
-// `npm update` (in-range), and `npm run generate` (next before_commit hook) re-derives
-// admin/jsonConfig.json from whatever version is bundled. Wired into the release flow
-// via .releaseconfig.json:before_commit.
+// Release gate: keep the bundled `date-holidays` current AND keep the admin card's bundled copy
+// in lockstep with the runtime's. Wired into the release flow via .releaseconfig.json:before_commit.
 //
-// Behaviour (non-blocking by design):
-//   - installed == latest        -> pass quietly
-//   - installed  < latest        -> WARN. In practice this only happens when a new
-//                                    MAJOR is available (in-range gaps are closed by
-//                                    npm update). A major is an API change that needs a
-//                                    deliberate migration, so it must not auto-block an
-//                                    unrelated hotfix release — it is surfaced loudly here.
-//   - npm unreachable (offline)  -> warn + pass
+// date-holidays ships holiday DATA (new countries, changed dates) in patch/minor releases. The
+// root dependency is a caret range kept current by pre-release's `npm update` (in-range).
+//
+// Currency (non-blocking): installed < latest only happens for a new MAJOR (in-range gaps are
+// closed by npm update). A major is an API change that needs a deliberate migration, so it is
+// surfaced loudly but must not auto-block an unrelated hotfix release.
+//
+// Parity (the reason this gate touches src-admin): the admin card (src-admin) bundles its OWN
+// date-holidays at build time and computes the country/state/region cascade + live preview from
+// it, while the runtime uses the root-installed copy. src-admin is exact-pinned and ignored by
+// dependabot, so it never moves on its own — if the two drift the card can offer a scope the
+// runtime doesn't compute. This gate pins src-admin to the version the runtime actually resolves
+// and installs it, so the shipped card always sees the same holiday data. The independent guard
+// src/lib/date-holidays-version-parity.test.ts fails CI if this ever drifts.
 import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
+import { readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const require = createRequire(import.meta.url);
-const installed = require("date-holidays/package.json").version;
+const requireFrom = createRequire(import.meta.url);
+const installed = requireFrom("date-holidays/package.json").version;
 
-let latest;
+// --- 1. currency check against npm (non-blocking) ---
+let latest = null;
 try {
   latest = execSync("npm view date-holidays version", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 } catch (e) {
   console.warn(`⚠️  Could not query npm for the latest date-holidays version (${e.message}). Skipping currency check.`);
-  process.exit(0);
 }
-
-if (installed !== latest) {
+if (latest && installed !== latest) {
   console.warn(
     `⚠️  date-holidays is behind: installed ${installed}, latest ${latest}.\n` +
       `   In-range updates are applied automatically; a remaining gap means a new MAJOR is\n` +
       `   available. Review it deliberately (not blocking this release):\n` +
-      `     npm install date-holidays@latest && npm run generate   (then re-run the tests)`,
+      `     npm install date-holidays@latest   (then re-run the tests)`,
   );
-  process.exit(0);
+} else if (latest) {
+  console.log(`✓ date-holidays is up to date (${installed}).`);
 }
 
-console.log(`✓ date-holidays is up to date (${installed}).`);
+// --- 2. pin the admin card's bundled date-holidays to the runtime's version ---
+const adapterRoot = fileURLToPath(new URL("..", import.meta.url));
+const adminPkgPath = fileURLToPath(new URL("../src-admin/package.json", import.meta.url));
+const adminSrc = readFileSync(adminPkgPath, "utf8");
+const pinRe = /("date-holidays":\s*")([^"]+)(")/;
+const adminPinned = adminSrc.match(pinRe)?.[2];
+if (adminPinned === undefined) {
+  console.error("✗ Could not find the date-holidays pin in src-admin/package.json.");
+  process.exit(1);
+}
+if (adminPinned !== installed) {
+  console.log(`↻ Syncing src-admin date-holidays ${adminPinned} → ${installed} (must match the runtime).`);
+  writeFileSync(adminPkgPath, adminSrc.replace(pinRe, `$1${installed}$3`));
+  execSync("npm install", { cwd: `${adapterRoot}src-admin`, stdio: "inherit" });
+  console.log(`✓ src-admin date-holidays synced to ${installed} — 'git add src-admin/package.json' before commit.`);
+} else {
+  console.log(`✓ src-admin date-holidays matches the runtime (${installed}).`);
+}

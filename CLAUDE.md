@@ -25,18 +25,19 @@ src/lib/
 ├── types.ts                       → AdapterConfig, DayInfo, NextHoliday, ComputedHolidays
 └── error-utils.ts                 → errText + oneLine (Log/Sentry-Newline-Hygiene)
 admin/
-├── jsonConfig.json                → 2 Tabs (Region + Holidays); Exclude-Feld = Custom-Komponente (type:custom), generiert durch generate-country-data.ts
-├── custom/                        → generierte MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (admin-8-only, Verteilung per GitHub-URL bis Admin 8 stable)
-├── i18n/<lang>.json               → Single-Source-of-Truth für UI- + State-Translations (31 Keys × 11 Sprachen)
+├── jsonConfig.json                → statischer Mini-Wrapper: EIN type:custom-Element (_holidayCard, guiApi:2) = die geführte Karte. Von 145 KB (206 Länder × Select-Panels) auf ~15 Zeilen — die Kaskade läuft jetzt client-seitig
+├── custom/                        → gebaute MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (admin-8-only, Verteilung per GitHub-URL bis Admin 8 stable)
+├── i18n/<lang>.json               → NUR State-Namen-Translations (9 Keys × 11 Sprachen) für tName + io-package-Sync; die Karten-Labels liegen in src-admin/src/i18n
 ├── public-holidays.svg            → Icon (SVG 256×256, transparent)
 src-admin/                          → Custom-Admin-Komponente (Module-Federation/Vite Remote, eigenes package.json + vite.config.ts)
-├── src/ExcludeSelector.tsx        → dünner ConfigGeneric-Wrapper: liest Scope aus props.data, memoisiert die Optionsliste per Scope/Typ/Sprache, rendert Autocomplete + Orphan-Chips
-├── src/exclude-options.ts         → PURE Logik (kein React/MUI): buildExcludeOptions (scope-exakt, date-holidays client-seitig, dedupe+MM-DD-Sort), computeOrphanIds, enabledTypes (defaultOn-Semantik = validateConfig), toHolidayId. Von vitest aus src/ importierbar → echte Unit-Tests (exclude-options.test.ts) + Drift-Guards (holiday-id-parity, exclude-type-flags-parity)
-├── src/i18n/<lang>.json           → Komponenten-Übersetzungen (11 Sprachen)
-├── package.json                   → Gen-2/Admin-8-Stack (Migration 2026-08-10): @iobroker/gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType)
-scripts/
-├── generate-country-data.ts       → Regeneriert jsonConfig: 206 Countries, 35 State-Panels, 29 Region-Panels + 1 Exclude-Custom-Komponente
+├── src/HolidayConfig.tsx          → dünner ConfigGeneric-Mount (govee ConnectionConfig-Muster): reicht props.data an das Panel, schreibt jedes Feld via this.onChange(attr,val) — besitzt ALLE native-Felder, keine Migration (gleiche Feldnamen)
+├── src/HolidayPanel.tsx           → plain React (kein ConfigGeneric, jsdom-freundlich): die geführte Stufen-Karte (Standort/Typen/Brückentage/Ausschluss/Live-Vorschau). Kein Draft-Puffer (nur diskrete Selects/Checkboxen/Chips). Leert state/region REAKTIV beim Landwechsel (sonst stale hinter altem Scope)
+├── src/scope-options.ts           → PURE Logik: getCountry/State/RegionOptions (Kaskade, client-seitig date-holidays) + buildPreviewHolidays (spiegelt getFilteredHolidays) + detectPreviewBridgeDays (spiegelt detectBridgeDays). Nutzt toHolidayId/TYPE_FLAGS aus exclude-options (.js-Import wegen root-tsc node16). Von vitest aus src/ testbar
+├── src/exclude-options.ts         → PURE Logik: buildExcludeOptions (scope-exakt, dedupe+MM-DD-Sort), computeOrphanIds, enabledTypes (defaultOn = validateConfig), toHolidayId. Drift-Guards: holiday-id-parity, exclude-type-flags-parity, scope-options-bridge-parity
+├── src/i18n/<lang>.json           → Karten-Übersetzungen (23 Keys × 11 Sprachen: ph_hc_* + ph_exclude*)
+├── package.json                   → Gen-2/Admin-8-Stack: gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType). date-holidays exakt-gepinnt = root-installierte Version (Wächter: date-holidays-version-parity.test.ts)
 tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); prepublishOnly + before_commit + CI-Job admin-component
+scripts/check-date-holidays.mjs     → Release-Gate: date-holidays-Currency (npm-latest) UND pinnt src-admin auf die Runtime-Version (die client-seitige Kaskade muss dieselbe Library sehen wie der Adapter)
 ../scripts/sync-iopackage-from-i18n.py → regeneriert io-package.json:instanceObjects.common.name aus admin/i18n/ (zentral, source: admin-i18n)
 ```
 
@@ -44,7 +45,7 @@ tasks.js                            → Komponenten-Build (@iobroker/build-tools
 
 1. **Schedule-Mode mit `allowInit: true`** — js-controller triggert per Cron (`0 0 * * *`) und einmalig bei Config-Änderung/Start. Adapter berechnet, publiziert, ruft `this.stop?.()` und beendet sich. Kein Daemon, kein Timer, kein Speicherverbrauch zwischen Runs.
 2. **date-holidays als einzige Engine** — 206 Länder, offline, stabile API seit 5+ Jahren, ISC-Lizenz (Daten CC-BY-SA-3.0 laut LICENSE-Datei; die package.json-SPDX `(ISC AND CC-BY-3.0)` understatet das ShareAlike — wir geben es korrekt an, ein Auto-SPDX-Check darf das nicht „korrigieren")
-3. **Panel-per-Country Dropdowns + Custom-Exclude** — Country/State/Region als statische per-Country Selects (hidden-Condition); Exclude seit 0.9.0 als Custom-Komponente (`src-admin/ExcludeSelector`, scope-exakt, client-seitig date-holidays) statt 206 per-Country-Exclude-Panels
+3. **Geführte Admin-8-Karte auf einer Seite** (Admin-8-Karten-Umbau) — EINE React-Stufen-Karte (`src-admin/HolidayConfig` + `HolidayPanel`, govee-Muster) statt 2 Tabs + generierter 145-KB-jsonConfig: Land→Bundesland→Region-Kaskade, Typen, Brückentage, Ausschluss + Live-Vorschau der erkannten Feiertage — alles client-seitig aus der gebündelten date-holidays. Die per-Country-Select-Panels + `generate-country-data.ts` entfielen; die Vorschau spiegelt die Runtime-Filterung (Typ/Exclude/Dedupe/Brückentage), verhaltens-parity-getestet gegen die Engine
 4. **Individuelle Type-Booleans in native** statt `holidayTypes: string[]` — sauberes jsonConfig-Mapping (5 Checkboxen)
 5. **referenceDate-Parameter** in computeHolidays — deterministische Tests ohne Mocking
 6. **Brückentag Do→Fr, Di→Mo, plus Mi zwischen Di+Do-Feiertag** — Mi→Wochenende braucht 2 Fehltage (kein Brückentag); ein Mi, der beidseitig von einem Di- und einem Do-Feiertag eingeklemmt ist, wird gebrückt (v0.8.0)
@@ -53,8 +54,8 @@ tasks.js                            → Komponenten-Build (@iobroker/build-tools
 
 4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, isHoliday. Next: name, isHoliday, date, daysUntil. (Der Flag-State hieß bis v0.10.0 `boolean` — in v0.11.0 zu `isHoliday` umbenannt, alte `*.boolean` per `cleanupDeprecatedStates` migriert.)
 
-## Tests (227 vitest + 69 package)
+## Tests (260 vitest + 69 package)
 
-Seit v0.11.0 zusätzlich: `exclude-options.test.ts` (pure ExcludeSelector-Logik: buildExcludeOptions/computeOrphanIds/enabledTypes, 12 Tests) + `exclude-type-flags-parity.test.ts` (Drift-Guard TYPE_FLAGS↔HOLIDAY_TYPES). `holiday-id-parity.test.ts` liest jetzt `exclude-options.ts` statt `ExcludeSelector.tsx`.
+Karten-Umbau ergänzte: `scope-options.test.ts` (Kaskade getCountry/State/RegionOptions + buildPreviewHolidays inkl. Brückentage), `scope-options-bridge-parity.test.ts` (Verhaltens-Parity detectPreviewBridgeDays vs. Runtime detectBridgeDays, 5 Länder × 4 Jahre), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version). Frühere Guards bleiben: `exclude-options.test.ts`, `exclude-type-flags-parity.test.ts`, `holiday-id-parity.test.ts` (liest `exclude-options.ts`). Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
 
-Test-Breakdown: holiday-engine 110, i18n 39, main 25, state-publisher 23, error-utils 7 = 204 vitest. Ehrliche Coverage (`coverage.include`): 98,7 %.
+Die pure Logik (Kaskade/Vorschau/Exclude/Engine) ist vitest-getestet; die React-Karte wird NICHT unit-getestet (kein @testing-library/react — jede src-admin-devDep landet dauerhaft unter dependabot-`ignore`), sondern über den turnkey Admin-8-`render-check` im echten Wegwerf-Admin verifiziert.

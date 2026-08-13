@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Località",
+  "ph_hc_country_label": "Paese",
+  "ph_hc_country_ph": "Seleziona un paese",
+  "ph_hc_state_label": "Stato / Provincia",
+  "ph_hc_region_label": "Regione",
+  "ph_hc_autodetect": "Nessun paese selezionato — verrà usato il valore predefinito del sistema ioBroker: %s",
+  "ph_hc_types_title": "Tipi di giorni festivi",
+  "ph_hc_type_public": "Giorni festivi nazionali",
+  "ph_hc_type_bank": "Giorni festivi bancari",
+  "ph_hc_type_school": "Vacanze scolastiche",
+  "ph_hc_type_optional": "Giorni festivi facoltativi",
+  "ph_hc_type_observance": "Giorni commemorativi",
+  "ph_hc_bridge_title": "Giorni ponte",
+  "ph_hc_bridge_label": "Rilevare i giorni ponte",
+  "ph_hc_bridge_desc": "Un giorno ponte è un giorno lavorativo tra un giorno festivo e il fine settimana (es. venerdì dopo un giorno festivo il giovedì)",
+  "ph_hc_exclude_title": "Escludere giorni festivi",
   "ph_excludeLabel": "Festività escluse",
   "ph_excludeSelectCountry": "Seleziona prima un paese",
-  "ph_excludeOrphans": "Non nella selezione attuale (clicca per rimuovere):"
+  "ph_excludeOrphans": "Non nella selezione attuale (clicca per rimuovere):",
+  "ph_hc_preview_title": "Giorni festivi rilevati",
+  "ph_hc_preview_count": "%s giorni festivi rilevati per %s",
+  "ph_hc_preview_none": "Seleziona un paese per vedere i giorni festivi rilevati",
+  "ph_hc_bridge_day": "Ponte"
 }

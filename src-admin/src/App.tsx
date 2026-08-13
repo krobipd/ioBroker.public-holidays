@@ -13,7 +13,7 @@ import {
   type GenericAppState,
 } from "@iobroker/gui-components";
 
-import ExcludeSelector from "./ExcludeSelector";
+import HolidayConfig from "./HolidayConfig";
 
 import enLocal from "./i18n/en.json";
 import deLocal from "./i18n/de.json";
@@ -34,13 +34,20 @@ const styles: Record<string, any> = {
     height: "100%",
   }),
   item: {
-    padding: 50,
-    width: 400,
+    padding: 40,
+    maxWidth: 760,
   },
 };
 
-// A realistic scope so the exclude selector actually lists holidays in the simulator.
-const DEMO_DATA = { country: "DE", state: "", region: "", typePublic: true, excludeHolidays: [] as string[] };
+// A realistic scope so the whole guided card (cascade + exclude list + preview) has data to show.
+const DEMO_DATA = {
+  country: "DE",
+  state: "BY",
+  region: "",
+  typePublic: true,
+  includeBridgeDays: true,
+  excludeHolidays: [] as string[],
+};
 
 interface AppState extends GenericAppState {
   data: Record<string, any>;
@@ -100,7 +107,7 @@ class App extends GenericApp<GenericAppProps, AppState> {
         <ThemeProvider theme={this.state.theme}>
           <Box sx={styles.app}>
             <div style={styles.item}>
-              <ExcludeSelector
+              <HolidayConfig
                 oContext={{
                   adapterName: "public-holidays",
                   socket: this.socket,
@@ -109,7 +116,7 @@ class App extends GenericApp<GenericAppProps, AppState> {
                   isFloatComma: true,
                   dateFormat: "",
                   forceUpdate: () => {},
-                  systemConfig: {} as ioBroker.SystemConfigCommon,
+                  systemConfig: { country: "Germany", language: "de" } as ioBroker.SystemConfigCommon,
                   theme: this.state.theme,
                   _themeName: this.state.themeName,
                   onCommandRunning: (_commandRunning: boolean): void => {},
@@ -118,14 +125,14 @@ class App extends GenericApp<GenericAppProps, AppState> {
                 changed={JSON.stringify(this.state.originalData) !== JSON.stringify(this.state.data)}
                 themeName={this.state.theme.palette.mode}
                 common={{} as ioBroker.InstanceCommon}
-                attr="excludeHolidays"
+                attr="_holidayCard"
                 data={this.state.data}
                 originalData={this.state.originalData}
                 onError={() => {}}
                 schema={{
                   url: "custom/customComponents.js",
                   i18n: true,
-                  name: "PublicHolidaysComponentSet/Components/ExcludeSelector",
+                  name: "PublicHolidaysComponentSet/Components/HolidayConfig",
                   type: "custom",
                 }}
                 onChange={data => this.setState({ data: data as Record<string, any> })}

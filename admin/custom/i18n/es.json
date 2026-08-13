@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Ubicación",
+  "ph_hc_country_label": "País",
+  "ph_hc_country_ph": "Seleccionar un país",
+  "ph_hc_state_label": "Estado / Provincia",
+  "ph_hc_region_label": "Región",
+  "ph_hc_autodetect": "Ningún país seleccionado — se usa el valor predeterminado del sistema ioBroker: %s",
+  "ph_hc_types_title": "Tipos de festivos",
+  "ph_hc_type_public": "Festivos nacionales",
+  "ph_hc_type_bank": "Festivos bancarios",
+  "ph_hc_type_school": "Vacaciones escolares",
+  "ph_hc_type_optional": "Festivos opcionales",
+  "ph_hc_type_observance": "Días conmemorativos",
+  "ph_hc_bridge_title": "Días puente",
+  "ph_hc_bridge_label": "Detectar días puente",
+  "ph_hc_bridge_desc": "Un día puente es un día laborable entre un festivo y el fin de semana (ej. viernes después de un festivo en jueves)",
+  "ph_hc_exclude_title": "Excluir festivos",
   "ph_excludeLabel": "Días festivos excluidos",
   "ph_excludeSelectCountry": "Seleccione primero un país",
-  "ph_excludeOrphans": "No en la selección actual (haga clic para eliminar):"
+  "ph_excludeOrphans": "No en la selección actual (haga clic para eliminar):",
+  "ph_hc_preview_title": "Festivos detectados",
+  "ph_hc_preview_count": "%s festivos detectados para %s",
+  "ph_hc_preview_none": "Seleccione un país para ver los festivos detectados",
+  "ph_hc_bridge_day": "Día puente"
 }

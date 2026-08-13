@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Emplacement",
+  "ph_hc_country_label": "Pays",
+  "ph_hc_country_ph": "Sélectionner un pays",
+  "ph_hc_state_label": "État / Province",
+  "ph_hc_region_label": "Région",
+  "ph_hc_autodetect": "Aucun pays sélectionné — utilisation de la valeur par défaut du système ioBroker : %s",
+  "ph_hc_types_title": "Types de jours fériés",
+  "ph_hc_type_public": "Jours fériés légaux",
+  "ph_hc_type_bank": "Jours fériés bancaires",
+  "ph_hc_type_school": "Vacances scolaires",
+  "ph_hc_type_optional": "Jours fériés optionnels",
+  "ph_hc_type_observance": "Jours commémoratifs",
+  "ph_hc_bridge_title": "Jours de pont",
+  "ph_hc_bridge_label": "Détecter les jours de pont",
+  "ph_hc_bridge_desc": "Un jour de pont est un jour ouvrable entre un jour férié et le week-end (ex. vendredi après un jour férié le jeudi)",
+  "ph_hc_exclude_title": "Exclure des jours fériés",
   "ph_excludeLabel": "Jours fériés exclus",
   "ph_excludeSelectCountry": "Sélectionnez d'abord un pays",
-  "ph_excludeOrphans": "Hors de la sélection actuelle (cliquer pour retirer) :"
+  "ph_excludeOrphans": "Hors de la sélection actuelle (cliquer pour retirer) :",
+  "ph_hc_preview_title": "Jours fériés détectés",
+  "ph_hc_preview_count": "%s jours fériés détectés pour %s",
+  "ph_hc_preview_none": "Sélectionnez un pays pour voir les jours fériés détectés",
+  "ph_hc_bridge_day": "Jour de pont"
 }

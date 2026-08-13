@@ -1,5 +1,25 @@
 {
+  "ph_hc_location_title": "Розташування",
+  "ph_hc_country_label": "Країна",
+  "ph_hc_country_ph": "Виберіть країну",
+  "ph_hc_state_label": "Область / Провінція",
+  "ph_hc_region_label": "Регіон",
+  "ph_hc_autodetect": "Країну не вибрано — використовується системне значення ioBroker за замовчуванням: %s",
+  "ph_hc_types_title": "Типи свят",
+  "ph_hc_type_public": "Державні свята",
+  "ph_hc_type_bank": "Банківські свята",
+  "ph_hc_type_school": "Шкільні канікули",
+  "ph_hc_type_optional": "Необов'язкові свята",
+  "ph_hc_type_observance": "Пам'ятні дні",
+  "ph_hc_bridge_title": "Перехідні дні",
+  "ph_hc_bridge_label": "Визначати перехідні дні",
+  "ph_hc_bridge_desc": "Перехідний день — робочий день між святом і вихідними (напр. п'ятниця після свята в четвер)",
+  "ph_hc_exclude_title": "Виключити свята",
   "ph_excludeLabel": "Виключені свята",
   "ph_excludeSelectCountry": "Спочатку виберіть країну",
-  "ph_excludeOrphans": "Немає в поточному виборі (натисніть, щоб видалити):"
+  "ph_excludeOrphans": "Немає в поточному виборі (натисніть, щоб видалити):",
+  "ph_hc_preview_title": "Виявлені свята",
+  "ph_hc_preview_count": "Виявлено свят: %s за %s",
+  "ph_hc_preview_none": "Виберіть країну, щоб побачити виявлені свята",
+  "ph_hc_bridge_day": "Неробочий день"
 }
