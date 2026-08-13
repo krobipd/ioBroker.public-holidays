@@ -9,7 +9,7 @@
 - **Version + Changelog:** current version in `io-package.json`; full internal dev history moved to `.claude/dev-history.md` (local, not auto-loaded). User-facing changelog: `README.md` + `io-package.json` news.
 - **GitHub:** https://github.com/krobipd/ioBroker.public-holidays
 - **npm:** `iobroker.public-holidays` — Zugang erhalten 2026-05-24
-- **Runtime-Deps:** `@iobroker/adapter-core`, `date-holidays` (^3.30.2, ISC + CC-BY-SA-3.0; im Release-Workflow auf npm-latest gehalten — Currency-Gate + `npm run generate`)
+- **Runtime-Deps:** `@iobroker/adapter-core`, `date-holidays` (^3.30.2, ISC + CC-BY-SA-3.0; im Release-Workflow auf npm-latest gehalten — Currency+Parität-Gate `check-date-holidays.mjs`, das auch die src-admin-Karten-Kopie auf dieselbe Version pinnt)
 - **Test-Setup:** Tests unter `src/**/*.test.ts` via **vitest**. `test/package.js` + `test/integration.js` bleiben mocha.
 - **`@types/node` an `engines.node`-Min gekoppelt:** `^22` weil `engines.node: ">=22"`
 
