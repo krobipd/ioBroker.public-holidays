@@ -107,7 +107,7 @@ Bridge days appear in the state tree with the localized name matching the system
 
 - The holiday exclusion selector in the settings now works on Admin 8 — it was blank there since Admin 8.0.1, so this version requires Admin 8.
 
-### 0.11.0 (2026-07-12)
+### 0.11.0 (2026-07-12) — stable
 
 - Breaking change: the states that flag whether each day is a holiday were renamed for clarity — update any scripts or views that read them.
 - Refreshed the built-in holiday data, adding newly recognised regional holidays.
