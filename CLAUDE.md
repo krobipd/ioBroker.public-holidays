@@ -26,7 +26,7 @@ src/lib/
 └── error-utils.ts                 → errText + oneLine (Log/Sentry-Newline-Hygiene)
 admin/
 ├── jsonConfig.json                → statischer Mini-Wrapper: EIN type:custom-Element (_holidayCard, guiApi:2) = die geführte Karte. Von 145 KB (206 Länder × Select-Panels) auf ~15 Zeilen — die Kaskade läuft jetzt client-seitig
-├── custom/                        → gebaute MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (admin-8-only, Verteilung per GitHub-URL bis Admin 8 stable)
+├── custom/                        → gebaute MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (nötig für GitHub-Installationen; npm-Verteilung läuft seit 2026-08-21 wieder regulär — der CI-Versions-Wächter erlaubt `admin` voraus)
 ├── i18n/<lang>.json               → NUR State-Namen-Translations (9 Keys × 11 Sprachen) für tName + io-package-Sync; die Karten-Labels liegen in src-admin/src/i18n
 ├── public-holidays.svg            → Icon (SVG 256×256, transparent)
 src-admin/                          → Custom-Admin-Komponente (Module-Federation/Vite Remote, eigenes package.json + vite.config.ts)
