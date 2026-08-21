@@ -16,19 +16,6 @@
         "uk": "Налаштування адаптера тепер єдина керована картка — країна, регіон, типи свят і виключення на одній сторінці, з попереднім переглядом виявлених свят.",
         "zh-cn": "适配器设置现在是一张引导式卡片——国家、地区、假日类型和排除项都在一个页面上，并实时预览将检测到的假日。"
       },
-      "0.12.0": {
-        "en": "The holiday exclusion selector now works on Admin 8.",
-        "de": "Die Feiertags-Ausschlussauswahl in den Einstellungen funktioniert wieder unter Admin 8.",
-        "ru": "Селектор исключения праздников в настройках снова работает в Admin 8.",
-        "pt": "O seletor de exclusão de feriados nas definições volta a funcionar no Admin 8.",
-        "nl": "De feestdag-uitsluitingskiezer in de instellingen werkt weer op Admin 8.",
-        "fr": "Le sélecteur d'exclusion des jours fériés dans les réglages fonctionne à nouveau sous Admin 8.",
-        "it": "Il selettore di esclusione festività nelle impostazioni funziona di nuovo su Admin 8.",
-        "es": "El selector de exclusión de festivos en los ajustes vuelve a funcionar en Admin 8.",
-        "pl": "Selektor wykluczania świąt w ustawieniach znów działa w Admin 8.",
-        "uk": "Селектор виключення свят у налаштуваннях знову працює в Admin 8.",
-        "zh-cn": "设置中的假日排除选择器现在可在 Admin 8 上重新正常使用。"
-      },
       "0.11.0": {
         "en": "Breaking change: the states that flag whether each day is a holiday were renamed for clarity. Update any scripts or views that read them.",
         "de": "Breaking Change: Die Datenpunkte, die anzeigen ob ein Tag ein Feiertag ist, wurden zur Klarheit umbenannt. Passe Skripte oder Ansichten an, die sie lesen.",
