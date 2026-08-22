@@ -159,6 +159,23 @@ describe("onReady — happy path", () => {
     expect(logsOf(stub, "error")).toEqual([]);
   });
 
+  it("warns about stale excludes only when there ARE stale ones", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
+
+    // Every configured exclude still matches a real holiday → no warning. A
+    // warning here would tell the user their configuration is broken when it
+    // is not — on every single run, because this adapter runs daily.
+    const good = setup({ country: "DE", excludeHolidays: ["01-01"] });
+    await good.internal.onReady();
+    expect(logsOf(good.stub, "warn").some(m => m.includes("no longer match"))).toBe(false);
+
+    // A renamed/removed id → the warning is exactly what the user needs.
+    const stale = setup({ country: "DE", excludeHolidays: ["gone_forever_xyz"] });
+    await stale.internal.onReady();
+    expect(logsOf(stale.stub, "warn").some(m => m.includes("gone_forever_xyz"))).toBe(true);
+  });
+
   it("publishes false/empty day states on a normal workday", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2027-03-10T12:00:00"));

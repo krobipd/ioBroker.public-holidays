@@ -65,6 +65,13 @@ describe("resolveLanguages", () => {
     expect(langs).toEqual(["en"]);
   });
 
+  it("returns [en] for a language date-holidays knows but this adapter does not", () => {
+    // Swedish: the library offers "sv" for SE, but the adapter has no Swedish
+    // state names. Passing it through would produce a half-translated tree —
+    // holiday names in Swedish, everything else in English.
+    expect(resolveLanguages("sv", new Holidays("SE"))).toEqual(["en"]);
+  });
+
   it("handles language with region code (de-AT)", () => {
     const langs = resolveLanguages("de-AT", new Holidays("AT"));
     expect(langs).toEqual(["de", "en"]);
@@ -166,6 +173,19 @@ describe("resolveCountryCode", () => {
   it("returns '' for a name mapped to a code date-holidays does not support (fail-safe)", () => {
     // Antarctica is in the admin country list (AQ) but date-holidays has no data for it.
     expect(resolveCountryCode("Antarctica")).toBe("");
+  });
+});
+
+describe("resolveCountryCode — rejects what is not a country", () => {
+  it("does not accept an arbitrary two-letter string as a country code", () => {
+    // Two letters alone are not a country. Passing "XX" through gives
+    // date-holidays a code it does not know: it returns no holidays at all and
+    // the adapter publishes an empty year without saying why.
+    for (const bogus of ["XX", "ZZ", "QQ"]) {
+      expect(resolveCountryCode(bogus), bogus).toBe("");
+    }
+    // A real code still works.
+    expect(resolveCountryCode("de")).toBe("DE");
   });
 });
 

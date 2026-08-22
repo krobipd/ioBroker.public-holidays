@@ -208,6 +208,61 @@ describe("exclude list", () => {
 
 // ─── Exclude warning (unmatchedExcludes) ────────────────────────────
 
+describe("same-day collisions and type priority", () => {
+  /**
+   * date-holidays itself rarely returns two types for one date, so the collision
+   * is built here: an injected instance that reports both entries on the same
+   * day. That is exactly what the priority comparison exists for.
+   *
+   * @param entries Holiday entries the fake instance returns for every year.
+   */
+  function fakeInstance(entries: { date: string; name: string; type: string }[]): never {
+    return {
+      getHolidays: (year: number) =>
+        entries
+          .filter(e => e.date.startsWith(String(year)))
+          .map(e => ({ date: `${e.date} 00:00:00`, start: new Date(`${e.date}T00:00:00`), name: e.name, type: e.type })),
+      setLanguages: () => undefined,
+    } as never;
+  }
+
+  it("keeps the higher-priority type when two holidays share a date", () => {
+    // Same day, two types. The state must name the public holiday — letting the
+    // observance win turns a day off into a "Gedenktag" in every visualisation
+    // and flips isHoliday for anyone filtering on the name.
+    const result = computeHolidays(
+      makeConfig({ holidayTypes: ["public", "observance"] }),
+      ["de"],
+      {
+        referenceDate: makeDate("2026-12-26"),
+        instance: fakeInstance([
+          { date: "2026-12-26", name: "Gedenktag", type: "observance" },
+          { date: "2026-12-26", name: "2. Weihnachtstag", type: "public" },
+        ]),
+      },
+    );
+    expect(result.today.isHoliday).toBe(true);
+    expect(result.today.name).toBe("2. Weihnachtstag");
+  });
+
+  it("ranks an unknown type LAST, never first", () => {
+    // A date-holidays release can add a type this adapter does not know yet.
+    // Ranking it first would let it push a real public holiday out of the day.
+    const result = computeHolidays(
+      makeConfig({ holidayTypes: ["public", "brand_new_type"] }),
+      ["de"],
+      {
+        referenceDate: makeDate("2026-12-25"),
+        instance: fakeInstance([
+          { date: "2026-12-25", name: "Neuer Typ", type: "brand_new_type" },
+          { date: "2026-12-25", name: "1. Weihnachtstag", type: "public" },
+        ]),
+      },
+    );
+    expect(result.today.name).toBe("1. Weihnachtstag");
+  });
+});
+
 describe("exclude warning (unmatchedExcludes)", () => {
   it("does not warn for an exclude that is only valid in a sibling state of the same country", () => {
     // Martinstag (11-11, Burgenland) and Rupert (09-24, Salzburg) do not occur in
@@ -289,6 +344,20 @@ describe("bridge days", () => {
     const bridges = detectBridgeDays(holidays, 2026);
     expect(bridges).toHaveLength(1);
     expect(toDateKey(bridges[0])).toBe("2026-05-15");
+  });
+
+  it("ignores holidays of the neighbouring years", () => {
+    // The map holds three years (last/this/next) so the "yesterday"/"next"
+    // lookups work across the turn of the year. Bridge days are computed PER
+    // year — without the year filter, every neighbouring-year holiday would add
+    // a bridge day to the current year's run and they would be published twice.
+    const holidays = new Map<string, RawHoliday>();
+    holidays.set("2025-05-29", { date: "2025-05-29", name: "Vorjahr", type: "public" }); // Thursday
+    holidays.set("2026-05-14", { date: "2026-05-14", name: "Aktuell", type: "public" }); // Thursday
+    holidays.set("2027-05-06", { date: "2027-05-06", name: "Folgejahr", type: "public" }); // Thursday
+
+    const bridges = detectBridgeDays(holidays, 2026);
+    expect(bridges.map(b => toDateKey(b))).toEqual(["2026-05-15"]);
   });
 
   it("detectBridgeDays returns correct dates for Tuesday holiday", () => {
