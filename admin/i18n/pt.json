@@ -7,5 +7,9 @@
   "name": "Nome do feriado",
   "isHoliday": "É feriado",
   "date": "Data",
-  "daysUntil": "Dias até ao feriado"
+  "daysUntil": "Dias até ao feriado",
+  "supportHeader": "Suporte",
+  "aboutInfo": "Este adaptador é gratuito e de código aberto. Se você o achar útil, considere apoiar o desenvolvimento com uma pequena doação.",
+  "donateKofi": "Apoiar no Ko-fi",
+  "donatePaypal": "Doar via PayPal"
 }

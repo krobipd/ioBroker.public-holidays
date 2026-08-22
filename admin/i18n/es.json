@@ -7,5 +7,9 @@
   "name": "Nombre del festivo",
   "isHoliday": "Es festivo",
   "date": "Fecha",
-  "daysUntil": "Días hasta el festivo"
+  "daysUntil": "Días hasta el festivo",
+  "supportHeader": "Soporte",
+  "aboutInfo": "Este adaptador es gratuito y de código abierto. Si lo encuentras útil, considera apoyar el desarrollo con una pequeña donación.",
+  "donateKofi": "Apoyar en Ko-fi",
+  "donatePaypal": "Donar vía PayPal"
 }

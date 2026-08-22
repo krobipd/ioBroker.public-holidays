@@ -25,9 +25,9 @@ src/lib/
 ├── types.ts                       → AdapterConfig, DayInfo, NextHoliday, ComputedHolidays
 └── error-utils.ts                 → errText + oneLine (Log/Sentry-Newline-Hygiene)
 admin/
-├── jsonConfig.json                → statischer Mini-Wrapper: EIN type:custom-Element (_holidayCard, guiApi:2) = die geführte Karte. Von 145 KB (206 Länder × Select-Panels) auf ~15 Zeilen — die Kaskade läuft jetzt client-seitig
+├── jsonConfig.json                → statischer Mini-Wrapper: EIN type:custom-Element (_holidayCard, guiApi:2) = die geführte Karte, darunter der Flotten-Spenden-Block (header + staticText + 2 staticLink). Von 145 KB (206 Länder × Select-Panels) auf ~15 Zeilen — die Kaskade läuft jetzt client-seitig
 ├── custom/                        → gebaute MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (nötig für GitHub-Installationen; npm-Verteilung läuft seit 2026-08-21 wieder regulär — der CI-Versions-Wächter erlaubt `admin` voraus)
-├── i18n/<lang>.json               → NUR State-Namen-Translations (9 Keys × 11 Sprachen) für tName + io-package-Sync; die Karten-Labels liegen in src-admin/src/i18n
+├── i18n/<lang>.json               → State-Namen-Translations (9 Keys) für tName + io-package-Sync UND die 4 jsonConfig-Labels des Spenden-Blocks (supportHeader/aboutInfo/donateKofi/donatePaypal — Admin löst jsonConfig-`label`/`text` NUR von hier auf, nicht aus der Komponente); die Karten-Labels liegen in src-admin/src/i18n
 ├── public-holidays.svg            → Icon (SVG 256×256, transparent)
 src-admin/                          → Custom-Admin-Komponente (Module-Federation/Vite Remote, eigenes package.json + vite.config.ts)
 ├── src/HolidayConfig.tsx          → dünner ConfigGeneric-Mount (govee ConnectionConfig-Muster): reicht props.data an das Panel, schreibt jedes Feld via this.onChange(attr,val) — besitzt ALLE native-Felder, keine Migration (gleiche Feldnamen)

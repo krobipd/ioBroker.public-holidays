@@ -7,5 +7,9 @@
   "name": "Nazwa święta",
   "isHoliday": "Jest świętem",
   "date": "Data",
-  "daysUntil": "Dni do święta"
+  "daysUntil": "Dni do święta",
+  "supportHeader": "Wsparcie",
+  "aboutInfo": "Ten adapter jest darmowy i open source. Jeśli uważasz go za przydatny, rozważ wsparcie rozwoju niewielką darowizną.",
+  "donateKofi": "Wesprzyj na Ko-fi",
+  "donatePaypal": "Przekaż darowiznę przez PayPal"
 }

@@ -7,5 +7,9 @@
   "name": "Naam feestdag",
   "isHoliday": "Is een feestdag",
   "date": "Datum",
-  "daysUntil": "Dagen tot feestdag"
+  "daysUntil": "Dagen tot feestdag",
+  "supportHeader": "Ondersteuning",
+  "aboutInfo": "Deze adapter is gratis en open source. Als je hem nuttig vindt, overweeg dan de ontwikkeling te steunen met een kleine donatie.",
+  "donateKofi": "Steunen op Ko-fi",
+  "donatePaypal": "Doneren via PayPal"
 }

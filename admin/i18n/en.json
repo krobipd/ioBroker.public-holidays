@@ -7,5 +7,9 @@
   "name": "Holiday name",
   "isHoliday": "Is a holiday",
   "date": "Date",
-  "daysUntil": "Days until holiday"
+  "daysUntil": "Days until holiday",
+  "supportHeader": "Support",
+  "aboutInfo": "This adapter is free and open source. If you find it useful, please consider supporting its development with a small donation.",
+  "donateKofi": "Support on Ko-fi",
+  "donatePaypal": "Donate via PayPal"
 }

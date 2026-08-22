@@ -7,5 +7,9 @@
   "name": "Nom du jour férié",
   "isHoliday": "Est un jour férié",
   "date": "Date",
-  "daysUntil": "Jours jusqu'au jour férié"
+  "daysUntil": "Jours jusqu'au jour férié",
+  "supportHeader": "Support",
+  "aboutInfo": "Cet adaptateur est gratuit et open source. Si vous le trouvez utile, pensez à soutenir son développement par un petit don.",
+  "donateKofi": "Soutenir sur Ko-fi",
+  "donatePaypal": "Faire un don via PayPal"
 }

@@ -7,5 +7,9 @@
   "name": "Feiertagsname",
   "isHoliday": "Ist ein Feiertag",
   "date": "Datum",
-  "daysUntil": "Tage bis zum Feiertag"
+  "daysUntil": "Tage bis zum Feiertag",
+  "supportHeader": "Unterstützung",
+  "aboutInfo": "Dieser Adapter ist kostenlos und Open Source. Wenn du ihn nützlich findest, unterstütze die Entwicklung gerne mit einer kleinen Spende.",
+  "donateKofi": "Unterstützen auf Ko-fi",
+  "donatePaypal": "Spenden via PayPal"
 }
