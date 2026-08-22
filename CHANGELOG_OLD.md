@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.9.0 (2026-06-28)
+
+- The holiday exclude list now shows only your selected region's holidays, in your admin language and sorted by date — no longer every region of a country mixed alphabetically.
+- The false "excluded holidays no longer match" warning at startup is fixed; it now fires only for a holiday that genuinely no longer exists.
+
 ## 0.8.0 (2026-06-25)
 
 - A misconfigured region/state is now reported instead of silently using country-level holidays.

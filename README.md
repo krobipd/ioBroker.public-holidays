@@ -99,6 +99,10 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 0.13.1 (2026-08-22)
+
+- Fixed: The support links were missing from the settings page since the new card was introduced; they are back below it.
+
 ### 0.13.0 (2026-08-13)
 
 - The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the holidays that will be detected.
@@ -116,11 +120,6 @@ Bridge days appear in the state tree with the localized name matching the system
 
 - The "next holiday" date and days-until states now show up correctly as a date and a day count in VIS widgets and scripts (they carry the proper ioBroker role and a "days" unit).
 - The exclude-holidays list in the settings now also offers holidays that only occur in the coming year, not just the current one.
-
-### 0.9.0 (2026-06-28)
-
-- The holiday exclude list now shows only your selected region's holidays, in your admin language and sorted by date — no longer every region of a country mixed alphabetically.
-- The false "excluded holidays no longer match" warning at startup is fixed; it now fires only for a holiday that genuinely no longer exists.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

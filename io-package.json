@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.13.0",
+    "version": "0.13.1",
     "news": {
+      "0.13.1": {
+        "en": "The support links were missing from the settings page since the new card was introduced; they are back below it.",
+        "de": "Die Unterstützungs-Links fehlten seit der neuen Karte auf der Einstellungsseite; sie stehen jetzt wieder darunter.",
+        "ru": "Ссылки на поддержку отсутствовали на странице настроек после появления новой карточки; теперь они снова под ней.",
+        "pt": "As ligações de apoio faltavam na página de definições desde a nova ficha; voltaram a aparecer por baixo dela.",
+        "nl": "De ondersteuningslinks ontbraken op de instellingenpagina sinds de nieuwe kaart; ze staan er weer onder.",
+        "fr": "Les liens de soutien manquaient sur la page des réglages depuis la nouvelle carte ; ils sont de nouveau en dessous.",
+        "it": "I collegamenti di supporto mancavano nella pagina delle impostazioni dalla nuova scheda; sono di nuovo sotto di essa.",
+        "es": "Los enlaces de apoyo faltaban en la página de ajustes desde la nueva tarjeta; vuelven a estar debajo de ella.",
+        "pl": "Odnośniki wsparcia znikły ze strony ustawień wraz z nową kartą; znów znajdują się pod nią.",
+        "uk": "Посилання на підтримку зникли зі сторінки налаштувань після появи нової картки; тепер вони знову під нею.",
+        "zh-cn": "自新卡片启用后，设置页面缺少了支持链接；现在它们重新显示在卡片下方。"
+      },
       "0.13.0": {
         "en": "The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the detected holidays.",
         "de": "Die Adapter-Einstellungen sind jetzt eine geführte Karte — Land, Region, Feiertagstypen und Ausschlüsse auf einer Seite, mit einer Live-Vorschau der erkannten Feiertage.",

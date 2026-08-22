@@ -1,6 +1,6 @@
 {
   "name": "iobroker.public-holidays",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "ioBroker adapter for public holiday detection using date-holidays",
   "author": {
     "name": "krobi",
