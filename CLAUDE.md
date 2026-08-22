@@ -38,7 +38,7 @@ src-admin/                          → Custom-Admin-Komponente (Module-Federati
 ├── package.json                   → Gen-2/Admin-8-Stack: gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType). date-holidays exakt-gepinnt = root-installierte Version (Wächter: date-holidays-version-parity.test.ts)
 tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); prepublishOnly + before_commit + CI-Job admin-component
 scripts/check-date-holidays.mjs     → Release-Gate: date-holidays-Currency (npm-latest) UND pinnt src-admin auf die Runtime-Version (die client-seitige Kaskade muss dieselbe Library sehen wie der Adapter)
-../scripts/sync-iopackage-from-i18n.py → regeneriert io-package.json:instanceObjects.common.name aus admin/i18n/ (zentral, source: admin-i18n)
+../scripts/sync-iopackage-from-i18n.py → regeneriert io-package.json:instanceObjects.common.name aus admin/i18n/ (zentral, source: admin-i18n; läuft seit 2026-08-22 in pre-release.py Schritt 2b, NICHT mehr als before_commit-Hook — .releaseconfig.json enthält kein Python mehr)
 ```
 
 ## Design-Entscheidungen
