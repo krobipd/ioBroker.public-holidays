@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.13.1",
+    "version": "0.13.2",
     "news": {
+      "0.13.2": {
+        "en": "Heads-up for Austria: St. Martin's, Rupert's and Referendum Day count as observances now and disappear unless that type is enabled. Plus data fixes for Ireland, Russia and others.",
+        "de": "Achtung Österreich: Martini, Rupert und der Tag der Volksabstimmung gelten jetzt als Gedenktage und verschwinden, wenn dieser Typ nicht aktiv ist. Dazu Korrekturen für Irland, Russland und weitere.",
+        "ru": "Внимание, Австрия: День св. Мартина, День св. Руперта и День референдума теперь памятные даты и исчезают, если этот тип не включён. Также исправления для Ирландии, России и других.",
+        "pt": "Atenção, Áustria: São Martinho, São Ruperto e o Dia do Referendo passam a ser efemérides e desaparecem se esse tipo não estiver ativo. Além disso, correções para Irlanda, Rússia e outros.",
+        "nl": "Let op, Oostenrijk: Sint-Maarten, Sint-Rupert en Referendumdag tellen nu als gedenkdagen en verdwijnen als dat type niet aanstaat. Daarnaast correcties voor Ierland, Rusland en andere.",
+        "fr": "Attention, Autriche : la Saint-Martin, la Saint-Rupert et le jour du référendum sont désormais des commémorations et disparaissent si ce type n'est pas activé. Plus des corrections ailleurs.",
+        "it": "Attenzione Austria: San Martino, San Ruperto e il Giorno del Referendum ora sono ricorrenze e spariscono se quel tipo non è attivo. In più correzioni per Irlanda, Russia e altri paesi.",
+        "es": "Atención Austria: San Martín, San Ruperto y el Día del Referéndum ahora son conmemoraciones y desaparecen si ese tipo no está activado. Además, correcciones para Irlanda, Rusia y otros.",
+        "pl": "Uwaga Austria: św. Marcin, św. Rupert i Dzień Referendum liczą się teraz jako dni pamięci i znikają, jeśli ten typ nie jest włączony. Do tego poprawki dla Irlandii, Rosji i innych.",
+        "uk": "Увага, Австрія: День св. Мартина, День св. Руперта та День референдуму тепер пам'ятні дати й зникають, якщо цей тип не увімкнено. Також виправлення для Ірландії, Росії та інших.",
+        "zh-cn": "奥地利请注意：圣马丁节、圣鲁伯特节和公投日现在算作纪念日，若未启用该类型则不再显示。另有爱尔兰、俄罗斯等国的数据修正。"
+      },
       "0.13.1": {
         "en": "The support links were missing from the settings page since the new card was introduced; they are back below it.",
         "de": "Die Unterstützungs-Links fehlten seit der neuen Karte auf der Einstellungsseite; sie stehen jetzt wieder darunter.",
@@ -80,19 +93,6 @@
         "pl": "Wykrywa błędnie skonfigurowany region/kraj związkowy i nieaktualne wykluczenie święta, przy kolizji wybiera ważniejsze święto i dodaje opcjonalny dzień pomostowy w środku tygodnia.",
         "uk": "Виявляє неправильно налаштований регіон/штат і застаріле виключення свята, при збігу обирає важливіше свято та додає необов'язковий день-місток серед тижня.",
         "zh-cn": "检测配置错误的地区/州和过时的节假日排除，两个节假日冲突时优先显示更重要的一个，并添加可选的工作日桥接日。"
-      },
-      "0.7.1": {
-        "en": "Internal refactoring. No user-facing changes.",
-        "de": "Internes Refactoring. Keine sichtbaren Änderungen.",
-        "ru": "Внутренний рефакторинг. Никаких видимых изменений.",
-        "pt": "Refatoração interna. Sem alterações visíveis.",
-        "nl": "Interne refactoring. Geen zichtbare wijzigingen.",
-        "fr": "Refactorisation interne. Aucun changement visible.",
-        "it": "Refactoring interno. Nessuna modifica visibile.",
-        "es": "Refactorización interna. Sin cambios visibles.",
-        "pl": "Wewnętrzna refaktoryzacja. Brak widocznych zmian.",
-        "uk": "Внутрішній рефакторинг. Жодних видимих змін.",
-        "zh-cn": "内部重构。无可见更改。"
       }
     },
     "plugins": {
@@ -149,9 +149,6 @@
     "dataSource": "push",
     "adminUI": {
       "config": "json"
-    },
-    "supportedMessages": {
-      "stopInstance": true
     },
     "dependencies": [
       {

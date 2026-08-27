@@ -23,6 +23,10 @@ vi.mock("@iobroker/adapter-core", () => {
     states = new Map<string, { val: unknown; ack: boolean }>();
     logs: { level: string; msg: string }[] = [];
     stop = vi.fn();
+    /** How often the instance's OWN object was written — every write costs a restart. */
+    instanceObjectWrites = 0;
+    /** Simulates a broker hiccup on the next instance-object read. */
+    failNextForeignObjectRead = false;
 
     log = {
       debug: (m: string): void => void this.logs.push({ level: "debug", msg: m }),
@@ -42,10 +46,17 @@ vi.mock("@iobroker/adapter-core", () => {
     }
 
     async getForeignObjectAsync(id: string): Promise<ObjEntry | null> {
+      if (this.failNextForeignObjectRead) {
+        this.failNextForeignObjectRead = false;
+        throw new Error("objects db unreachable");
+      }
       return this.objects.get(id) ?? null;
     }
 
     async extendForeignObjectAsync(id: string, obj: Partial<ObjEntry>): Promise<void> {
+      if (id === `system.adapter.${this.namespace}`) {
+        this.instanceObjectWrites++;
+      }
       const existing = this.objects.get(id) ?? {};
       this.objects.set(id, {
         ...existing,
@@ -105,6 +116,8 @@ interface StubSurface {
   states: Map<string, { val: unknown; ack: boolean }>;
   logs: { level: string; msg: string }[];
   stop: ReturnType<typeof vi.fn>;
+  instanceObjectWrites: number;
+  failNextForeignObjectRead: boolean;
   extendObjectAsync: (id: string, obj: Partial<ObjEntry>, options?: unknown) => Promise<void>;
 }
 
@@ -225,8 +238,10 @@ describe("onReady — happy path", () => {
   });
 });
 
-describe("onReady — daemon → schedule migration", () => {
-  it("migrates a daemon-mode instance to schedule mode", async () => {
+describe("onReady — instance-object repair", () => {
+  it("migrates a daemon-mode instance to schedule mode and stands down", async () => {
+    // Writing the instance object makes the host restart us — computing and publishing
+    // afterwards runs against a database that is already closing.
     const { internal, stub } = setup({ country: "DE" });
     stub.objects.set("system.adapter.public-holidays.0", {
       type: "instance",
@@ -240,12 +255,65 @@ describe("onReady — daemon → schedule migration", () => {
     expect(inst.common!.mode).toBe("schedule");
     expect(inst.common!.schedule).toBe("0 0 * * *");
     expect(logsOf(stub, "info").some(m => m.includes("Migrating from daemon to schedule"))).toBe(true);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeUndefined();
+    expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
-  it("does not touch an instance already in schedule mode", async () => {
+  it("switches a leftover stopInstance flag off and stands down", async () => {
+    // With the flag set the host kills the process a second after asking it to stop —
+    // in the middle of a holiday run, and this adapter has no message handler to answer with.
     const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule", supportedMessages: { stopInstance: true } },
+      native: {},
+    });
+
     await internal.onReady();
+
+    const inst = stub.objects.get("system.adapter.public-holidays.0")!;
+    expect(inst.common!.supportedMessages).toEqual({ stopInstance: false });
+    expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(true);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeUndefined();
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("repairs both in ONE write so the instance restarts once, not twice", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "daemon", supportedMessages: { stopInstance: true } },
+      native: {},
+    });
+
+    await internal.onReady();
+
+    const inst = stub.objects.get("system.adapter.public-holidays.0")!;
+    expect(inst.common!.mode).toBe("schedule");
+    expect(inst.common!.supportedMessages).toEqual({ stopInstance: false });
+    expect(stub.instanceObjectWrites).toBe(1);
+  });
+
+  it("does not touch a healthy instance object and computes normally", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+
+    await internal.onReady();
+
     expect(logsOf(stub, "info").some(m => m.includes("Migrating"))).toBe(false);
+    expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(false);
+    expect(stub.instanceObjectWrites).toBe(0);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+  });
+
+  it("computes normally when the instance object cannot be read", async () => {
+    // A broker hiccup must not cost the daily run — the next run retries the repair.
+    const { internal, stub } = setup({ country: "DE" });
+    stub.failNextForeignObjectRead = true;
+
+    await internal.onReady();
+
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+    expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -15,14 +15,54 @@ export class PublicHolidaysAdapter extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
 
-  private async onReady(): Promise<void> {
+  /**
+   * Bring this instance's own object in line with the current manifest and report whether
+   * anything had to be written. Two corrections, one write, one restart:
+   *
+   * - `mode: daemon` → the pre-schedule layout. Was already migrated here, but the run then
+   *   carried on writing states while the host was already restarting the instance.
+   * - `supportedMessages.stopInstance` → dropped from the manifest, which only helps a FRESH
+   *   install: an upgrade merges the manifest into the existing instance object and never
+   *   removes a key, so the old `true` survives in the database — and that is what the host
+   *   reads. With it the host kills the process one second after asking it to stop, in the
+   *   middle of a holiday run, and this adapter has no message handler to answer with.
+   *
+   * @returns true when something was written and the restart is coming — the caller has to
+   *   stand down instead of computing in a process that is going away.
+   */
+  private async repairInstanceObject(): Promise<boolean> {
+    const id = `system.adapter.${this.namespace}`;
     try {
-      const instanceObj = await this.getForeignObjectAsync(`system.adapter.${this.namespace}`);
+      const instanceObj = await this.getForeignObjectAsync(id);
+      const common: Partial<ioBroker.InstanceCommon> = {};
       if (instanceObj?.common?.mode === "daemon") {
         this.log.info("Migrating from daemon to schedule mode");
-        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-          common: { mode: "schedule", schedule: "0 0 * * *" },
-        });
+        Object.assign(common, { mode: "schedule", schedule: "0 0 * * *" });
+      }
+      const supported = instanceObj?.common?.supportedMessages as { stopInstance?: unknown } | undefined;
+      if (supported?.stopInstance) {
+        this.log.info("Correcting a leftover setting from an earlier version — this instance restarts once");
+        Object.assign(common, { supportedMessages: { stopInstance: false } });
+      }
+      if (Object.keys(common).length === 0) {
+        return false;
+      }
+      await this.extendForeignObjectAsync(id, { common });
+      return true;
+    } catch (err: unknown) {
+      // Objects DB unreachable — not worth failing the run over; the next run retries.
+      this.log.debug(`Could not check the instance object ${id}: ${errText(err)}`);
+      return false;
+    }
+  }
+
+  private async onReady(): Promise<void> {
+    try {
+      // Every instance-object change restarts the instance, so there is no point computing
+      // and publishing in a process that is on its way out.
+      if (await this.repairInstanceObject()) {
+        void this.stop?.();
+        return;
       }
 
       await I18n.init(join(this.adapterDir, "admin"), this);
@@ -138,6 +178,15 @@ export class PublicHolidaysAdapter extends utils.Adapter {
     return Array.isArray(val) ? val.filter((x): x is string => typeof x === "string") : [];
   }
 
+  /**
+   * Deliberately empty apart from the callback: this adapter holds no connection, no timer and
+   * no device marker — it computes, publishes and stops itself. There is nothing that would have
+   * to be written on the way out, so nothing has to be awaited before reporting done. What DID
+   * matter is that `onUnload` runs at all, which is why the manifest no longer declares
+   * `supportedMessages.stopInstance` (see {@link repairInstanceObject}).
+   *
+   * @param callback js-controller's "shutdown finished" signal
+   */
   private onUnload(callback: () => void): void {
     callback();
   }

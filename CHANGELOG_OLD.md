@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.10.0 (2026-07-02)
+
+- The "next holiday" date and days-until states now show up correctly as a date and a day count in VIS widgets and scripts (they carry the proper ioBroker role and a "days" unit).
+- The exclude-holidays list in the settings now also offers holidays that only occur in the coming year, not just the current one.
+
 ## 0.9.0 (2026-06-28)
 
 - The holiday exclude list now shows only your selected region's holidays, in your admin language and sorted by date — no longer every region of a country mixed alphabetically.

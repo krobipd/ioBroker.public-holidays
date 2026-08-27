@@ -45,15 +45,52 @@ class PublicHolidaysAdapter extends utils.Adapter {
     this.on("ready", this.onReady.bind(this));
     this.on("unload", this.onUnload.bind(this));
   }
+  /**
+   * Bring this instance's own object in line with the current manifest and report whether
+   * anything had to be written. Two corrections, one write, one restart:
+   *
+   * - `mode: daemon` → the pre-schedule layout. Was already migrated here, but the run then
+   *   carried on writing states while the host was already restarting the instance.
+   * - `supportedMessages.stopInstance` → dropped from the manifest, which only helps a FRESH
+   *   install: an upgrade merges the manifest into the existing instance object and never
+   *   removes a key, so the old `true` survives in the database — and that is what the host
+   *   reads. With it the host kills the process one second after asking it to stop, in the
+   *   middle of a holiday run, and this adapter has no message handler to answer with.
+   *
+   * @returns true when something was written and the restart is coming — the caller has to
+   *   stand down instead of computing in a process that is going away.
+   */
+  async repairInstanceObject() {
+    var _a, _b;
+    const id = `system.adapter.${this.namespace}`;
+    try {
+      const instanceObj = await this.getForeignObjectAsync(id);
+      const common = {};
+      if (((_a = instanceObj == null ? void 0 : instanceObj.common) == null ? void 0 : _a.mode) === "daemon") {
+        this.log.info("Migrating from daemon to schedule mode");
+        Object.assign(common, { mode: "schedule", schedule: "0 0 * * *" });
+      }
+      const supported = (_b = instanceObj == null ? void 0 : instanceObj.common) == null ? void 0 : _b.supportedMessages;
+      if (supported == null ? void 0 : supported.stopInstance) {
+        this.log.info("Correcting a leftover setting from an earlier version \u2014 this instance restarts once");
+        Object.assign(common, { supportedMessages: { stopInstance: false } });
+      }
+      if (Object.keys(common).length === 0) {
+        return false;
+      }
+      await this.extendForeignObjectAsync(id, { common });
+      return true;
+    } catch (err) {
+      this.log.debug(`Could not check the instance object ${id}: ${(0, import_error_utils.errText)(err)}`);
+      return false;
+    }
+  }
   async onReady() {
     var _a, _b, _c;
     try {
-      const instanceObj = await this.getForeignObjectAsync(`system.adapter.${this.namespace}`);
-      if (((_a = instanceObj == null ? void 0 : instanceObj.common) == null ? void 0 : _a.mode) === "daemon") {
-        this.log.info("Migrating from daemon to schedule mode");
-        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-          common: { mode: "schedule", schedule: "0 0 * * *" }
-        });
+      if (await this.repairInstanceObject()) {
+        void ((_a = this.stop) == null ? void 0 : _a.call(this));
+        return;
       }
       await import_adapter_core.I18n.init((0, import_node_path.join)(this.adapterDir, "admin"), this);
       this.log.debug("Computing holidays...");
@@ -140,6 +177,15 @@ class PublicHolidaysAdapter extends utils.Adapter {
   static toStringArray(val) {
     return Array.isArray(val) ? val.filter((x) => typeof x === "string") : [];
   }
+  /**
+   * Deliberately empty apart from the callback: this adapter holds no connection, no timer and
+   * no device marker — it computes, publishes and stops itself. There is nothing that would have
+   * to be written on the way out, so nothing has to be awaited before reporting done. What DID
+   * matter is that `onUnload` runs at all, which is why the manifest no longer declares
+   * `supportedMessages.stopInstance` (see {@link repairInstanceObject}).
+   *
+   * @param callback js-controller's "shutdown finished" signal
+   */
   onUnload(callback) {
     callback();
   }

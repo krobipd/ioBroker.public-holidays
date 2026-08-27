@@ -49,12 +49,13 @@ scripts/check-date-holidays.mjs     → Release-Gate: date-holidays-Currency (np
 4. **Individuelle Type-Booleans in native** statt `holidayTypes: string[]` — sauberes jsonConfig-Mapping (5 Checkboxen)
 5. **referenceDate-Parameter** in computeHolidays — deterministische Tests ohne Mocking
 6. **Brückentag Do→Fr, Di→Mo, plus Mi zwischen Di+Do-Feiertag** — Mi→Wochenende braucht 2 Fehltage (kein Brückentag); ein Mi, der beidseitig von einem Di- und einem Do-Feiertag eingeklemmt ist, wird gebrückt (v0.8.0)
+7. **Instanz-Objekt-Reparatur in EINEM Schreibvorgang, danach Abbruch (v0.13.2)** — `repairInstanceObject()` bündelt die daemon→schedule-Migration und das Abschalten eines übriggebliebenen `common.supportedMessages.stopInstance`; jede Änderung am eigenen Instanz-Objekt löst einen Neustart aus, deshalb EIN Patch (ein Neustart, nicht zwei) und danach `stop()` + `return` statt weiterzurechnen. **`stopInstance` darf nie zurück ins Manifest:** der Host killt den Prozess damit 1 s nach der Stopp-Nachricht — mitten in einem Lauf — und dieser Adapter hat gar keinen Nachrichten-Handler, der antworten könnte. Ein Update entfernt den Eintrag NICHT aus dem Instanz-Objekt, daher die Selbstkorrektur. **`onUnload` bleibt bewusst leer:** kein Verbindungs-Marker, kein Timer, kein Gerät — es gibt nichts, worauf vor dem `callback()` gewartet werden müsste; die drei Flotten-Summen (`…Total`/`…Online`/`…AllOnline`) haben hier ebenfalls keinen Gegenstand.
 
 ## State Tree
 
 4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, isHoliday. Next: name, isHoliday, date, daysUntil. (Der Flag-State hieß bis v0.10.0 `boolean` — in v0.11.0 zu `isHoliday` umbenannt, alte `*.boolean` per `cleanupDeprecatedStates` migriert.)
 
-## Tests (260 vitest + 69 package)
+## Tests (278 vitest + 69 package)
 
 Karten-Umbau ergänzte: `scope-options.test.ts` (Kaskade getCountry/State/RegionOptions + buildPreviewHolidays inkl. Brückentage), `scope-options-bridge-parity.test.ts` (Verhaltens-Parity detectPreviewBridgeDays vs. Runtime detectBridgeDays, 5 Länder × 4 Jahre), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version). Frühere Guards bleiben: `exclude-options.test.ts`, `exclude-type-flags-parity.test.ts`, `holiday-id-parity.test.ts` (liest `exclude-options.ts`). Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
 
