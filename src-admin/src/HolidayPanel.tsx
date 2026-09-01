@@ -48,7 +48,13 @@ function formatDay(dateKey: string): string {
   return month && day ? `${day}.${month}.` : dateKey;
 }
 
-/** One vertical tier of the card: a small heading plus its controls. */
+/**
+ * One vertical tier of the card: a small heading plus its controls.
+ *
+ * @param root0 the tier's props
+ * @param root0.title the small heading above the controls
+ * @param root0.children the controls themselves
+ */
 function Stage({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
   return (
     <Box sx={{ py: 1.5 }}>
@@ -69,6 +75,8 @@ function Stage({ title, children }: { title: string; children: React.ReactNode }
  * excluded holidays → a live preview of what the runtime would detect. The whole country/state/
  * region taxonomy, the exclude list and the preview are computed client-side from the card's own
  * bundled date-holidays (held equal to the runtime's, see date-holidays-version-parity.test.ts).
+ *
+ * @param props card data, detected system country and the change callback
  */
 export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
   const { data, systemCountry, onChange } = props;
@@ -113,7 +121,8 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
 
   const excludeKey = excludeHolidays.join(",");
   const preview = React.useMemo(
-    () => buildPreviewHolidays({ country, state, region, types: enabled, excludeHolidays }, includeBridgeDays, lang, year),
+    () =>
+      buildPreviewHolidays({ country, state, region, types: enabled, excludeHolidays }, includeBridgeDays, lang, year),
     [country, state, region, enabledKey, excludeKey, includeBridgeDays, lang, year],
   );
 

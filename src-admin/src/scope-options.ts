@@ -36,7 +36,11 @@ export function getCountryOptions(lang: string, makeHd: MakeHolidays = defaultMa
   return toOptions(makeHd().getCountries(lang), lang);
 }
 
-export function getStateOptions(country: string, lang: string, makeHd: MakeHolidays = defaultMakeHolidays): ScopeOption[] {
+export function getStateOptions(
+  country: string,
+  lang: string,
+  makeHd: MakeHolidays = defaultMakeHolidays,
+): ScopeOption[] {
   if (!country) {
     return [];
   }
