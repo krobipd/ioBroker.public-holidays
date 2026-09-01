@@ -33,7 +33,7 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 ## Requirements
 
 - ioBroker js-controller >= 7.2.2
-- Admin >= 7.8.23
+- ioBroker Admin >= 8.0.1
 - Node.js >= 22
 
 ## Configuration
