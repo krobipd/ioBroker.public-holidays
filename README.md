@@ -103,7 +103,7 @@ Bridge days appear in the state tree with the localized name matching the system
 
 - New: the next-holiday log line now shows the date in your system's date format — for example 26.10.2026 instead of 2026-10-26. The date data point itself stays machine-readable for scripts.
 
-### 0.13.2 (2026-08-27)
+### 0.13.2 (2026-08-27) — stable
 
 - Fixed: Stopping or restarting the instance while the holidays were being worked out cut that run short, which could leave half-written values and errors in the log.
 - Changed: Heads-up for Austria — St. Martin's, Rupert's and Referendum Day count as observances now and disappear unless that type is enabled. Plus data fixes for Ireland, Russia and others.
