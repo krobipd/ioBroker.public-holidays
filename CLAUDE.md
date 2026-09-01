@@ -20,7 +20,7 @@ src/main.ts                        → Adapter (onReady → resolve country → 
 src/lib/
 ├── holiday-engine.ts              → date-holidays Wrapper, Type-Filter, Brückentag-Algo (alle 3 Jahre), createHolidaysInstance (injizierbar); getFilteredHolidays prüft verwaiste Excludes gegen collectCountryWideIds (alle Land-Scopes, nicht nur Schmal-Scope)
 ├── state-publisher.ts             → ComputedHolidays → ioBroker States
-├── i18n.ts                        → tName-Wrapper + getSystemConfig (1 Read, typed) + resolveLanguages + resolveCountryCode (Name→ISO via country-codes)
+├── i18n.ts                        → tName-Wrapper + getSystemConfig (1 Read, typed: country/language/dateFormat) + resolveLanguages + resolveCountryCode (Name→ISO via country-codes) + formatDateForDisplay (Log-Datum im System-Datumsformat, v0.14.0 — der next.date-STATE bleibt ISO)
 ├── country-codes.ts              → ISO-3166 Name→alpha-2 Map (aus admin countries.json; Auto-Detect resolver)
 ├── types.ts                       → AdapterConfig, DayInfo, NextHoliday, ComputedHolidays
 └── error-utils.ts                 → errText + oneLine (Log/Sentry-Newline-Hygiene)
@@ -36,7 +36,7 @@ src-admin/                          → Custom-Admin-Komponente (Module-Federati
 ├── src/exclude-options.ts         → PURE Logik: buildExcludeOptions (scope-exakt, dedupe+MM-DD-Sort), computeOrphanIds, enabledTypes (defaultOn = validateConfig), toHolidayId. Drift-Guards: holiday-id-parity, exclude-type-flags-parity, scope-options-bridge-parity
 ├── src/i18n/<lang>.json           → Karten-Übersetzungen (23 Keys × 11 Sprachen: ph_hc_* + ph_exclude*)
 ├── package.json                   → Gen-2/Admin-8-Stack: gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType). date-holidays exakt-gepinnt = root-installierte Version (Wächter: date-holidays-version-parity.test.ts)
-tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); prepublishOnly + before_commit + CI-Job admin-component
+tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); läuft als Master-Release-Schritt `npm run --if-present build:admin` (W0095-Umbau 2026-09-01: KEIN prepublishOnly mehr; Hand-Publish nur via `publish:manual`) + CI-Job admin-component
 scripts/check-date-holidays.mjs     → Release-Gate: date-holidays-Currency (npm-latest) UND pinnt src-admin auf die Runtime-Version (die client-seitige Kaskade muss dieselbe Library sehen wie der Adapter)
 ../scripts/sync-iopackage-from-i18n.py → regeneriert io-package.json:instanceObjects.common.name aus admin/i18n/ (zentral, source: admin-i18n; läuft seit 2026-08-22 in pre-release.py Schritt 2b, NICHT mehr als before_commit-Hook — .releaseconfig.json enthält kein Python mehr)
 ```
@@ -55,7 +55,7 @@ scripts/check-date-holidays.mjs     → Release-Gate: date-holidays-Currency (np
 
 4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, isHoliday. Next: name, isHoliday, date, daysUntil. (Der Flag-State hieß bis v0.10.0 `boolean` — in v0.11.0 zu `isHoliday` umbenannt, alte `*.boolean` per `cleanupDeprecatedStates` migriert.)
 
-## Tests (278 vitest + 69 package)
+## Tests (282 vitest + 69 package)
 
 Karten-Umbau ergänzte: `scope-options.test.ts` (Kaskade getCountry/State/RegionOptions + buildPreviewHolidays inkl. Brückentage), `scope-options-bridge-parity.test.ts` (Verhaltens-Parity detectPreviewBridgeDays vs. Runtime detectBridgeDays, 5 Länder × 4 Jahre), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version). Frühere Guards bleiben: `exclude-options.test.ts`, `exclude-type-flags-parity.test.ts`, `holiday-id-parity.test.ts` (liest `exclude-options.ts`). Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
 
