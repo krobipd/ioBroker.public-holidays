@@ -9,7 +9,7 @@ vi.mock("@iobroker/adapter-core", () => ({
   },
 }));
 
-import { getSystemConfig, resolveCountryCode, resolveLanguages, SUPPORTED_LANGS, tName } from "./i18n";
+import { getSystemConfig, resolveCountryCode, resolveLanguages, SUPPORTED_LANGS, tName, formatDateForDisplay } from "./i18n";
 import { BRIDGE_DAY_NAMES } from "./holiday-engine";
 
 describe("tName", () => {
@@ -202,8 +202,8 @@ describe("getSystemConfig", () => {
   }
 
   it("reads country and language", async () => {
-    const res = await getSystemConfig(makeAdapter({ country: "Austria", language: "de" }));
-    expect(res).toEqual({ country: "Austria", language: "de" });
+    const res = await getSystemConfig(makeAdapter({ country: "Austria", language: "de", dateFormat: "DD.MM.YYYY" }));
+    expect(res).toEqual({ country: "Austria", language: "de", dateFormat: "DD.MM.YYYY" });
   });
 
   it("defaults language to en when missing", async () => {
@@ -213,7 +213,7 @@ describe("getSystemConfig", () => {
 
   it("returns defaults when system.config is missing", async () => {
     const res = await getSystemConfig(makeAdapter(undefined));
-    expect(res).toEqual({ country: "", language: "en" });
+    expect(res).toEqual({ country: "", language: "en", dateFormat: "" });
   });
 
   it("treats a non-string country as empty", async () => {
@@ -224,7 +224,30 @@ describe("getSystemConfig", () => {
 
   it("returns defaults on read error", async () => {
     const res = await getSystemConfig(makeAdapter({}, true));
-    expect(res).toEqual({ country: "", language: "en" });
+    expect(res).toEqual({ country: "", language: "en", dateFormat: "" });
+  });
+});
+
+
+describe("formatDateForDisplay", () => {
+  it("renders the ISO key in the system date format", () => {
+    expect(formatDateForDisplay("2026-10-26", "DD.MM.YYYY")).toBe("26.10.2026");
+    expect(formatDateForDisplay("2026-10-26", "MM/DD/YYYY")).toBe("10/26/2026");
+    expect(formatDateForDisplay("2026-10-26", "YYYY.MM.DD")).toBe("2026.10.26");
+  });
+
+  it("supports two-digit years", () => {
+    expect(formatDateForDisplay("2026-10-26", "DD.MM.YY")).toBe("26.10.26");
+  });
+
+  it("returns the key unchanged for an empty or unrecognized format", () => {
+    expect(formatDateForDisplay("2026-10-26", "")).toBe("2026-10-26");
+    expect(formatDateForDisplay("2026-10-26", "garbage")).toBe("2026-10-26");
+  });
+
+  it("returns a malformed key unchanged", () => {
+    expect(formatDateForDisplay("", "DD.MM.YYYY")).toBe("");
+    expect(formatDateForDisplay("26.10.2026", "DD.MM.YYYY")).toBe("26.10.2026");
   });
 });
 

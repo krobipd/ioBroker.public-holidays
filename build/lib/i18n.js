@@ -29,6 +29,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var i18n_exports = {};
 __export(i18n_exports, {
   SUPPORTED_LANGS: () => SUPPORTED_LANGS,
+  formatDateForDisplay: () => formatDateForDisplay,
   getSystemConfig: () => getSystemConfig,
   resolveCountryCode: () => resolveCountryCode,
   resolveLanguages: () => resolveLanguages,
@@ -78,15 +79,25 @@ async function getSystemConfig(adapter) {
     const common = obj == null ? void 0 : obj.common;
     return {
       country: typeof (common == null ? void 0 : common.country) === "string" ? common.country : "",
-      language: (typeof (common == null ? void 0 : common.language) === "string" ? common.language : "") || "en"
+      language: (typeof (common == null ? void 0 : common.language) === "string" ? common.language : "") || "en",
+      dateFormat: typeof (common == null ? void 0 : common.dateFormat) === "string" ? common.dateFormat : ""
     };
   } catch {
-    return { country: "", language: "en" };
+    return { country: "", language: "en", dateFormat: "" };
   }
+}
+function formatDateForDisplay(dateKey, dateFormat) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!m || !dateFormat.includes("DD") || !dateFormat.includes("MM") || !/Y{2,4}/.test(dateFormat)) {
+    return dateKey;
+  }
+  const [, year, month, day] = m;
+  return dateFormat.replace("YYYY", year).replace("YY", year.slice(-2)).replace("MM", month).replace("DD", day);
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   SUPPORTED_LANGS,
+  formatDateForDisplay,
   getSystemConfig,
   resolveCountryCode,
   resolveLanguages,

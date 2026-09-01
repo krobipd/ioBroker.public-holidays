@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.11.0 (2026-07-12) — stable
+
+- Breaking change: the states that flag whether each day is a holiday were renamed for clarity — update any scripts or views that read them.
+- Refreshed the built-in holiday data, adding newly recognised regional holidays.
+
 ## 0.10.0 (2026-07-02)
 
 - The "next holiday" date and days-until states now show up correctly as a date and a day count in VIS widgets and scripts (they carry the proper ioBroker role and a "days" unit).

@@ -99,6 +99,10 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 0.14.0 (2026-09-01)
+
+- New: the next-holiday log line now shows the date in your system's date format — for example 26.10.2026 instead of 2026-10-26. The date data point itself stays machine-readable for scripts.
+
 ### 0.13.2 (2026-08-27)
 
 - Fixed: Stopping or restarting the instance while the holidays were being worked out cut that run short, which could leave half-written values and errors in the log.
@@ -115,11 +119,6 @@ Bridge days appear in the state tree with the localized name matching the system
 ### 0.12.0 (2026-08-10)
 
 - The holiday exclusion selector in the settings now works on Admin 8 — it was blank there since Admin 8.0.1, so this version requires Admin 8.
-
-### 0.11.0 (2026-07-12) — stable
-
-- Breaking change: the states that flag whether each day is a holiday were renamed for clarity — update any scripts or views that read them.
-- Refreshed the built-in holiday data, adding newly recognised regional holidays.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

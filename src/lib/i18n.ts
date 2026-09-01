@@ -52,15 +52,42 @@ export function resolveCountryCode(value: string): string {
   return mapped && supportedCodes.has(mapped) ? mapped : "";
 }
 
-export async function getSystemConfig(adapter: ioBroker.Adapter): Promise<{ country: string; language: string }> {
+export interface SystemConfig {
+  country: string;
+  language: string;
+  /** The system-wide date display format (e.g. "DD.MM.YYYY"); "" when unset. */
+  dateFormat: string;
+}
+
+export async function getSystemConfig(adapter: ioBroker.Adapter): Promise<SystemConfig> {
   try {
     const obj = (await adapter.getForeignObjectAsync("system.config")) as ioBroker.SystemConfigObject | null;
     const common = obj?.common;
     return {
       country: typeof common?.country === "string" ? common.country : "",
       language: (typeof common?.language === "string" ? common.language : "") || "en",
+      dateFormat: typeof common?.dateFormat === "string" ? common.dateFormat : "",
     };
   } catch {
-    return { country: "", language: "en" };
+    return { country: "", language: "en", dateFormat: "" };
   }
+}
+
+/**
+ * Render a calendar key (YYYY-MM-DD) in the system's configured date display format
+ * ("DD.MM.YYYY" → "26.10.2026") for human-facing log lines. The machine-facing
+ * `next.date` state keeps the ISO form — scripts and comparisons rely on it.
+ * An empty/unrecognized format (or a malformed key) returns the key unchanged.
+ *
+ * @param dateKey the ISO calendar date (YYYY-MM-DD)
+ * @param dateFormat the system date format using DD / MM / YYYY (or YY) tokens
+ * @returns the formatted date, or the untouched key when formatting is not possible
+ */
+export function formatDateForDisplay(dateKey: string, dateFormat: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!m || !dateFormat.includes("DD") || !dateFormat.includes("MM") || !/Y{2,4}/.test(dateFormat)) {
+    return dateKey;
+  }
+  const [, year, month, day] = m;
+  return dateFormat.replace("YYYY", year).replace("YY", year.slice(-2)).replace("MM", month).replace("DD", day);
 }

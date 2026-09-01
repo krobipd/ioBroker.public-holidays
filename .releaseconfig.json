@@ -5,7 +5,7 @@
       "node scripts/check-date-holidays.mjs",
       "npm test",
       "npm run build",
-      "npm run build:admin"
+      "npm run --if-present build:admin"
     ]
   }
 }

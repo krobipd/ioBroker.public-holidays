@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.13.2",
+    "version": "0.14.0",
     "news": {
+      "0.14.0": {
+        "en": "The next-holiday log line now shows the date in your system's date format, for example 26.10.2026 instead of 2026-10-26; the date data point itself stays machine-readable.",
+        "de": "Die Log-Zeile zum nächsten Feiertag zeigt das Datum jetzt im Datumsformat deines Systems, z. B. 26.10.2026 statt 2026-10-26; der Datums-Datenpunkt selbst bleibt maschinenlesbar.",
+        "ru": "Строка журнала о следующем празднике теперь показывает дату в формате вашей системы, например 26.10.2026 вместо 2026-10-26; сама точка данных даты остаётся машиночитаемой.",
+        "pt": "A linha de registo do próximo feriado mostra agora a data no formato do seu sistema, por exemplo 26.10.2026 em vez de 2026-10-26; o ponto de dados da data continua legível por máquina.",
+        "nl": "De logregel voor de volgende feestdag toont de datum nu in het datumformaat van je systeem, bijvoorbeeld 26.10.2026 in plaats van 2026-10-26; het datum-datapunt zelf blijft machineleesbaar.",
+        "fr": "La ligne de journal du prochain jour férié affiche désormais la date au format de votre système, par exemple 26.10.2026 au lieu de 2026-10-26 ; le point de donnée de date reste lisible par machine.",
+        "it": "La riga di log della prossima festività mostra ora la data nel formato del tuo sistema, ad esempio 26.10.2026 invece di 2026-10-26; il punto dati della data resta leggibile dalla macchina.",
+        "es": "La línea de registro del próximo festivo muestra ahora la fecha en el formato de tu sistema, por ejemplo 26.10.2026 en lugar de 2026-10-26; el punto de datos de fecha sigue siendo legible por máquina.",
+        "pl": "Wiersz dziennika o następnym święcie pokazuje teraz datę w formacie Twojego systemu, np. 26.10.2026 zamiast 2026-10-26; punkt danych z datą pozostaje czytelny maszynowo.",
+        "uk": "Рядок журналу про наступне свято тепер показує дату у форматі вашої системи, наприклад 26.10.2026 замість 2026-10-26; сама точка даних дати лишається машиночитаною.",
+        "zh-cn": "下一个节假日的日志行现在按系统日期格式显示日期，例如 26.10.2026 而不是 2026-10-26；日期数据点本身保持机器可读。"
+      },
       "0.13.2": {
         "en": "Heads-up for Austria: St. Martin's, Rupert's and Referendum Day count as observances now and disappear unless that type is enabled. Plus data fixes for Ireland, Russia and others.",
         "de": "Achtung Österreich: Martini, Rupert und der Tag der Volksabstimmung gelten jetzt als Gedenktage und verschwinden, wenn dieser Typ nicht aktiv ist. Dazu Korrekturen für Irland, Russland und weitere.",
@@ -80,19 +93,6 @@
         "pl": "Lista wykluczeń świąt pokazuje teraz tylko święta twojego regionu, zlokalizowana i posortowana według daty. Naprawiono fałszywe ostrzeżenie przy starcie.",
         "uk": "Список виключених свят тепер показує лише свята вашого регіону, локалізований і відсортований за датою. Виправлено хибне попередження при запуску.",
         "zh-cn": "节假日排除列表现在仅显示所选地区的节假日，已本地化并按日期排序。修复了启动时的错误警告。"
-      },
-      "0.8.0": {
-        "en": "Surfaces a misconfigured region/state and a stale holiday exclude, prefers the more important holiday when two collide, and adds an optional midweek bridge day.",
-        "de": "Erkennt ein falsch konfiguriertes Bundesland/Region und einen veralteten Feiertags-Ausschluss, zeigt am selben Tag den wichtigeren Feiertag und ergänzt einen optionalen Brückentag.",
-        "ru": "Обнаруживает неверно настроенный регион/штат и устаревшее исключение праздника, при совпадении двух праздников выбирает более важный и добавляет необязательный мостовой день среди недели.",
-        "pt": "Deteta uma região/estado mal configurado e uma exclusão de feriado obsoleta, prefere o feriado mais importante quando dois coincidem e adiciona um dia-ponte opcional a meio da semana.",
-        "nl": "Detecteert een verkeerd geconfigureerde regio/deelstaat en een verouderde feestdaguitsluiting, kiest de belangrijkste feestdag bij samenvallen en voegt een optionele doordeweekse brugdag toe.",
-        "fr": "Détecte une région/un État mal configuré et une exclusion de jour férié obsolète, affiche le jour férié le plus important en cas de collision et ajoute un jour de pont facultatif.",
-        "it": "Rileva una regione/stato configurato male e un'esclusione di festività obsoleta, preferisce la festività più importante in caso di collisione e aggiunge un ponte facoltativo a metà settimana.",
-        "es": "Detecta una región/estado mal configurado y una exclusión de festivo obsoleta, prefiere el festivo más importante cuando coinciden dos y añade un día puente opcional entre semana.",
-        "pl": "Wykrywa błędnie skonfigurowany region/kraj związkowy i nieaktualne wykluczenie święta, przy kolizji wybiera ważniejsze święto i dodaje opcjonalny dzień pomostowy w środku tygodnia.",
-        "uk": "Виявляє неправильно налаштований регіон/штат і застаріле виключення свята, при збігу обирає важливіше свято та додає необов'язковий день-місток серед тижня.",
-        "zh-cn": "检测配置错误的地区/州和过时的节假日排除，两个节假日冲突时优先显示更重要的一个，并添加可选的工作日桥接日。"
       }
     },
     "plugins": {

@@ -135,7 +135,7 @@ class PublicHolidaysAdapter extends utils.Adapter {
         );
       }
       (0, import_holiday_engine.logAvailableHolidays)(config, languages, (msg) => this.log.debug(msg), hd);
-      const nextText = computed.next.isHoliday ? `${(0, import_error_utils.oneLine)(computed.next.name)} on ${computed.next.date} (in ${computed.next.daysUntil} days)` : "no upcoming holiday";
+      const nextText = computed.next.isHoliday ? `${(0, import_error_utils.oneLine)(computed.next.name)} on ${(0, import_i18n.formatDateForDisplay)(computed.next.date, sysConfig.dateFormat)} (in ${computed.next.daysUntil} days)` : "no upcoming holiday";
       const summary = `Today: ${computed.today.isHoliday ? (0, import_error_utils.oneLine)(computed.today.name) : "no holiday"}, next holiday: ${nextText}`;
       this.log.info(summary);
       await (0, import_state_publisher.cleanupDeprecatedStates)(this);

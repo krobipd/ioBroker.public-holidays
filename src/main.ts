@@ -3,7 +3,7 @@ import { I18n } from "@iobroker/adapter-core";
 import { join } from "node:path";
 import { errText, oneLine } from "./lib/error-utils";
 import { computeHolidays, createHolidaysInstance, detectScopeIssues, logAvailableHolidays } from "./lib/holiday-engine";
-import { getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
+import { formatDateForDisplay, getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
 import { HOLIDAY_TYPES, type AdapterConfig } from "./lib/types";
 
@@ -119,8 +119,10 @@ export class PublicHolidaysAdapter extends utils.Adapter {
 
       logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
 
+      // The log line shows the date the way the user's ioBroker displays dates
+      // (system.config dateFormat, e.g. "26.10.2026"); the next.date STATE stays ISO.
       const nextText = computed.next.isHoliday
-        ? `${oneLine(computed.next.name)} on ${computed.next.date} (in ${computed.next.daysUntil} days)`
+        ? `${oneLine(computed.next.name)} on ${formatDateForDisplay(computed.next.date, sysConfig.dateFormat)} (in ${computed.next.daysUntil} days)`
         : "no upcoming holiday";
       const summary = `Today: ${
         computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"

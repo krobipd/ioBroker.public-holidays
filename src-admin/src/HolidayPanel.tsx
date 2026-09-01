@@ -188,7 +188,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
 
       <Divider />
 
-      {/* Tier 3 — holiday types */}
+      {/* Tier 2 — holiday types */}
       <Stage title={t("ph_hc_types_title")}>
         <FormGroup row>
           {TYPE_FLAGS.map(tf => (
@@ -209,7 +209,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
 
       <Divider />
 
-      {/* Tier 4 — bridge days */}
+      {/* Tier 3 — bridge days */}
       <Stage title={t("ph_hc_bridge_title")}>
         <FormControlLabel
           control={
@@ -231,7 +231,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
 
       <Divider />
 
-      {/* Tier 5 — excluded holidays (the former ExcludeSelector, now a tier) */}
+      {/* Tier 4 — excluded holidays (the former ExcludeSelector, now a tier) */}
       <Stage title={t("ph_hc_exclude_title")}>
         <Autocomplete
           multiple
@@ -274,7 +274,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
 
       <Divider />
 
-      {/* Tier 6 — live preview of what the runtime would detect */}
+      {/* Tier 5 — live preview of what the runtime would detect */}
       <Stage title={t("ph_hc_preview_title")}>
         {country ? (
           <>

@@ -93,12 +93,9 @@ export function buildExcludeOptions(
 
   let hd: Holidays;
   try {
-    hd =
-      scope.state && scope.region
-        ? makeHolidays(scope.country, scope.state, scope.region)
-        : scope.state
-          ? makeHolidays(scope.country, scope.state)
-          : makeHolidays(scope.country);
+    // The scoped construction (country / +state / +region) lives in the maker itself —
+    // empty strings are folded to "absent" here instead of re-branching per call site.
+    hd = makeHolidays(scope.country, scope.state || undefined, scope.region || undefined);
   } catch {
     return [];
   }
