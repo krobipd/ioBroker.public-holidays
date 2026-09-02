@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Holidays from "date-holidays";
+import type Holidays from "date-holidays";
 import {
   buildExcludeOptions,
   computeOrphanIds,

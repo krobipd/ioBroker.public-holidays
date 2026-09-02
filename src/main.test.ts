@@ -1,7 +1,7 @@
 /**
  * Orchestration tests for main.ts — onReady flow (mode migration, country
  * detection chain, compute → publish → stop) and the validateConfig matrix.
- * Fleet harness pattern: @iobroker/adapter-core is mocked with a stub Adapter
+ * Fleet harness pattern: `@iobroker/adapter-core` is mocked with a stub Adapter
  * class; everything else (holiday-engine with the real date-holidays data,
  * i18n, state-publisher) runs for REAL against the stub object store.
  */
@@ -45,15 +45,15 @@ vi.mock("@iobroker/adapter-core", () => {
       return id.startsWith("system.") || id.startsWith(`${this.namespace}.`) ? id : `${this.namespace}.${id}`;
     }
 
-    async getForeignObjectAsync(id: string): Promise<ObjEntry | null> {
+    getForeignObjectAsync(id: string): Promise<ObjEntry | null> {
       if (this.failNextForeignObjectRead) {
         this.failNextForeignObjectRead = false;
-        throw new Error("objects db unreachable");
+        return Promise.reject(new Error("objects db unreachable"));
       }
-      return this.objects.get(id) ?? null;
+      return Promise.resolve(this.objects.get(id) ?? null);
     }
 
-    async extendForeignObjectAsync(id: string, obj: Partial<ObjEntry>): Promise<void> {
+    extendForeignObjectAsync(id: string, obj: Partial<ObjEntry>): Promise<void> {
       if (id === `system.adapter.${this.namespace}`) {
         this.instanceObjectWrites++;
       }
@@ -64,17 +64,19 @@ vi.mock("@iobroker/adapter-core", () => {
         common: { ...(existing.common ?? {}), ...(obj.common ?? {}) },
         native: { ...(existing.native ?? {}), ...(obj.native ?? {}) },
       });
+      return Promise.resolve();
     }
 
-    async getObjectAsync(id: string): Promise<ObjEntry | null> {
-      return this.objects.get(this.fullId(id)) ?? null;
+    getObjectAsync(id: string): Promise<ObjEntry | null> {
+      return Promise.resolve(this.objects.get(this.fullId(id)) ?? null);
     }
 
-    async delObjectAsync(id: string): Promise<void> {
+    delObjectAsync(id: string): Promise<void> {
       this.objects.delete(this.fullId(id));
+      return Promise.resolve();
     }
 
-    async extendObjectAsync(id: string, obj: Partial<ObjEntry>, _options?: unknown): Promise<void> {
+    extendObjectAsync(id: string, obj: Partial<ObjEntry>, _options?: unknown): Promise<void> {
       const full = this.fullId(id);
       const existing = this.objects.get(full) ?? {};
       this.objects.set(full, {
@@ -83,10 +85,12 @@ vi.mock("@iobroker/adapter-core", () => {
         common: { ...(existing.common ?? {}), ...(obj.common ?? {}) },
         native: { ...(existing.native ?? {}), ...(obj.native ?? {}) },
       });
+      return Promise.resolve();
     }
 
-    async setStateChangedAsync(id: string, val: unknown, ack: boolean): Promise<void> {
+    setStateChangedAsync(id: string, val: unknown, ack: boolean): Promise<void> {
       this.states.set(this.fullId(id), { val, ack });
+      return Promise.resolve();
     }
   }
 
@@ -221,9 +225,9 @@ describe("onReady — happy path", () => {
     vi.setSystemTime(new Date("2027-03-10T12:00:00"));
     const { internal, stub } = setup({ country: "DE" });
     await internal.onReady();
-    expect(
-      logsOf(stub, "info").some(m => m.startsWith("Today: no holiday") && m.includes("next holiday: ")),
-    ).toBe(true);
+    expect(logsOf(stub, "info").some(m => m.startsWith("Today: no holiday") && m.includes("next holiday: "))).toBe(
+      true,
+    );
   });
 
   it("removes deprecated states left over from older versions", async () => {
@@ -378,8 +382,8 @@ describe("onReady — country detection chain", () => {
 describe("onReady — error handling", () => {
   it("catches errors, logs onReady failed and STILL stops", async () => {
     const { internal, stub } = setup({ country: "DE" });
-    stub.extendObjectAsync = async () => {
-      throw new Error("broker write refused");
+    stub.extendObjectAsync = () => {
+      return Promise.reject(new Error("broker write refused"));
     };
 
     await internal.onReady();

@@ -31,9 +31,7 @@ describe("bridge-day parity (runtime engine vs admin preview)", () => {
           map.set(key, { date: key, name: h.name, type: h.type, rule: h.rule });
         }
         const keys = new Set(map.keys());
-        const runtime = detectBridgeDays(map, year)
-          .map(toDateKey)
-          .sort();
+        const runtime = detectBridgeDays(map, year).map(toDateKey).sort();
         const preview = detectPreviewBridgeDays(keys, year).sort();
         expect(preview).toEqual(runtime);
       });

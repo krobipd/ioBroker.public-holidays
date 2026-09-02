@@ -23,7 +23,7 @@ function makeConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
 }
 
 function makeDate(dateStr: string): Date {
-  return new Date(dateStr + "T12:00:00");
+  return new Date(`${dateStr}T12:00:00`);
 }
 
 // ─── Config: country / state / region ───────────────────────────────
@@ -221,7 +221,12 @@ describe("same-day collisions and type priority", () => {
       getHolidays: (year: number) =>
         entries
           .filter(e => e.date.startsWith(String(year)))
-          .map(e => ({ date: `${e.date} 00:00:00`, start: new Date(`${e.date}T00:00:00`), name: e.name, type: e.type })),
+          .map(e => ({
+            date: `${e.date} 00:00:00`,
+            start: new Date(`${e.date}T00:00:00`),
+            name: e.name,
+            type: e.type,
+          })),
       setLanguages: () => undefined,
     } as never;
   }
@@ -230,17 +235,13 @@ describe("same-day collisions and type priority", () => {
     // Same day, two types. The state must name the public holiday — letting the
     // observance win turns a day off into a "Gedenktag" in every visualisation
     // and flips isHoliday for anyone filtering on the name.
-    const result = computeHolidays(
-      makeConfig({ holidayTypes: ["public", "observance"] }),
-      ["de"],
-      {
-        referenceDate: makeDate("2026-12-26"),
-        instance: fakeInstance([
-          { date: "2026-12-26", name: "Gedenktag", type: "observance" },
-          { date: "2026-12-26", name: "2. Weihnachtstag", type: "public" },
-        ]),
-      },
-    );
+    const result = computeHolidays(makeConfig({ holidayTypes: ["public", "observance"] }), ["de"], {
+      referenceDate: makeDate("2026-12-26"),
+      instance: fakeInstance([
+        { date: "2026-12-26", name: "Gedenktag", type: "observance" },
+        { date: "2026-12-26", name: "2. Weihnachtstag", type: "public" },
+      ]),
+    });
     expect(result.today.isHoliday).toBe(true);
     expect(result.today.name).toBe("2. Weihnachtstag");
   });
@@ -248,17 +249,13 @@ describe("same-day collisions and type priority", () => {
   it("ranks an unknown type LAST, never first", () => {
     // A date-holidays release can add a type this adapter does not know yet.
     // Ranking it first would let it push a real public holiday out of the day.
-    const result = computeHolidays(
-      makeConfig({ holidayTypes: ["public", "brand_new_type"] }),
-      ["de"],
-      {
-        referenceDate: makeDate("2026-12-25"),
-        instance: fakeInstance([
-          { date: "2026-12-25", name: "Neuer Typ", type: "brand_new_type" },
-          { date: "2026-12-25", name: "1. Weihnachtstag", type: "public" },
-        ]),
-      },
-    );
+    const result = computeHolidays(makeConfig({ holidayTypes: ["public", "brand_new_type"] }), ["de"], {
+      referenceDate: makeDate("2026-12-25"),
+      instance: fakeInstance([
+        { date: "2026-12-25", name: "Neuer Typ", type: "brand_new_type" },
+        { date: "2026-12-25", name: "1. Weihnachtstag", type: "public" },
+      ]),
+    });
     expect(result.today.name).toBe("1. Weihnachtstag");
   });
 });

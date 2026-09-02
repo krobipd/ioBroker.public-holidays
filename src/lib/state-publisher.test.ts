@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 vi.mock("@iobroker/adapter-core", () => ({
   I18n: {
@@ -11,15 +11,22 @@ vi.mock("@iobroker/adapter-core", () => ({
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./state-publisher";
 import type { ComputedHolidays } from "./types";
 
-function makeMockAdapter() {
+function makeMockAdapter(): {
+  extendObjectAsync: Mock;
+  setStateChangedAsync: Mock;
+  states: Record<string, { val: unknown; ack: boolean }>;
+  objects: Record<string, unknown>;
+} {
   const states: Record<string, { val: unknown; ack: boolean }> = {};
   const objects: Record<string, unknown> = {};
   return {
-    extendObjectAsync: vi.fn(async (id: string, obj: unknown) => {
+    extendObjectAsync: vi.fn((id: string, obj: unknown) => {
       objects[id] = obj;
+      return Promise.resolve();
     }),
-    setStateChangedAsync: vi.fn(async (id: string, val: unknown, ack: boolean) => {
+    setStateChangedAsync: vi.fn((id: string, val: unknown, ack: boolean) => {
       states[id] = { val, ack };
+      return Promise.resolve();
     }),
     states,
     objects,
@@ -111,7 +118,7 @@ describe("ensureObjects", () => {
 
   it("channel objects have translation object name", async () => {
     await ensureObjects(adapter as any);
-    const ch = adapter.objects["today"] as any;
+    const ch = adapter.objects.today as any;
     expect(ch.common.name).toHaveProperty("en");
     expect(ch.common.name).toHaveProperty("de");
   });
@@ -147,9 +154,10 @@ describe("cleanupDeprecatedStates", () => {
     };
     const deleted: string[] = [];
     const adapter = {
-      getObjectAsync: vi.fn(async (id: string) => existingObjects[id] ?? null),
-      delObjectAsync: vi.fn(async (id: string) => {
+      getObjectAsync: vi.fn((id: string) => Promise.resolve(existingObjects[id] ?? null)),
+      delObjectAsync: vi.fn((id: string) => {
         deleted.push(id);
+        return Promise.resolve();
       }),
       log: { debug: vi.fn() },
     };
@@ -175,9 +183,10 @@ describe("cleanupDeprecatedStates", () => {
     );
     const deleted: string[] = [];
     const adapter = {
-      getObjectAsync: vi.fn(async (id: string) => existingObjects[id] ?? null),
-      delObjectAsync: vi.fn(async (id: string) => {
+      getObjectAsync: vi.fn((id: string) => Promise.resolve(existingObjects[id] ?? null)),
+      delObjectAsync: vi.fn((id: string) => {
         deleted.push(id);
+        return Promise.resolve();
       }),
       log: { debug: vi.fn() },
     };
@@ -189,7 +198,7 @@ describe("cleanupDeprecatedStates", () => {
 
   it("does nothing when no deprecated states exist", async () => {
     const adapter = {
-      getObjectAsync: vi.fn(async () => null),
+      getObjectAsync: vi.fn(() => Promise.resolve(null)),
       delObjectAsync: vi.fn(),
       log: { debug: vi.fn() },
     };

@@ -9,7 +9,14 @@ vi.mock("@iobroker/adapter-core", () => ({
   },
 }));
 
-import { getSystemConfig, resolveCountryCode, resolveLanguages, SUPPORTED_LANGS, tName, formatDateForDisplay } from "./i18n";
+import {
+  getSystemConfig,
+  resolveCountryCode,
+  resolveLanguages,
+  SUPPORTED_LANGS,
+  tName,
+  formatDateForDisplay,
+} from "./i18n";
 import { BRIDGE_DAY_NAMES } from "./holiday-engine";
 
 describe("tName", () => {
@@ -192,11 +199,11 @@ describe("resolveCountryCode — rejects what is not a country", () => {
 describe("getSystemConfig", () => {
   function makeAdapter(common: unknown, reject = false): ioBroker.Adapter {
     return {
-      getForeignObjectAsync: vi.fn(async () => {
+      getForeignObjectAsync: vi.fn(() => {
         if (reject) {
-          throw new Error("boom");
+          return Promise.reject(new Error("boom"));
         }
-        return common === undefined ? null : { common };
+        return Promise.resolve(common === undefined ? null : { common });
       }),
     } as unknown as ioBroker.Adapter;
   }
@@ -227,7 +234,6 @@ describe("getSystemConfig", () => {
     expect(res).toEqual({ country: "", language: "en", dateFormat: "" });
   });
 });
-
 
 describe("formatDateForDisplay", () => {
   it("renders the ISO key in the system date format", () => {
