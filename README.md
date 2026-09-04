@@ -33,7 +33,7 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 ## Requirements
 
 - ioBroker js-controller >= 7.2.2
-- ioBroker Admin >= 8.0.1
+- ioBroker Admin >= 8.0.11
 - Node.js >= 22
 
 ## Configuration
@@ -99,6 +99,13 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- Fixed: On installations updated from an older version the adapter's own message box stayed switched off — a leftover setting is now removed properly instead of being written back as "off".
+- Fixed: Turning off every holiday type left the adapter reporting nothing without a word, while the settings card still previewed a full year of holidays. The card now shows what the adapter really reports, and the log says when no type is enabled.
+- Changed: Channel and data point names are refreshed on every run, so renamed labels also reach installations that were updated instead of newly installed. A manual rename of one of these data points is overwritten.
+- Changed: The unused exclusion setting left over from versions before 0.9.0 is cleared from the instance configuration.
+
 ### 0.14.0 (2026-09-01)
 
 - New: the next-holiday log line now shows the date in your system's date format — for example 26.10.2026 instead of 2026-10-26. The date data point itself stays machine-readable for scripts.
