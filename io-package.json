@@ -137,6 +137,14 @@
     "icon": "public-holidays.svg",
     "extIcon": "https://cdn.jsdelivr.net/gh/krobipd/ioBroker.public-holidays@main/admin/public-holidays.svg",
     "readme": "https://github.com/krobipd/ioBroker.public-holidays/blob/main/README.md",
+    "docs": {
+      "en": [
+        "docs/en/README.md"
+      ],
+      "de": [
+        "docs/de/README.md"
+      ]
+    },
     "enabled": true,
     "tier": 2,
     "loglevel": "info",
@@ -157,7 +165,7 @@
     ],
     "globalDependencies": [
       {
-        "admin": ">=8.0.1"
+        "admin": ">=8.0.11"
       }
     ],
     "keywords": [

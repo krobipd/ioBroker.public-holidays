@@ -15,6 +15,10 @@ on:
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - ".editorconfig"
+      - "LICENSE"
   pull_request:
     branches:
       - main
@@ -134,6 +138,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: "24.x"
+          cache: npm
       - run: npm install --force
       - name: Build admin custom component (Vite / Module Federation)
         run: npm run build:admin
