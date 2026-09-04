@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.14.0",
+    "version": "0.15.0",
     "news": {
+      "0.15.0": {
+        "en": "The settings card now shows what the adapter really reports when no holiday type is enabled, and channel and data point names are refreshed on existing installations.",
+        "de": "Die Einstellungskarte zeigt jetzt, was der Adapter bei abgeschalteten Feiertagstypen wirklich meldet, und Kanal- und Datenpunktnamen werden im Bestand aufgefrischt.",
+        "ru": "Карточка настроек теперь показывает, что адаптер действительно сообщает при отключённых типах праздников, а имена каналов и точек данных обновляются.",
+        "pt": "O cartão de definições mostra agora o que o adaptador realmente comunica sem tipos de feriado ativos, e os nomes de canais e pontos de dados são atualizados.",
+        "nl": "De instellingenkaart toont nu wat de adapter werkelijk meldt als geen feestdagtype actief is, en namen van kanalen en datapunten worden vernieuwd.",
+        "fr": "La carte de configuration montre désormais ce que l'adaptateur signale réellement sans type de jour férié actif, et les noms des canaux et points de données sont rafraîchis.",
+        "it": "La scheda impostazioni mostra ora ciò che l'adattatore riporta davvero senza tipi di festività attivi e i nomi di canali e punti dati vengono aggiornati.",
+        "es": "La tarjeta de ajustes muestra ahora lo que el adaptador informa realmente sin tipos de festivo activos, y se actualizan los nombres de canales y puntos de datos.",
+        "pl": "Karta ustawień pokazuje teraz, co adapter naprawdę zgłasza przy wyłączonych typach świąt, a nazwy kanałów i punktów danych są odświeżane.",
+        "uk": "Картка налаштувань тепер показує, що адаптер справді повідомляє за вимкнених типів свят, а назви каналів і точок даних оновлюються.",
+        "zh-cn": "未启用任何假日类型时，设置卡片现在显示适配器真正报告的内容，并刷新通道和数据点名称。"
+      },
       "0.14.0": {
         "en": "The next-holiday log line now shows the date in your system's date format, for example 26.10.2026 instead of 2026-10-26; the date data point itself stays machine-readable.",
         "de": "Die Log-Zeile zum nächsten Feiertag zeigt das Datum jetzt im Datumsformat deines Systems, z. B. 26.10.2026 statt 2026-10-26; der Datums-Datenpunkt selbst bleibt maschinenlesbar.",
@@ -80,19 +93,6 @@
         "pl": "Data i dni do następnego święta są teraz poprawnie wyświetlane jako data i liczba w VIS i skryptach, a lista wykluczeń oferuje także święta przyszłego roku.",
         "uk": "Дата та кількість днів до наступного свята тепер коректно відображаються як дата й число у VIS і скриптах, а список винятків також пропонує свята наступного року.",
         "zh-cn": "下一个假日的日期和剩余天数现在在 VIS 和脚本中正确显示为日期和数字，设置中的排除列表也会提供明年的假日。"
-      },
-      "0.9.0": {
-        "en": "The holiday exclude list now shows only your selected region's holidays, localized and sorted by date. A false startup warning about excludes is fixed.",
-        "de": "Die Feiertags-Ausschlussliste zeigt jetzt nur die Feiertage deiner Region, lokalisiert und nach Datum sortiert. Eine falsche Startwarnung zu Ausschlüssen ist behoben.",
-        "ru": "Список исключаемых праздников теперь показывает только праздники вашего региона, локализован и отсортирован по дате. Исправлено ложное предупреждение при запуске.",
-        "pt": "A lista de exclusão de feriados agora mostra apenas os feriados da sua região, localizada e ordenada por data. Foi corrigido um aviso falso no arranque.",
-        "nl": "De uitsluitlijst voor feestdagen toont nu alleen de feestdagen van je regio, gelokaliseerd en op datum gesorteerd. Een onterechte startwaarschuwing is verholpen.",
-        "fr": "La liste d'exclusion des jours fériés n'affiche que ceux de votre région, localisée et triée par date. Un faux avertissement au démarrage est corrigé.",
-        "it": "L'elenco di esclusione delle festività ora mostra solo quelle della tua regione, localizzato e ordinato per data. Corretto un falso avviso all'avvio.",
-        "es": "La lista de exclusión de festivos ahora muestra solo los de tu región, localizada y ordenada por fecha. Se ha corregido un aviso falso al inicio.",
-        "pl": "Lista wykluczeń świąt pokazuje teraz tylko święta twojego regionu, zlokalizowana i posortowana według daty. Naprawiono fałszywe ostrzeżenie przy starcie.",
-        "uk": "Список виключених свят тепер показує лише свята вашого регіону, локалізований і відсортований за датою. Виправлено хибне попередження при запуску.",
-        "zh-cn": "节假日排除列表现在仅显示所选地区的节假日，已本地化并按日期排序。修复了启动时的错误警告。"
       }
     },
     "plugins": {

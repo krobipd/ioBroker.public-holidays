@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.12.0 (2026-08-10)
+
+- The holiday exclusion selector in the settings now works on Admin 8 — it was blank there since Admin 8.0.1, so this version requires Admin 8.
+
 ## 0.11.0 (2026-07-12) — stable
 
 - Breaking change: the states that flag whether each day is a holiday were renamed for clarity — update any scripts or views that read them.

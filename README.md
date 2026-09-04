@@ -99,12 +99,10 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.15.0 (2026-09-04)
 
-- Fixed: On installations updated from an older version the adapter's own message box stayed switched off — a leftover setting is now removed properly instead of being written back as "off".
-- Fixed: Turning off every holiday type left the adapter reporting nothing without a word, while the settings card still previewed a full year of holidays. The card now shows what the adapter really reports, and the log says when no type is enabled.
-- Changed: Channel and data point names are refreshed on every run, so renamed labels also reach installations that were updated instead of newly installed. A manual rename of one of these data points is overwritten.
-- Changed: The unused exclusion setting left over from versions before 0.9.0 is cleared from the instance configuration.
+- Fixed: With no holiday type enabled the adapter reported nothing without a word while the card still previewed a full year. Card and log now say it.
+- Changed: Channel and data point names are refreshed on every run, so renames reach updated installations too — a manual rename of them is overwritten.
 
 ### 0.14.0 (2026-09-01)
 
@@ -122,10 +120,6 @@ Bridge days appear in the state tree with the localized name matching the system
 ### 0.13.0 (2026-08-13)
 
 - The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the holidays that will be detected.
-
-### 0.12.0 (2026-08-10)
-
-- The holiday exclusion selector in the settings now works on Admin 8 — it was blank there since Admin 8.0.1, so this version requires Admin 8.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
