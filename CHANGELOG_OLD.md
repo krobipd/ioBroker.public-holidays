@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.13.0 (2026-08-13)
+
+- The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the holidays that will be detected.
+
 ## 0.12.0 (2026-08-10)
 
 - The holiday exclusion selector in the settings now works on Admin 8 — it was blank there since Admin 8.0.1, so this version requires Admin 8.

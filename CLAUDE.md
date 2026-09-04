@@ -9,7 +9,7 @@
 - **Version + Changelog:** current version in `io-package.json`; full internal dev history moved to `.claude/dev-history.md` (local, not auto-loaded). User-facing changelog: `README.md` + `io-package.json` news.
 - **GitHub:** https://github.com/krobipd/ioBroker.public-holidays
 - **npm:** `iobroker.public-holidays` — Zugang erhalten 2026-05-24
-- **Runtime-Deps:** `@iobroker/adapter-core`, `date-holidays` (^3.30.2, ISC + CC-BY-SA-3.0; im Release-Workflow auf npm-latest gehalten — Currency+Parität-Gate `check-date-holidays.mjs`, das auch die src-admin-Karten-Kopie auf dieselbe Version pinnt)
+- **Runtime-Deps:** `@iobroker/adapter-core`, `date-holidays` (ISC + CC-BY-SA-3.0). ⚠️ Der deklarierte **Mindeststand** ist das EINZIGE, was eine Installation erreicht — die Lock-Datei gilt nur für dieses Repo/CI, ioBroker installiert in den gemeinsamen `/opt/iobroker`-Baum und behält dort jede Kopie, die den Bereich erfüllt. Deshalb hebt `check-date-holidays.mjs` bei JEDEM Release den Boden auf die installierte Version (`^<installed>`); Wächter `date-holidays-floor.test.ts`. Gemessen 2026-09-04: krobis Server lief noch 3.30.2 bei Boden `^3.30.2`, sechs Datenstände zurück — mit sichtbarer Folge (ein Tag galt dort noch als gesetzlicher Feiertag).
 - **Test-Setup:** Tests unter `src/**/*.test.ts` via **vitest**. `test/package.js` + `test/integration.js` bleiben mocha.
 - **`@types/node` an `engines.node`-Min gekoppelt:** `^22` weil `engines.node: ">=22"`
 
@@ -38,7 +38,7 @@ src-admin/                          → Custom-Admin-Komponente (Module-Federati
 ├── src/i18n/<lang>.json           → Karten-Übersetzungen (23 Keys × 11 Sprachen: ph_hc_* + ph_exclude*)
 ├── package.json                   → Gen-2/Admin-8-Stack: gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType). date-holidays exakt-gepinnt = root-installierte Version (Wächter: date-holidays-version-parity.test.ts)
 tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); läuft als Master-Release-Schritt `npm run --if-present build:admin` (W0095-Umbau 2026-09-01: KEIN prepublishOnly mehr; Hand-Publish nur via `publish:manual`) + CI-Job admin-component
-scripts/check-date-holidays.mjs     → Release-Gate: date-holidays-Currency (npm-latest) UND pinnt src-admin auf die Runtime-Version (die client-seitige Kaskade muss dieselbe Library sehen wie der Adapter)
+scripts/check-date-holidays.mjs     → Release-Gate, DREI Teile: (1) Currency-Warnung gegen npm-latest, (2) hebt den deklarierten date-holidays-Boden in package.json auf `^<installed>` — nur das erreicht bestehende Installationen, (3) pinnt src-admin auf die Runtime-Version (die client-seitige Kaskade muss dieselbe Library sehen wie der Adapter). Wächter: date-holidays-floor.test.ts + date-holidays-version-parity.test.ts
 ../scripts/sync-iopackage-from-i18n.py → regeneriert io-package.json:instanceObjects.common.name aus admin/i18n/ (zentral, source: admin-i18n; läuft seit 2026-08-22 in pre-release.py Schritt 2b, NICHT mehr als before_commit-Hook — .releaseconfig.json enthält kein Python mehr)
 ```
 

@@ -99,6 +99,10 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 0.15.1 (2026-09-04)
+
+- Fixed: Installations kept whatever holiday data was already on the system, so corrections and new countries never arrived. An update now brings the current data along.
+
 ### 0.15.0 (2026-09-04)
 
 - Fixed: With no holiday type enabled the adapter reported nothing without a word while the card still previewed a full year. Card and log now say it.
@@ -116,10 +120,6 @@ Bridge days appear in the state tree with the localized name matching the system
 ### 0.13.1 (2026-08-22)
 
 - Fixed: The support links were missing from the settings page since the new card was introduced; they are back below it.
-
-### 0.13.0 (2026-08-13)
-
-- The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the holidays that will be detected.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.15.0",
+    "version": "0.15.1",
     "news": {
+      "0.15.1": {
+        "en": "Installations kept whatever holiday data was already on the system; an update now brings the current data along, including corrected holiday classifications.",
+        "de": "Anlagen behielten die Feiertagsdaten, die schon auf dem System lagen; ein Update bringt jetzt die aktuellen Daten mit, samt korrigierter Einstufungen.",
+        "ru": "Установки сохраняли те данные о праздниках, что уже были в системе; теперь обновление приносит актуальные данные с исправленными классификациями.",
+        "pt": "As instalações mantinham os dados de feriados já presentes no sistema; uma atualização traz agora os dados atuais, incluindo classificações corrigidas.",
+        "nl": "Installaties behielden de feestdaggegevens die al op het systeem stonden; een update brengt nu de actuele gegevens mee, inclusief gecorrigeerde indelingen.",
+        "fr": "Les installations conservaient les données de jours fériés déjà présentes ; une mise à jour apporte désormais les données actuelles et leurs classifications corrigées.",
+        "it": "Le installazioni mantenevano i dati delle festività già presenti; ora un aggiornamento porta con sé i dati attuali, comprese le classificazioni corrette.",
+        "es": "Las instalaciones conservaban los datos de festivos ya presentes; ahora una actualización trae los datos actuales, incluidas las clasificaciones corregidas.",
+        "pl": "Instalacje zachowywały dane o świętach już obecne w systemie; aktualizacja przynosi teraz bieżące dane wraz z poprawionymi klasyfikacjami.",
+        "uk": "Установки зберігали дані про свята, що вже були в системі; тепер оновлення приносить актуальні дані з виправленими класифікаціями.",
+        "zh-cn": "以往安装会沿用系统上已有的假日数据；现在更新会一并带来最新数据，包括更正后的假日分类。"
+      },
       "0.15.0": {
         "en": "The settings card now shows what the adapter really reports when no holiday type is enabled, and channel and data point names are refreshed on existing installations.",
         "de": "Die Einstellungskarte zeigt jetzt, was der Adapter bei abgeschalteten Feiertagstypen wirklich meldet, und Kanal- und Datenpunktnamen werden im Bestand aufgefrischt.",
@@ -80,19 +93,6 @@
         "pl": "Zmiana niekompatybilna: stany wskazujące, czy dzień jest świętem, zmieniono dla jasności. Zaktualizuj skrypty lub widoki, które je odczytują.",
         "uk": "Несумісна зміна: стани, що вказують, чи є день святом, перейменовано для ясності. Оновіть скрипти, що їх читають.",
         "zh-cn": "重大变更：用于标识某天是否为假日的状态已重命名以更清晰。请更新读取它们的脚本或视图。"
-      },
-      "0.10.0": {
-        "en": "The next-holiday date and days-until now show correctly as a date and a day count in VIS and scripts, and the settings exclude list also offers next year's holidays.",
-        "de": "Datum und Tage bis zum nächsten Feiertag werden nun in VIS und Skripten korrekt als Datum und Zahl angezeigt, und die Ausschlussliste bietet auch Feiertage des nächsten Jahres.",
-        "ru": "Дата и количество дней до следующего праздника теперь корректно отображаются в VIS и скриптах как дата и число, а список исключений также предлагает праздники следующего года.",
-        "pt": "A data e os dias até ao próximo feriado são agora apresentados corretamente como data e número no VIS e em scripts, e a lista de exclusão também oferece os feriados do próximo ano.",
-        "nl": "De datum en dagen tot de volgende feestdag worden nu correct weergegeven als datum en getal in VIS en scripts, en de uitsluitingslijst biedt ook feestdagen van volgend jaar.",
-        "fr": "La date et les jours jusqu'au prochain jour férié s'affichent correctement comme date et nombre dans VIS et les scripts ; la liste d'exclusion propose aussi les jours fériés de l'an prochain.",
-        "it": "La data e i giorni al prossimo giorno festivo ora si visualizzano correttamente come data e numero in VIS e negli script, e l'elenco di esclusione offre anche le festività del prossimo anno.",
-        "es": "La fecha y los días hasta el próximo festivo ahora se muestran correctamente como fecha y número en VIS y scripts, y la lista de exclusión también ofrece los festivos del próximo año.",
-        "pl": "Data i dni do następnego święta są teraz poprawnie wyświetlane jako data i liczba w VIS i skryptach, a lista wykluczeń oferuje także święta przyszłego roku.",
-        "uk": "Дата та кількість днів до наступного свята тепер коректно відображаються як дата й число у VIS і скриптах, а список винятків також пропонує свята наступного року.",
-        "zh-cn": "下一个假日的日期和剩余天数现在在 VIS 和脚本中正确显示为日期和数字，设置中的排除列表也会提供明年的假日。"
       }
     },
     "plugins": {

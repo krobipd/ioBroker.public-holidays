@@ -42,8 +42,33 @@ if (latest && installed !== latest) {
   console.log(`✓ date-holidays is up to date (${installed}).`);
 }
 
-// --- 2. pin the admin card's bundled date-holidays to the runtime's version ---
+// --- 2. raise the DECLARED floor in package.json to the installed version ---
+// This is the half that actually reaches users. Our package-lock.json governs this repo and CI
+// only — an ioBroker installation runs `npm install` into the shared /opt/iobroker tree, where
+// nothing but the declared RANGE decides. A floor left at an old version is therefore satisfied
+// by whatever ancient copy already sits in that tree, and no release ever moves it: measured
+// 2026-09-04 on krobi's server, which still ran 3.30.2 while this repo was six data releases
+// ahead — with the visible consequence that a day classified as a public holiday back then was
+// still reported as one. Raising the floor on every release is what forces the update.
 const adapterRoot = fileURLToPath(new URL("..", import.meta.url));
+const rootPkgPath = fileURLToPath(new URL("../package.json", import.meta.url));
+const rootSrc = readFileSync(rootPkgPath, "utf8");
+const floorRe = /("date-holidays":\s*")([^"]+)(")/;
+const declaredFloor = rootSrc.match(floorRe)?.[2];
+if (declaredFloor === undefined) {
+  console.error("✗ Could not find the date-holidays dependency in package.json.");
+  process.exit(1);
+}
+const wantedFloor = `^${installed}`;
+if (declaredFloor !== wantedFloor) {
+  console.log(`↻ Raising the declared date-holidays floor ${declaredFloor} → ${wantedFloor} (reaches installations).`);
+  writeFileSync(rootPkgPath, rootSrc.replace(floorRe, `$1${wantedFloor}$3`));
+  console.log(`✓ package.json floor raised to ${wantedFloor} — 'git add package.json' before commit.`);
+} else {
+  console.log(`✓ declared date-holidays floor is current (${wantedFloor}).`);
+}
+
+// --- 3. pin the admin card's bundled date-holidays to the runtime's version ---
 const adminPkgPath = fileURLToPath(new URL("../src-admin/package.json", import.meta.url));
 const adminSrc = readFileSync(adminPkgPath, "utf8");
 const pinRe = /("date-holidays":\s*")([^"]+)(")/;
