@@ -11,6 +11,7 @@
   "ph_hc_type_school": "学校假期",
   "ph_hc_type_optional": "可选假日",
   "ph_hc_type_observance": "纪念日",
+  "ph_hc_types_none": "未选择任何假日类型——适配器将不会报告任何假日",
   "ph_hc_bridge_title": "桥接日",
   "ph_hc_bridge_label": "检测桥接日",
   "ph_hc_bridge_desc": "桥接日是介于假日和周末之间的工作日（例如周四假日后的周五）",

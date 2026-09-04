@@ -59,50 +59,82 @@ export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter): Promis
   }
 }
 
-export async function ensureObjects(adapter: ioBroker.Adapter): Promise<void> {
-  for (const ch of DAY_CHANNELS) {
-    await ensureChannel(adapter, ch);
-    for (const field of DAY_FIELDS) {
-      await ensureState(adapter, ch, field);
-    }
-  }
-
-  await ensureChannel(adapter, "next");
-  for (const field of NEXT_FIELDS) {
-    await ensureState(adapter, "next", field);
-  }
+/**
+ * The channel object for one of the five channels. NO `preserve` on `common.name`: these names
+ * belong to the adapter (translated from `admin/i18n`), not to a user or a manufacturer — with
+ * `preserve` a renamed channel would only ever reach FRESH installs, every existing tree would
+ * keep the old text (js-controller applies the manifest `instanceObjects` with exactly that
+ * preserve, so the runtime call is the only way a rename reaches an existing install).
+ *
+ * @param channel the channel id, which doubles as its i18n key
+ * @returns the object passed to `extendObject`
+ */
+function channelObj(channel: string): ioBroker.SettableChannelObject {
+  return {
+    type: "channel",
+    common: { name: tName(channel as I18nKey) },
+    native: {},
+  };
 }
 
-async function ensureChannel(adapter: ioBroker.Adapter, channel: string): Promise<void> {
-  await adapter.extendObjectAsync(
-    channel,
-    {
-      type: "channel",
-      common: { name: tName(channel as I18nKey) },
-      native: {},
-    },
-    { preserve: { common: ["name"] } },
-  );
-}
-
-async function ensureState(adapter: ioBroker.Adapter, channel: string, field: string): Promise<void> {
+/**
+ * The state object for one field, built from {@link FIELD_SPECS}. Same no-`preserve` reasoning as
+ * {@link channelObj}.
+ *
+ * @param field the field name, which doubles as its i18n key
+ * @returns the object passed to `extendObject`
+ */
+function stateObj(field: string): ioBroker.SettableStateObject {
   const spec = FIELD_SPECS[field];
-  await adapter.extendObjectAsync(
-    `${channel}.${field}`,
-    {
-      type: "state",
-      common: {
-        name: tName(field as I18nKey),
-        type: spec.type,
-        role: spec.role,
-        read: spec.read,
-        write: spec.write,
-        ...(spec.unit ? { unit: spec.unit } : {}),
-      },
-      native: {},
+  return {
+    type: "state",
+    common: {
+      name: tName(field as I18nKey),
+      type: spec.type,
+      role: spec.role,
+      read: spec.read,
+      write: spec.write,
+      ...(spec.unit ? { unit: spec.unit } : {}),
     },
-    { preserve: { common: ["name"] } },
-  );
+    native: {},
+  };
+}
+
+/**
+ * Create/refresh all 17 objects (5 channels + 12 states) on every run.
+ *
+ * The ids are spelled out instead of looped for a reason: the manifest carries the same 17 as
+ * `instanceObjects`, and the consistency gate `audit_instanceobjects_reach` checks that each of
+ * them is refreshed at runtime by looking for a literal `extendObject("<id>"` in `src/` — a
+ * template-built id would satisfy the tree but not the check that guards it.
+ *
+ * `extendObject` (never `setObject`): the objects carry user-owned side data — history/logging
+ * settings live in `common.custom` — and a full write would drop it.
+ *
+ * @param adapter the adapter instance
+ */
+export async function ensureObjects(adapter: ioBroker.Adapter): Promise<void> {
+  await adapter.extendObjectAsync("today", channelObj("today"));
+  await adapter.extendObjectAsync("today.name", stateObj("name"));
+  await adapter.extendObjectAsync("today.isHoliday", stateObj("isHoliday"));
+
+  await adapter.extendObjectAsync("yesterday", channelObj("yesterday"));
+  await adapter.extendObjectAsync("yesterday.name", stateObj("name"));
+  await adapter.extendObjectAsync("yesterday.isHoliday", stateObj("isHoliday"));
+
+  await adapter.extendObjectAsync("tomorrow", channelObj("tomorrow"));
+  await adapter.extendObjectAsync("tomorrow.name", stateObj("name"));
+  await adapter.extendObjectAsync("tomorrow.isHoliday", stateObj("isHoliday"));
+
+  await adapter.extendObjectAsync("dayAfterTomorrow", channelObj("dayAfterTomorrow"));
+  await adapter.extendObjectAsync("dayAfterTomorrow.name", stateObj("name"));
+  await adapter.extendObjectAsync("dayAfterTomorrow.isHoliday", stateObj("isHoliday"));
+
+  await adapter.extendObjectAsync("next", channelObj("next"));
+  await adapter.extendObjectAsync("next.name", stateObj("name"));
+  await adapter.extendObjectAsync("next.isHoliday", stateObj("isHoliday"));
+  await adapter.extendObjectAsync("next.date", stateObj("date"));
+  await adapter.extendObjectAsync("next.daysUntil", stateObj("daysUntil"));
 }
 
 // Map state-field name → value getter.

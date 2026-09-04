@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Vacances scolaires",
   "ph_hc_type_optional": "Jours fériés optionnels",
   "ph_hc_type_observance": "Jours commémoratifs",
+  "ph_hc_types_none": "Aucun type de jour férié sélectionné — l'adaptateur ne signalera aucun jour férié",
   "ph_hc_bridge_title": "Jours de pont",
   "ph_hc_bridge_label": "Détecter les jours de pont",
   "ph_hc_bridge_desc": "Un jour de pont est un jour ouvrable entre un jour férié et le week-end (ex. vendredi après un jour férié le jeudi)",

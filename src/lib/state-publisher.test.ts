@@ -130,18 +130,44 @@ describe("ensureObjects", () => {
     expect(st.common.name).toHaveProperty("de");
   });
 
-  it("passes preserve option for channels", async () => {
+  it("never preserves a name — the adapter owns these names, so a rename must reach existing installs", async () => {
+    // `preserve: { common: ["name"] }` tells js-controller to keep whatever name is already
+    // there. These names are the adapter's own (translated from admin/i18n), so preserving them
+    // would mean a renamed channel/state only ever reaches FRESH installs.
     await ensureObjects(adapter as any);
-    expect(adapter.extendObjectAsync).toHaveBeenCalledWith("today", expect.anything(), {
-      preserve: { common: ["name"] },
-    });
+    const withPreserve = adapter.extendObjectAsync.mock.calls.filter(
+      call => (call[2] as { preserve?: unknown } | undefined)?.preserve !== undefined,
+    );
+    expect(withPreserve).toEqual([]);
   });
 
-  it("passes preserve option for states", async () => {
+  it("refreshes every manifest object by its literal id", async () => {
+    // The 17 ids also live in io-package.json:instanceObjects, which js-controller applies with
+    // preserve on common.name — the runtime call is the only path a rename can take to an
+    // existing install. Literal ids (not template-built) so the consistency gate can see them.
     await ensureObjects(adapter as any);
-    expect(adapter.extendObjectAsync).toHaveBeenCalledWith("today.name", expect.anything(), {
-      preserve: { common: ["name"] },
-    });
+    const called = adapter.extendObjectAsync.mock.calls.map(call => call[0] as string);
+    expect(called.sort()).toEqual(
+      [
+        "today",
+        "today.name",
+        "today.isHoliday",
+        "yesterday",
+        "yesterday.name",
+        "yesterday.isHoliday",
+        "tomorrow",
+        "tomorrow.name",
+        "tomorrow.isHoliday",
+        "dayAfterTomorrow",
+        "dayAfterTomorrow.name",
+        "dayAfterTomorrow.isHoliday",
+        "next",
+        "next.name",
+        "next.isHoliday",
+        "next.date",
+        "next.daysUntil",
+      ].sort(),
+    );
   });
 });
 

@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Schoolvakanties",
   "ph_hc_type_optional": "Optionele feestdagen",
   "ph_hc_type_observance": "Herdenkingsdagen",
+  "ph_hc_types_none": "Geen feestdagtype geselecteerd — de adapter meldt geen feestdagen",
   "ph_hc_bridge_title": "Brugdagen",
   "ph_hc_bridge_label": "Brugdagen detecteren",
   "ph_hc_bridge_desc": "Een brugdag is een werkdag tussen een feestdag en het weekend (bijv. vrijdag na een feestdag op donderdag)",

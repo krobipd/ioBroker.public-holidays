@@ -11,6 +11,7 @@
   "ph_hc_type_school": "School holidays",
   "ph_hc_type_optional": "Optional holidays",
   "ph_hc_type_observance": "Observance days",
+  "ph_hc_types_none": "No holiday type is selected — the adapter will not report any holidays",
   "ph_hc_bridge_title": "Bridge days",
   "ph_hc_bridge_label": "Detect bridge days",
   "ph_hc_bridge_desc": "A bridge day is a working day between a holiday and a weekend (e.g. Friday after a Thursday holiday)",

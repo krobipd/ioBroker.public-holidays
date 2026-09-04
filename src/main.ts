@@ -17,15 +17,25 @@ export class PublicHolidaysAdapter extends utils.Adapter {
 
   /**
    * Bring this instance's own object in line with the current manifest and report whether
-   * anything had to be written. Two corrections, one write, one restart:
+   * anything had to be written. Every correction goes into ONE write, because each write of the
+   * own instance object costs a restart:
    *
    * - `mode: daemon` → the pre-schedule layout. Was already migrated here, but the run then
    *   carried on writing states while the host was already restarting the instance.
-   * - `supportedMessages.stopInstance` → dropped from the manifest, which only helps a FRESH
-   *   install: an upgrade merges the manifest into the existing instance object and never
-   *   removes a key, so the old `true` survives in the database — and that is what the host
-   *   reads. With it the host kills the process one second after asking it to stop, in the
+   * - `common.supportedMessages` → dropped from the manifest, which only helps a FRESH install:
+   *   an upgrade merges the manifest into the existing instance object and never removes a key,
+   *   so the old value survives in the database — and that is what the host reads. With
+   *   `stopInstance` the host kills the process one second after asking it to stop, in the
    *   middle of a holiday run, and this adapter has no message handler to answer with.
+   *   The key is CLEARED (`null`), never rewritten to `{ stopInstance: false }`:
+   *   `supportedMessages` is a positive list, not a switch — as long as it is an object,
+   *   `isMessageboxSupported()` ignores `common.messagebox`, and with no value other than
+   *   `false` in it the adapter is never subscribed to messages at all. Triggering on the mere
+   *   EXISTENCE of the key (not on `stopInstance`) is what makes the correction converge: an
+   *   already-cleared key reads back as `null`/absent and is left alone, so there is no restart
+   *   loop, and a half-corrected install from an earlier version is still repaired.
+   * - `native.excludePublic` → the exclude field of the pre-0.9.0 config. The runtime ignores it,
+   *   but it stays in the instance object forever unless it is cleared here.
    *
    * @returns true when something was written and the restart is coming — the caller has to
    *   stand down instead of computing in a process that is going away.
@@ -34,20 +44,37 @@ export class PublicHolidaysAdapter extends utils.Adapter {
     const id = `system.adapter.${this.namespace}`;
     try {
       const instanceObj = await this.getForeignObjectAsync(id);
-      const common: Partial<ioBroker.InstanceCommon> = {};
+      const common: Record<string, unknown> = {};
+      const native: Record<string, unknown> = {};
+
       if (instanceObj?.common?.mode === "daemon") {
         this.log.info("Migrating from daemon to schedule mode");
         Object.assign(common, { mode: "schedule", schedule: "0 0 * * *" });
       }
-      const supported = instanceObj?.common?.supportedMessages as { stopInstance?: unknown } | undefined;
-      if (supported?.stopInstance) {
+
+      const supported = instanceObj?.common?.supportedMessages;
+      if (supported !== undefined && supported !== null) {
         this.log.info("Correcting a leftover setting from an earlier version — this instance restarts once");
-        Object.assign(common, { supportedMessages: { stopInstance: false } });
+        common.supportedMessages = null;
       }
-      if (Object.keys(common).length === 0) {
+
+      const legacyExclude = (instanceObj?.native as Record<string, unknown> | undefined)?.excludePublic;
+      if (legacyExclude !== undefined && legacyExclude !== null) {
+        this.log.debug("Clearing the leftover excludePublic setting from a pre-0.9.0 version");
+        native.excludePublic = null;
+      }
+
+      const patch: Record<string, unknown> = {};
+      if (Object.keys(common).length > 0) {
+        patch.common = common;
+      }
+      if (Object.keys(native).length > 0) {
+        patch.native = native;
+      }
+      if (Object.keys(patch).length === 0) {
         return false;
       }
-      await this.extendForeignObjectAsync(id, { common });
+      await this.extendForeignObjectAsync(id, patch);
       return true;
     } catch (err: unknown) {
       // Objects DB unreachable — not worth failing the run over; the next run retries.
@@ -84,6 +111,14 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         this.log.warn("No country configured — open adapter settings");
         void this.stop?.();
         return;
+      }
+
+      // Every holiday type unchecked filters everything away — one click on the "public" box is
+      // enough to get there. Say so instead of publishing empty states without a word, and keep
+      // going: stopping here would leave yesterday's values standing, which is worse than a
+      // truthful empty result.
+      if (config.holidayTypes.length === 0) {
+        this.log.warn("No holiday type is enabled — no holidays will be reported; enable at least one in the settings");
       }
 
       // Build the date-holidays instance once and reuse it for language detection, scope checks

@@ -69,47 +69,46 @@ async function cleanupDeprecatedStates(adapter) {
     }
   }
 }
-async function ensureObjects(adapter) {
-  for (const ch of DAY_CHANNELS) {
-    await ensureChannel(adapter, ch);
-    for (const field of DAY_FIELDS) {
-      await ensureState(adapter, ch, field);
-    }
-  }
-  await ensureChannel(adapter, "next");
-  for (const field of NEXT_FIELDS) {
-    await ensureState(adapter, "next", field);
-  }
+function channelObj(channel) {
+  return {
+    type: "channel",
+    common: { name: (0, import_i18n.tName)(channel) },
+    native: {}
+  };
 }
-async function ensureChannel(adapter, channel) {
-  await adapter.extendObjectAsync(
-    channel,
-    {
-      type: "channel",
-      common: { name: (0, import_i18n.tName)(channel) },
-      native: {}
-    },
-    { preserve: { common: ["name"] } }
-  );
-}
-async function ensureState(adapter, channel, field) {
+function stateObj(field) {
   const spec = FIELD_SPECS[field];
-  await adapter.extendObjectAsync(
-    `${channel}.${field}`,
-    {
-      type: "state",
-      common: {
-        name: (0, import_i18n.tName)(field),
-        type: spec.type,
-        role: spec.role,
-        read: spec.read,
-        write: spec.write,
-        ...spec.unit ? { unit: spec.unit } : {}
-      },
-      native: {}
+  return {
+    type: "state",
+    common: {
+      name: (0, import_i18n.tName)(field),
+      type: spec.type,
+      role: spec.role,
+      read: spec.read,
+      write: spec.write,
+      ...spec.unit ? { unit: spec.unit } : {}
     },
-    { preserve: { common: ["name"] } }
-  );
+    native: {}
+  };
+}
+async function ensureObjects(adapter) {
+  await adapter.extendObjectAsync("today", channelObj("today"));
+  await adapter.extendObjectAsync("today.name", stateObj("name"));
+  await adapter.extendObjectAsync("today.isHoliday", stateObj("isHoliday"));
+  await adapter.extendObjectAsync("yesterday", channelObj("yesterday"));
+  await adapter.extendObjectAsync("yesterday.name", stateObj("name"));
+  await adapter.extendObjectAsync("yesterday.isHoliday", stateObj("isHoliday"));
+  await adapter.extendObjectAsync("tomorrow", channelObj("tomorrow"));
+  await adapter.extendObjectAsync("tomorrow.name", stateObj("name"));
+  await adapter.extendObjectAsync("tomorrow.isHoliday", stateObj("isHoliday"));
+  await adapter.extendObjectAsync("dayAfterTomorrow", channelObj("dayAfterTomorrow"));
+  await adapter.extendObjectAsync("dayAfterTomorrow.name", stateObj("name"));
+  await adapter.extendObjectAsync("dayAfterTomorrow.isHoliday", stateObj("isHoliday"));
+  await adapter.extendObjectAsync("next", channelObj("next"));
+  await adapter.extendObjectAsync("next.name", stateObj("name"));
+  await adapter.extendObjectAsync("next.isHoliday", stateObj("isHoliday"));
+  await adapter.extendObjectAsync("next.date", stateObj("date"));
+  await adapter.extendObjectAsync("next.daysUntil", stateObj("daysUntil"));
 }
 const DAY_VALUE = {
   name: (d) => d.name,

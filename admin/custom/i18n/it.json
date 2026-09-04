@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Vacanze scolastiche",
   "ph_hc_type_optional": "Giorni festivi facoltativi",
   "ph_hc_type_observance": "Giorni commemorativi",
+  "ph_hc_types_none": "Nessun tipo di giorno festivo selezionato — l'adattatore non segnalerà alcun giorno festivo",
   "ph_hc_bridge_title": "Giorni ponte",
   "ph_hc_bridge_label": "Rilevare i giorni ponte",
   "ph_hc_bridge_desc": "Un giorno ponte è un giorno lavorativo tra un giorno festivo e il fine settimana (es. venerdì dopo un giorno festivo il giovedì)",

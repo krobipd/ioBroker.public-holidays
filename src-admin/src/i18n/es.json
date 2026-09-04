@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Vacaciones escolares",
   "ph_hc_type_optional": "Festivos opcionales",
   "ph_hc_type_observance": "Días conmemorativos",
+  "ph_hc_types_none": "No hay ningún tipo de festivo seleccionado: el adaptador no informará de ningún festivo",
   "ph_hc_bridge_title": "Días puente",
   "ph_hc_bridge_label": "Detectar días puente",
   "ph_hc_bridge_desc": "Un día puente es un día laborable entre un festivo y el fin de semana (ej. viernes después de un festivo en jueves)",

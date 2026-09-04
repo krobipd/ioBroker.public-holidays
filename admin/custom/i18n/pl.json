@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Ferie szkolne",
   "ph_hc_type_optional": "Święta opcjonalne",
   "ph_hc_type_observance": "Dni pamięci",
+  "ph_hc_types_none": "Nie wybrano żadnego typu świąt — adapter nie zgłosi żadnych świąt",
   "ph_hc_bridge_title": "Dni pomostowe",
   "ph_hc_bridge_label": "Wykrywaj dni pomostowe",
   "ph_hc_bridge_desc": "Dzień pomostowy to dzień roboczy między świętem a weekendem (np. piątek po święcie w czwartek)",

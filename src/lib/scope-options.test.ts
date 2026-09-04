@@ -86,11 +86,15 @@ function makeFakeScope(byYear: Record<number, FakePreviewHoliday[]>): {
   return { make, calls };
 }
 
+// Default scope has every type enabled: an EMPTY type list means "no holidays at all" (the
+// runtime's semantics), so it is a case of its own rather than a neutral default.
+const ALL_TYPES = ["public", "bank", "school", "optional", "observance"];
+
 const pscope = (over: Partial<PreviewScope> = {}): PreviewScope => ({
   country: "DE",
   state: "",
   region: "",
-  types: [],
+  types: ALL_TYPES,
   excludeHolidays: [],
   ...over,
 });
@@ -105,6 +109,18 @@ describe("buildPreviewHolidays", () => {
     const { make, calls } = makeFakeScope({ 2026: [] });
     buildPreviewHolidays(pscope({ state: "BY", region: "A" }), false, "en", 2026, make);
     expect(calls[0]).toEqual(["DE", "BY", "A"]);
+  });
+
+  it("previews nothing when no type is enabled — mirrors what the runtime publishes", () => {
+    // The runtime's type filter drops every holiday when the list is empty. A preview that
+    // showed a full year here would promise states the adapter never writes.
+    const { make } = makeFakeScope({
+      2026: [
+        { name: "Public Day", rule: "pubrule", type: "public", date: "2026-05-01" },
+        { name: "Bank Day", rule: "bankrule", type: "bank", date: "2026-06-01" },
+      ],
+    });
+    expect(buildPreviewHolidays(pscope({ types: [] }), true, "en", 2026, make)).toEqual([]);
   });
 
   it("keeps only enabled types and drops excluded ids", () => {

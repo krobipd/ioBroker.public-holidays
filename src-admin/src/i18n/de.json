@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Schulferien",
   "ph_hc_type_optional": "Optionale Feiertage",
   "ph_hc_type_observance": "Gedenktage",
+  "ph_hc_types_none": "Kein Feiertagstyp gewählt — der Adapter meldet keine Feiertage",
   "ph_hc_bridge_title": "Brückentage",
   "ph_hc_bridge_label": "Brückentage erkennen",
   "ph_hc_bridge_desc": "Ein Brückentag ist ein Arbeitstag zwischen einem Feiertag und dem Wochenende (z.B. Freitag nach einem Donnerstags-Feiertag)",

@@ -65,7 +65,11 @@ export interface PreviewScope {
   country: string;
   state: string;
   region: string;
-  /** Enabled holiday types; an empty list means "no type filter" (offer all). */
+  /**
+   * Enabled holiday types. An empty list means NO holidays at all — the same thing the runtime
+   * does (`getFilteredHolidays` keeps only types in this list). The preview would otherwise show
+   * a full year of holidays for a configuration that publishes nothing.
+   */
   types: string[];
   excludeHolidays: string[];
 }
@@ -108,7 +112,8 @@ export function buildPreviewHolidays(
   referenceYear: number,
   makeHolidays: MakeScopedHolidays = defaultMakeScoped,
 ): PreviewHoliday[] {
-  if (!scope.country) {
+  // No country, or no enabled type: the runtime publishes nothing, so the preview shows nothing.
+  if (!scope.country || scope.types.length === 0) {
     return [];
   }
 
@@ -124,7 +129,7 @@ export function buildPreviewHolidays(
 
   const byDate = new Map<string, PreviewHoliday>();
   for (const h of hd.getHolidays(referenceYear) || []) {
-    if (scope.types.length && !scope.types.includes(h.type)) {
+    if (!scope.types.includes(h.type)) {
       continue;
     }
     const id = toHolidayId(h.name, h.rule);

@@ -31,11 +31,15 @@ function makeFake(byYear: Record<number, FakeHoliday[]>): {
   return { make, calls };
 }
 
+// Default scope has every type enabled: an EMPTY type list means "no holidays at all" (the
+// runtime's semantics), so it is a case of its own rather than a neutral default.
+const ALL_TYPES = ["public", "bank", "school", "optional", "observance"];
+
 const scope = (over: Partial<ScopeSelection> = {}): ScopeSelection => ({
   country: "DE",
   state: "",
   region: "",
-  types: [],
+  types: ALL_TYPES,
   ...over,
 });
 
@@ -94,7 +98,9 @@ describe("buildExcludeOptions", () => {
     expect(opts.map(o => o.label)).toEqual(["Public Day (01.05.)"]);
   });
 
-  it("with an empty type list offers every type (no filter)", () => {
+  it("offers nothing when no type is enabled — the runtime would report nothing either", () => {
+    // The runtime keeps only holidays whose type is in the list, so an empty list drops
+    // everything. Offering holidays to exclude that the adapter never reports would be a lie.
     const { make } = makeFake({
       2026: [
         { name: "Public Day", rule: "pub", type: "public", date: "2026-05-01" },
@@ -102,7 +108,7 @@ describe("buildExcludeOptions", () => {
       ],
       2027: [],
     });
-    expect(buildExcludeOptions(scope({ types: [] }), "en", 2026, make)).toHaveLength(2);
+    expect(buildExcludeOptions(scope({ types: [] }), "en", 2026, make)).toEqual([]);
   });
 
   it("routes state+region into the constructor", () => {

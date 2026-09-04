@@ -61,7 +61,11 @@ export interface ScopeSelection {
   country: string;
   state: string;
   region: string;
-  /** Enabled holiday types; an empty list means "no type filter" (offer all). */
+  /**
+   * Enabled holiday types. An empty list means NO holidays at all — exactly what the runtime
+   * does (`getFilteredHolidays` keeps only types in this list, so an empty one drops
+   * everything). The card must not offer holidays the adapter would never report.
+   */
   types: string[];
 }
 
@@ -87,7 +91,8 @@ export function buildExcludeOptions(
   referenceYear: number,
   makeHolidays: MakeHolidays = defaultMakeHolidays,
 ): ExcludeOption[] {
-  if (!scope.country) {
+  // No country, or no enabled type: the runtime reports nothing, so there is nothing to exclude.
+  if (!scope.country || scope.types.length === 0) {
     return [];
   }
 
@@ -106,7 +111,7 @@ export function buildExcludeOptions(
   const seen = new Map<string, { name: string; date: string }>();
   for (const year of [referenceYear, referenceYear + 1]) {
     for (const h of hd.getHolidays(year) || []) {
-      if (scope.types.length && !scope.types.includes(h.type)) {
+      if (!scope.types.includes(h.type)) {
         continue;
       }
       const id = toHolidayId(h.name, h.rule);

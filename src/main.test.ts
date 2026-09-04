@@ -263,9 +263,11 @@ describe("onReady — instance-object repair", () => {
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
-  it("switches a leftover stopInstance flag off and stands down", async () => {
-    // With the flag set the host kills the process a second after asking it to stop —
-    // in the middle of a holiday run, and this adapter has no message handler to answer with.
+  it("CLEARS a leftover supportedMessages key instead of writing false into it", async () => {
+    // With stopInstance set the host kills the process a second after asking it to stop — in the
+    // middle of a holiday run, and this adapter has no message handler to answer with. Writing
+    // `{ stopInstance: false }` back would not fix it: supportedMessages is a positive list, so
+    // an object with no value other than false shuts the message box for good, silently.
     const { internal, stub } = setup({ country: "DE" });
     stub.objects.set("system.adapter.public-holidays.0", {
       type: "instance",
@@ -276,10 +278,75 @@ describe("onReady — instance-object repair", () => {
     await internal.onReady();
 
     const inst = stub.objects.get("system.adapter.public-holidays.0")!;
-    expect(inst.common!.supportedMessages).toEqual({ stopInstance: false });
+    expect(inst.common!.supportedMessages ?? null).toBeNull();
     expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(true);
     expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeUndefined();
     expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("corrects a half-repaired instance that only carries { stopInstance: false }", async () => {
+    // The 0.13.2 correction wrote exactly this. A guard that looks at `stopInstance` would never
+    // see its own result again, so such an install would stay message-deaf forever.
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule", supportedMessages: { stopInstance: false } },
+      native: {},
+    });
+
+    await internal.onReady();
+
+    const inst = stub.objects.get("system.adapter.public-holidays.0")!;
+    expect(inst.common!.supportedMessages ?? null).toBeNull();
+    expect(stub.instanceObjectWrites).toBe(1);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a cleared key alone on the next start — no restart loop", async () => {
+    // The whole correction hinges on converging: once the key is gone (or null), the next run
+    // must write nothing at all, otherwise every start restarts the instance.
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule", supportedMessages: null as unknown as undefined },
+      native: {},
+    });
+
+    await internal.onReady();
+
+    expect(stub.instanceObjectWrites).toBe(0);
+    expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(false);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+  });
+
+  it("clears the pre-0.9.0 excludePublic leftover in the same write", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule", supportedMessages: { stopInstance: true } },
+      native: { excludePublic: ["11-11", "09-24"] },
+    });
+
+    await internal.onReady();
+
+    const inst = stub.objects.get("system.adapter.public-holidays.0")!;
+    expect(inst.native!.excludePublic ?? null).toBeNull();
+    expect(inst.common!.supportedMessages ?? null).toBeNull();
+    // Both corrections in ONE write: each write of the own instance object costs a restart.
+    expect(stub.instanceObjectWrites).toBe(1);
+  });
+
+  it("does not write for excludePublic once it is cleared", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule" },
+      native: { excludePublic: null },
+    });
+
+    await internal.onReady();
+
+    expect(stub.instanceObjectWrites).toBe(0);
   });
 
   it("repairs both in ONE write so the instance restarts once, not twice", async () => {
@@ -294,7 +361,7 @@ describe("onReady — instance-object repair", () => {
 
     const inst = stub.objects.get("system.adapter.public-holidays.0")!;
     expect(inst.common!.mode).toBe("schedule");
-    expect(inst.common!.supportedMessages).toEqual({ stopInstance: false });
+    expect(inst.common!.supportedMessages ?? null).toBeNull();
     expect(stub.instanceObjectWrites).toBe(1);
   });
 
@@ -420,6 +487,30 @@ describe("onReady — diagnostics warnings", () => {
 
     expect(logsOf(stub, "warn").some(m => m.includes("no longer match any holiday"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("warns when no holiday type is enabled — and still publishes the (empty) result", async () => {
+    // One click on the "public holidays" box gets a user here, and the type filter then drops
+    // every holiday. Publishing empty states without a word looks like a broken adapter; keeping
+    // yesterday's values (by stopping early) would be worse still.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
+    const { internal, stub } = setup({ country: "DE", typePublic: false });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn").some(m => m.includes("No holiday type is enabled"))).toBe(true);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
+    expect(stub.states.get("public-holidays.0.next.name")).toEqual({ val: "", ack: true });
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays quiet about types when at least one is enabled", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn").some(m => m.includes("No holiday type is enabled"))).toBe(false);
   });
 });
 

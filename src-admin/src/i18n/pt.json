@@ -11,6 +11,7 @@
   "ph_hc_type_school": "Férias escolares",
   "ph_hc_type_optional": "Feriados opcionais",
   "ph_hc_type_observance": "Dias comemorativos",
+  "ph_hc_types_none": "Nenhum tipo de feriado selecionado — o adaptador não comunicará feriados",
   "ph_hc_bridge_title": "Dias ponte",
   "ph_hc_bridge_label": "Detectar dias ponte",
   "ph_hc_bridge_desc": "Um dia ponte é um dia útil entre um feriado e o fim de semana (ex. sexta-feira após um feriado na quinta-feira)",

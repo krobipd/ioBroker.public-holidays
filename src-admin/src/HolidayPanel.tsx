@@ -214,6 +214,16 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
             />
           ))}
         </FormGroup>
+        {/* With no type checked the runtime filters every holiday away and publishes empty
+            states — one click on "public holidays" is enough to get there, so say it here. */}
+        {enabled.length === 0 ? (
+          <Typography
+            variant="body2"
+            color="warning.main"
+          >
+            {t("ph_hc_types_none")}
+          </Typography>
+        ) : null}
       </Stage>
 
       <Divider />
@@ -256,7 +266,9 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               {...p}
               variant="standard"
               label={t("ph_excludeLabel")}
-              placeholder={excludeOptions.length ? "" : t("ph_excludeSelectCountry")}
+              // An empty list has two causes: no country yet, or no holiday type enabled. Only the
+              // first one is fixed by picking a country — the second is explained above.
+              placeholder={excludeOptions.length || country ? "" : t("ph_excludeSelectCountry")}
             />
           )}
         />
