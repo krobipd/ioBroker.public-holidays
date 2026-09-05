@@ -57,8 +57,8 @@ scripts/check-date-holidays.mjs     → Release-Gate, DREI Teile: (1) Currency-W
 
 4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, isHoliday. Next: name, isHoliday, date, daysUntil. (Der Flag-State hieß bis v0.10.0 `boolean` — in v0.11.0 zu `isHoliday` umbenannt, alte `*.boolean` per `cleanupDeprecatedStates` migriert.)
 
-## Tests (282 vitest + 69 package)
+## Tests (312 vitest + 69 package)
 
-Karten-Umbau ergänzte: `scope-options.test.ts` (Kaskade getCountry/State/RegionOptions + buildPreviewHolidays inkl. Brückentage), `scope-options-bridge-parity.test.ts` (Verhaltens-Parity detectPreviewBridgeDays vs. Runtime detectBridgeDays, 5 Länder × 4 Jahre), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version). Frühere Guards bleiben: `exclude-options.test.ts`, `exclude-type-flags-parity.test.ts`, `holiday-id-parity.test.ts` (liest `exclude-options.ts`). Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
+Karten-Umbau ergänzte: `scope-options.test.ts` (Kaskade getCountry/State/RegionOptions + buildPreviewHolidays inkl. Brückentage), `scope-options-bridge-parity.test.ts` (Verhaltens-Parity detectPreviewBridgeDays vs. Runtime detectBridgeDays, 5 Länder × 4 Jahre), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version) und `date-holidays-floor.test.ts` (deklarierter Boden == installierte Version — der Boden ist das Einzige, was eine Bestandsanlage erreicht), dazu `instance-objects-reach.test.ts` (alle 17 Manifest-Objekte per LITERALER ID aufgefrischt, kein `preserve`). Frühere Guards bleiben: `exclude-options.test.ts`, `exclude-type-flags-parity.test.ts`, `holiday-id-parity.test.ts` (liest `exclude-options.ts`). Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
 
 Die pure Logik (Kaskade/Vorschau/Exclude/Engine) ist vitest-getestet; die React-Karte wird NICHT unit-getestet (kein @testing-library/react — jede src-admin-devDep landet dauerhaft unter dependabot-`ignore`), sondern über den turnkey Admin-8-`render-check` im echten Wegwerf-Admin verifiziert.
