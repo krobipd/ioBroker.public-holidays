@@ -2,12 +2,14 @@
 // Release gate: keep the bundled `date-holidays` current AND keep the admin card's bundled copy
 // in lockstep with the runtime's. Wired into the release flow via .releaseconfig.json:before_commit.
 //
-// date-holidays ships holiday DATA (new countries, changed dates) in patch/minor releases. The
-// root dependency is a caret range kept current by pre-release's `npm update` (in-range).
+// date-holidays ships holiday DATA (new countries, changed dates, corrected classifications) in
+// every kind of release, so a release that ships an older copy ships wrong holidays.
 //
-// Currency (non-blocking): installed < latest only happens for a new MAJOR (in-range gaps are
-// closed by npm update). A major is an API change that needs a deliberate migration, so it is
-// surfaced loudly but must not auto-block an unrelated hotfix release.
+// Currency (ENFORCED, krobi 2026-09-04: "immer die aktuelle Release-Version eingepackt"): if the
+// installed copy is behind npm's latest, this gate INSTALLS the latest one — including a new
+// major. It does not warn and move on: a warning is exactly how six data releases went by
+// unnoticed. The safety net is the release flow itself, which runs `npm test` + `npm run build`
+// right after this gate, so an API break fails the release instead of shipping stale data.
 //
 // Parity (the reason this gate touches src-admin): the admin card (src-admin) bundles its OWN
 // date-holidays at build time and computes the country/state/region cascade + live preview from
@@ -22,9 +24,21 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const requireFrom = createRequire(import.meta.url);
-const installed = requireFrom("date-holidays/package.json").version;
+const adapterRoot = fileURLToPath(new URL("..", import.meta.url));
 
-// --- 1. currency check against npm (non-blocking) ---
+/**
+ * The date-holidays version this repository currently resolves.
+ *
+ * @returns the installed version, read fresh from disk (the require cache is bypassed so the
+ *   value is correct after an install in the same run)
+ */
+function readInstalled() {
+  const pkgPath = requireFrom.resolve("date-holidays/package.json");
+  return JSON.parse(readFileSync(pkgPath, "utf8")).version;
+}
+
+// --- 1. currency: install npm's latest when we are behind (ENFORCED, not a warning) ---
+let installed = readInstalled();
 let latest = null;
 try {
   latest = execSync("npm view date-holidays version", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
@@ -32,12 +46,22 @@ try {
   console.warn(`⚠️  Could not query npm for the latest date-holidays version (${e.message}). Skipping currency check.`);
 }
 if (latest && installed !== latest) {
-  console.warn(
-    `⚠️  date-holidays is behind: installed ${installed}, latest ${latest}.\n` +
-      `   In-range updates are applied automatically; a remaining gap means a new MAJOR is\n` +
-      `   available. Review it deliberately (not blocking this release):\n` +
-      `     npm install date-holidays@latest   (then re-run the tests)`,
-  );
+  console.log(`↻ date-holidays ${installed} → ${latest} (a release always ships the current data).`);
+  try {
+    execSync(`npm install date-holidays@${latest} --save`, { cwd: adapterRoot, stdio: "inherit" });
+  } catch (e) {
+    console.error(
+      `✗ Could not install date-holidays@${latest}: ${e.message}\n` +
+        `  A release must not ship older holiday data. Fix the install, then re-run.`,
+    );
+    process.exit(1);
+  }
+  installed = readInstalled();
+  if (installed !== latest) {
+    console.error(`✗ date-holidays is still ${installed} after installing ${latest} — aborting.`);
+    process.exit(1);
+  }
+  console.log(`✓ date-holidays updated to ${installed}. The tests right after this gate cover the data change.`);
 } else if (latest) {
   console.log(`✓ date-holidays is up to date (${installed}).`);
 }
@@ -50,7 +74,6 @@ if (latest && installed !== latest) {
 // 2026-09-04 on krobi's server, which still ran 3.30.2 while this repo was six data releases
 // ahead — with the visible consequence that a day classified as a public holiday back then was
 // still reported as one. Raising the floor on every release is what forces the update.
-const adapterRoot = fileURLToPath(new URL("..", import.meta.url));
 const rootPkgPath = fileURLToPath(new URL("../package.json", import.meta.url));
 const rootSrc = readFileSync(rootPkgPath, "utf8");
 const floorRe = /("date-holidays":\s*")([^"]+)(")/;
