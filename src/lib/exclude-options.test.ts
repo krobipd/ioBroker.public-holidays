@@ -3,7 +3,7 @@ import type Holidays from "date-holidays";
 import {
   buildExcludeOptions,
   computeOrphanIds,
-  enabledTypes,
+  enabledTypeKeys,
   type ScopeSelection,
 } from "../../src-admin/src/exclude-options";
 
@@ -43,18 +43,18 @@ const scope = (over: Partial<ScopeSelection> = {}): ScopeSelection => ({
   ...over,
 });
 
-describe("enabledTypes (defaultOn semantics, mirrors validateConfig)", () => {
+describe("enabledTypeKeys (defaultOn semantics, shared with the runtime config)", () => {
   it("a fresh config enables only public (defaultOn)", () => {
-    expect(enabledTypes(() => undefined)).toEqual(["public"]);
+    expect(enabledTypeKeys(() => undefined)).toEqual(["public"]);
   });
 
   it("public explicitly off + bank on → only bank (the L1 divergence, now aligned)", () => {
     const flags: Record<string, unknown> = { typePublic: false, typeBank: true };
-    expect(enabledTypes(f => flags[f])).toEqual(["bank"]);
+    expect(enabledTypeKeys((f: string) => flags[f])).toEqual(["bank"]);
   });
 
   it("all flags true → all five types", () => {
-    expect(enabledTypes(() => true)).toEqual(["public", "bank", "school", "optional", "observance"]);
+    expect(enabledTypeKeys(() => true)).toEqual(["public", "bank", "school", "optional", "observance"]);
   });
 });
 
@@ -135,5 +135,44 @@ describe("computeOrphanIds", () => {
   });
   it("returns [] when every stored id is still offered", () => {
     expect(computeOrphanIds(["a", "b"], options)).toEqual([]);
+  });
+});
+
+// ─── the DEFAULT maker (audit finding F10) ──────────────────────────────────
+//
+// Every test above injects a fake constructor, so until v0.16.0 the maker the admin card actually
+// runs — `new Holidays(country, state, region)` — was executed by no test at all (measured: lines
+// 75-81 uncovered). The card is not unit-tested and the render gate only checks that it renders,
+// so a swapped argument would have shipped green while breaking the cascade, the exclude list and
+// the preview at once. These three cases go through the real library.
+describe("buildExcludeOptions with the real date-holidays constructor", () => {
+  it("country level: offers the nationwide public holidays", () => {
+    const ids = buildExcludeOptions({ country: "DE", state: "", region: "", types: ["public"] }, "en", 2026).map(
+      o => o.id,
+    );
+    expect(ids).toContain("01-01");
+    expect(ids).not.toContain("01-06");
+  });
+
+  it("state reaches the SECOND constructor argument: Bavaria adds its own days", () => {
+    const ids = buildExcludeOptions({ country: "DE", state: "BY", region: "", types: ["public"] }, "en", 2026).map(
+      o => o.id,
+    );
+    // Epiphany, Corpus Christi and All Saints exist in Bavaria but not nationwide.
+    expect(ids).toEqual(expect.arrayContaining(["01-06", "easter_60", "11-01"]));
+  });
+
+  it("region reaches the THIRD constructor argument: Augsburg adds its peace festival", () => {
+    const ids = buildExcludeOptions({ country: "DE", state: "BY", region: "A", types: ["public"] }, "en", 2026).map(
+      o => o.id,
+    );
+    expect(ids).toContain("08-08");
+  });
+
+  it("localizes the labels with the language it was given", () => {
+    const [de] = buildExcludeOptions({ country: "DE", state: "", region: "", types: ["public"] }, "de", 2026);
+    const [en] = buildExcludeOptions({ country: "DE", state: "", region: "", types: ["public"] }, "en", 2026);
+    expect(de.id).toBe(en.id);
+    expect(de.label).not.toBe(en.label);
   });
 });

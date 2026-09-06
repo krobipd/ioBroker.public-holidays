@@ -16,7 +16,8 @@ Bundesländern, Kantonen, Provinzen und Regionen abdeckt.
 
 ## Einrichtung
 
-1. Adapter installieren und eine Instanz anlegen.
+1. Adapter aus dem ioBroker-Repository (stable oder latest) installieren und eine Instanz anlegen.
+   Eine Installation über eine GitHub-Adresse wird nicht unterstützt.
 2. Die Instanz-Einstellungen öffnen. Alle Einstellungen liegen auf einer geführten Karte, die von
    oben nach unten durchgearbeitet wird.
 3. Speichern. Der Adapter rechnet sofort und schreibt seine Datenpunkte.
@@ -43,8 +44,18 @@ Fünf Typen lassen sich unabhängig voneinander aktivieren:
 | Optionale Feiertage | Tage, die nur für einen Teil der Bevölkerung frei sind. |
 | Gedenktage | Gedenk- und Aktionstage ohne arbeitsfreie Wirkung — z. B. Muttertag. |
 
-Fällt ein Tag unter mehrere aktivierte Typen, gewinnt der höherrangige in der Reihenfolge der
-Tabelle. Damit bleibt der gemeldete Name stabil, statt von der Reihenfolge der Rohdaten abzuhängen.
+Fallen zwei Feiertage auf denselben Tag, entscheiden drei Regeln in dieser Reihenfolge, welcher
+Name gemeldet wird:
+
+1. der höherrangige Typ gewinnt, in der Reihenfolge der Tabelle,
+2. ein Feiertag, der wirklich auf diesen Tag gehört, schlägt einen, der nur vom Wochenende hierher
+   verschoben wurde,
+3. und bleibt es dann noch gleich, entscheidet eine feste interne Reihenfolge.
+
+Alle drei sind eindeutig, der Name bleibt über Datenaktualisierungen hinweg also derselbe. Bis
+Version 0.15.1 gewann bei Gleichstand schlicht der zuerst gelieferte Eintrag, was sich mit einer
+Datenaktualisierung still ändern konnte — in 39 Ländern, darunter Norwegen, Polen, Rumänien,
+Serbien und Taiwan.
 
 > Sind **alle** Typen abgeschaltet, meldet der Adapter überhaupt keine Feiertage — die Karte und das
 > Log sagen das ausdrücklich.
@@ -97,8 +108,9 @@ rechnet genauso wie der Adapter selbst, die Vorschau zeigt also den echten spät
 | `next.date` | string | Dessen Datum als `YYYY-MM-DD` — maschinenlesbar, unabhängig vom Anzeigeformat |
 | `next.daysUntil` | number | Tage bis zu diesem Feiertag |
 
-Alle Datenpunkte sind nur lesbar. `next` schaut strikt nach vorn: Ein Feiertag, der heute ist, steht
-in `today`, nicht in `next`.
+Alle Datenpunkte sind nur lesbar und tragen im Objektbaum eine kurze Erklärung in der eingestellten
+Sprache. `next` schaut strikt nach vorn: Ein Feiertag, der heute ist, steht in `today`, nicht in
+`next`.
 
 Die Namen der Kanäle und Datenpunkte folgen der ioBroker-Systemsprache und werden bei jedem
 Durchgang aufgefrischt — auch auf Anlagen, die aktualisiert statt neu installiert wurden. Ein von
@@ -121,7 +133,9 @@ alle Typ-Häkchen aus sind.
 **Das eingestellte Bundesland oder die Region wird scheinbar ignoriert.**
 Ein unbekanntes Bundesland oder eine unbekannte Region fällt still auf die gröbere Ebene zurück. Der
 Adapter erkennt das und warnt: „State 'XX' is unknown for YY — using country-level holidays". Den
-Eintrag aus der Auswahlliste wählen, statt ihn einzutippen.
+Eintrag aus der Auswahlliste wählen, statt ihn einzutippen. Ist der gespeicherte Eintrag durch eine
+Datenaktualisierung weggefallen, weist die Karte oberhalb der Auswahlliste darauf hin und lässt die
+Konfiguration unangetastet, bis ein neuer Eintrag gewählt wird.
 
 **Ein Feiertag fehlt oder taucht unerwartet auf.**
 Den passenden Feiertagstyp aktivieren — manche Tage zählen als Gedenktag statt als gesetzlicher

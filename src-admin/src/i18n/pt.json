@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Feriados detetados",
   "ph_hc_preview_count": "%s feriados detetados para %s",
   "ph_hc_preview_none": "Selecione um país para ver os feriados detetados",
-  "ph_hc_bridge_day": "Dia de ponte"
+  "ph_hc_scope_stale": "Guardado, mas já não disponível para este local: %s — escolha uma nova entrada."
 }

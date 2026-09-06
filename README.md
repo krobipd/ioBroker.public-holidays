@@ -36,6 +36,8 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 - ioBroker Admin >= 8.0.11
 - Node.js >= 22
 
+> The adapter CANNOT be installed via GitHub: The adapter must be installed via the ioBroker repository (stable or latest).
+
 ## Configuration
 
 All settings live on a single guided card. Work through it from top to bottom:
@@ -99,6 +101,16 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- Fixed: Two holidays on one day could swap the reported name on their own with a data update. A fixed rule decides now — the name changes in 39 countries, among them Norway, Poland and Taiwan.
+- Fixed: A day moved off a weekend no longer pushes aside the holiday that genuinely belongs on that date.
+- New: Every data point now explains itself in the object tree, in your language.
+- Fixed: Opening the settings marked them as changed when a stored state or province had vanished from the holiday data. The card points that entry out now instead.
+- Fixed: A country written as a name instead of its code was rejected in the settings, although the same name worked when it came from the ioBroker system settings.
+- Changed: Install the adapter from the ioBroker repository (stable or latest) — installing from GitHub is no longer supported.
+
 ### 0.15.1 (2026-09-04)
 
 - Fixed: Installations kept whatever holiday data was already on the system, so corrections and new countries never arrived. An update now brings the current data along.

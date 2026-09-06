@@ -1,6 +1,6 @@
 /**
  * Orchestration tests for main.ts — onReady flow (mode migration, country
- * detection chain, compute → publish → stop) and the validateConfig matrix.
+ * detection chain, compute → publish → stop). The config matrix lives in config.test.ts.
  * Fleet harness pattern: `@iobroker/adapter-core` is mocked with a stub Adapter
  * class; everything else (holiday-engine with the real date-holidays data,
  * i18n, state-publisher) runs for REAL against the stub object store.
@@ -29,6 +29,8 @@ vi.mock("@iobroker/adapter-core", () => {
     failNextForeignObjectRead = false;
 
     log = {
+      /** The instance's verbosity — the real Logger carries it and onReady reads it. */
+      level: "info",
       debug: (m: string): void => void this.logs.push({ level: "debug", msg: m }),
       info: (m: string): void => void this.logs.push({ level: "info", msg: m }),
       warn: (m: string): void => void this.logs.push({ level: "warn", msg: m }),
@@ -105,7 +107,6 @@ vi.mock("@iobroker/adapter-core", () => {
 });
 
 import { PublicHolidaysAdapter } from "./main";
-import type { AdapterConfig } from "./lib/types";
 
 interface ObjEntry {
   type?: string;
@@ -119,6 +120,7 @@ interface StubSurface {
   objects: Map<string, ObjEntry>;
   states: Map<string, { val: unknown; ack: boolean }>;
   logs: { level: string; msg: string }[];
+  log: { level: string };
   stop: ReturnType<typeof vi.fn>;
   instanceObjectWrites: number;
   failNextForeignObjectRead: boolean;
@@ -128,7 +130,6 @@ interface StubSurface {
 /** Typed access to the private members the orchestration tests drive. */
 interface Internal {
   onReady: () => Promise<void>;
-  validateConfig: (fallbackCountry?: string) => AdapterConfig | null;
 }
 
 function setup(config: Record<string, unknown> = {}): {
@@ -210,6 +211,24 @@ describe("onReady — happy path", () => {
     await internal.onReady();
     const own = [...stub.objects.keys()].filter(id => id.startsWith("public-holidays.0."));
     expect(own).toHaveLength(17);
+  });
+
+  // audit finding F12 — the holiday listing computes an extra year and builds a line naming every
+  // holiday of it. Doing that once a day for a log level nobody reads is pure waste.
+  it("skips the holiday listing while debug output is off", async () => {
+    const { internal, stub } = setup({ country: "DE", state: "BY" });
+    stub.log.level = "info";
+    await internal.onReady();
+    expect(logsOf(stub, "debug").filter(m => m.includes("IDs:"))).toEqual([]);
+  });
+
+  it("writes the holiday listing once debug output is on", async () => {
+    const { internal, stub } = setup({ country: "DE", state: "BY" });
+    stub.log.level = "debug";
+    await internal.onReady();
+    const listing = logsOf(stub, "debug").filter(m => m.includes("IDs:"));
+    expect(listing).toHaveLength(1);
+    expect(listing[0]).toContain("DE/BY:");
   });
 
   it("logs the Today/next-holiday summary at info on a holiday", async () => {
@@ -511,70 +530,5 @@ describe("onReady — diagnostics warnings", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("No holiday type is enabled"))).toBe(false);
-  });
-});
-
-describe("validateConfig", () => {
-  it("returns null without a country (no fallback)", () => {
-    const { internal } = setup({});
-    expect(internal.validateConfig()).toBeNull();
-  });
-
-  it("uses the fallback country when config has none", () => {
-    const { internal } = setup({});
-    expect(internal.validateConfig("AT")?.country).toBe("AT");
-  });
-
-  it("trims the configured country and prefers it over the fallback", () => {
-    const { internal } = setup({ country: "  DE  " });
-    expect(internal.validateConfig("AT")?.country).toBe("DE");
-  });
-
-  it("defaults to public holidays only (typePublic unset)", () => {
-    const { internal } = setup({ country: "DE" });
-    expect(internal.validateConfig()?.holidayTypes).toEqual(["public"]);
-  });
-
-  it("typePublic=false removes public; explicit true flags add their types", () => {
-    const { internal } = setup({
-      country: "DE",
-      typePublic: false,
-      typeBank: true,
-      typeSchool: true,
-      typeOptional: true,
-      typeObservance: true,
-    });
-    expect(internal.validateConfig()?.holidayTypes).toEqual(["bank", "school", "optional", "observance"]);
-  });
-
-  it("non-boolean type flags are NOT treated as enabled (strict === true)", () => {
-    const { internal } = setup({ country: "DE", typeBank: "true", typeSchool: 1 });
-    expect(internal.validateConfig()?.holidayTypes).toEqual(["public"]);
-  });
-
-  it("takes excludeHolidays only (legacy per-type exclude keys are ignored) and drops non-strings", () => {
-    const { internal } = setup({
-      country: "DE",
-      // Legacy keys from the pre-0.9.0 per-type exclude UI — no admin field writes these
-      // anymore; validateConfig must NOT merge them back in.
-      excludePublic: ["legacy_ignored"],
-      excludeBank: ["legacy_ignored_too"],
-      excludeHolidays: ["a", 42, "b", null],
-    });
-    expect(internal.validateConfig()?.excludeHolidays).toEqual(["a", "b"]);
-  });
-
-  it("state/region default to empty strings and get trimmed", () => {
-    const { internal } = setup({ country: "DE", state: " BY ", region: 7 });
-    const cfg = internal.validateConfig()!;
-    expect(cfg.state).toBe("BY");
-    expect(cfg.region).toBe("");
-  });
-
-  it("includeBridgeDays only on strict boolean true", () => {
-    const { internal: a } = setup({ country: "DE", includeBridgeDays: true });
-    const { internal: b } = setup({ country: "DE", includeBridgeDays: "true" });
-    expect(a.validateConfig()?.includeBridgeDays).toBe(true);
-    expect(b.validateConfig()?.includeBridgeDays).toBe(false);
   });
 });

@@ -11,5 +11,12 @@
   "supportHeader": "Support",
   "aboutInfo": "This adapter is free and open source. If you find it useful, please consider supporting its development with a small donation.",
   "donateKofi": "Support on Ko-fi",
-  "donatePaypal": "Donate via PayPal"
+  "donatePaypal": "Donate via PayPal",
+  "descNext": "The next holiday still ahead — a holiday that falls today stays in the today channel.",
+  "descDayName": "Empty on a day that is not a holiday.",
+  "descDayIsHoliday": "Also true for bridge days while bridge days are switched on.",
+  "descNextName": "Empty while no upcoming holiday was found.",
+  "descNextIsHoliday": "False when no upcoming holiday was found at all.",
+  "descNextDate": "Always ISO format (YYYY-MM-DD), independent of the date format set in ioBroker.",
+  "descNextDaysUntil": "0 means no upcoming holiday was found — a real one is always at least one day ahead."
 }

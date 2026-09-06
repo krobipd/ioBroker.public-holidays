@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Festivos detectados",
   "ph_hc_preview_count": "%s festivos detectados para %s",
   "ph_hc_preview_none": "Seleccione un país para ver los festivos detectados",
-  "ph_hc_bridge_day": "Día puente"
+  "ph_hc_scope_stale": "Guardado, pero ya no disponible para esta ubicación: %s — elija una nueva entrada."
 }

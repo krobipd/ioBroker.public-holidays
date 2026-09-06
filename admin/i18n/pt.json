@@ -11,5 +11,12 @@
   "supportHeader": "Suporte",
   "aboutInfo": "Este adaptador é gratuito e de código aberto. Se você o achar útil, considere apoiar o desenvolvimento com uma pequena doação.",
   "donateKofi": "Apoiar no Ko-fi",
-  "donatePaypal": "Doar via PayPal"
+  "donatePaypal": "Doar via PayPal",
+  "descNext": "O próximo feriado ainda por vir — um feriado que cai hoje permanece no canal de hoje.",
+  "descDayName": "Vazio num dia que não é feriado.",
+  "descDayIsHoliday": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
+  "descNextName": "Vazio enquanto nenhum feriado futuro for encontrado.",
+  "descNextIsHoliday": "Falso quando nenhum feriado futuro foi encontrado.",
+  "descNextDate": "Sempre em formato ISO (AAAA-MM-DD), independentemente do formato de data definido no ioBroker.",
+  "descNextDaysUntil": "0 significa que nenhum feriado futuro foi encontrado — um real está sempre a pelo menos um dia de distância."
 }

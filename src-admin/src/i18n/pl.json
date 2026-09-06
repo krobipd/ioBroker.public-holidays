@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Wykryte święta",
   "ph_hc_preview_count": "Wykryto %s świąt dla %s",
   "ph_hc_preview_none": "Wybierz kraj, aby zobaczyć wykryte święta",
-  "ph_hc_bridge_day": "Dzień pomostowy"
+  "ph_hc_scope_stale": "Zapisane, ale niedostępne dla tej lokalizacji: %s — wybierz nową pozycję."
 }

@@ -11,5 +11,12 @@
   "supportHeader": "Supporto",
   "aboutInfo": "Questo adattatore è gratuito e open source. Se lo trovi utile, considera di supportare lo sviluppo con una piccola donazione.",
   "donateKofi": "Supporta su Ko-fi",
-  "donatePaypal": "Dona tramite PayPal"
+  "donatePaypal": "Dona tramite PayPal",
+  "descNext": "La prossima festività ancora futura — una festività che cade oggi resta nel canale di oggi.",
+  "descDayName": "Vuoto in un giorno che non è festivo.",
+  "descDayIsHoliday": "Vero anche per i ponti finché i ponti sono attivati.",
+  "descNextName": "Vuoto finché non è stata trovata alcuna festività futura.",
+  "descNextIsHoliday": "Falso quando non è stata trovata alcuna festività futura.",
+  "descNextDate": "Sempre in formato ISO (AAAA-MM-GG), indipendentemente dal formato data impostato in ioBroker.",
+  "descNextDaysUntil": "0 significa che non è stata trovata alcuna festività futura — una reale dista sempre almeno un giorno."
 }

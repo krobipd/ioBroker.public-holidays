@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Gedetecteerde feestdagen",
   "ph_hc_preview_count": "%s feestdagen gedetecteerd voor %s",
   "ph_hc_preview_none": "Selecteer een land om gedetecteerde feestdagen te zien",
-  "ph_hc_bridge_day": "Brugdag"
+  "ph_hc_scope_stale": "Opgeslagen, maar niet meer beschikbaar voor deze locatie: %s — kies een nieuwe vermelding."
 }

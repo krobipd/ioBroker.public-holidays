@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Giorni festivi rilevati",
   "ph_hc_preview_count": "%s giorni festivi rilevati per %s",
   "ph_hc_preview_none": "Seleziona un paese per vedere i giorni festivi rilevati",
-  "ph_hc_bridge_day": "Ponte"
+  "ph_hc_scope_stale": "Salvato, ma non più disponibile per questa località: %s — selezionare una nuova voce."
 }

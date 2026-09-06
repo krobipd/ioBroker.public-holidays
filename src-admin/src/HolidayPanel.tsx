@@ -15,7 +15,11 @@ import {
 import { I18n } from "@iobroker/gui-components";
 
 import { buildPreviewHolidays, getCountryOptions, getRegionOptions, getStateOptions } from "./scope-options";
-import { buildExcludeOptions, computeOrphanIds, enabledTypes, TYPE_FLAGS } from "./exclude-options";
+import { buildExcludeOptions, computeOrphanIds, enabledTypeKeys, HOLIDAY_TYPES } from "./exclude-options";
+// The bridge-day name comes from the runtime's own table, not from the card's i18n: the preview
+// chip and the published `name` state must read identically, and a second translation table for
+// the same sentence is exactly what drifts (audit finding F16).
+import { bridgeDayName } from "../../src/lib/holiday-shared.js";
 
 /**
  * Props for the guided holiday-config card. It owns the flat `native.*` fields directly — the thin
@@ -89,26 +93,41 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
   const region = readString(data, "region");
   const excludeHolidays = readStringArray(data, "excludeHolidays");
   const includeBridgeDays = data.includeBridgeDays === true;
-  const enabled = enabledTypes(flag => data[flag]);
+  const enabled = enabledTypeKeys(flag => data[flag]);
 
   const countryOptions = React.useMemo(() => getCountryOptions(lang), [lang]);
   const stateOptions = React.useMemo(() => getStateOptions(country, lang), [country, lang]);
   const regionOptions = React.useMemo(() => getRegionOptions(country, state, lang), [country, state, lang]);
 
-  // Clear a stored state/region the moment it no longer belongs to the chosen scope (e.g. after a
-  // country change). Otherwise it lingers as a native value the runtime feeds to date-holidays,
-  // which then silently falls back to the broader scope. Reactive (not done inside the country
-  // onChange handler) so each write is a single, race-free onChange call.
+  // A stored state/region that no longer belongs to the chosen scope has two very different
+  // causes, and until v0.15.1 both were treated the same — cleared reactively (audit finding F13):
+  //
+  // - The USER just picked another country. Clearing is right, and the resulting "unsaved changes"
+  //   state is honest: they did change something.
+  // - A date-holidays update dropped the state code. Then merely OPENING the settings page wrote
+  //   an empty value and armed the Save button without anybody touching anything.
+  //
+  // So the write now happens only on a country change this component actually witnessed; a value
+  // that was already stale when the page opened is surfaced the way stale excludes have always
+  // been surfaced — visibly, for the user to resolve.
+  const seenCountry = React.useRef(country);
   React.useEffect(() => {
-    if (state && !stateOptions.some(o => o.value === state)) {
+    if (seenCountry.current === country) {
+      return;
+    }
+    seenCountry.current = country;
+    if (state) {
       onChange("state", "");
     }
-  }, [state, stateOptions, onChange]);
-  React.useEffect(() => {
-    if (region && !regionOptions.some(o => o.value === region)) {
+    if (region) {
       onChange("region", "");
     }
-  }, [region, regionOptions, onChange]);
+  }, [country, state, region, onChange]);
+
+  const staleScope = [
+    state && stateOptions.length && !stateOptions.some(o => o.value === state) ? state : "",
+    region && regionOptions.length && !regionOptions.some(o => o.value === region) ? region : "",
+  ].filter(Boolean);
 
   const enabledKey = enabled.join(",");
   const excludeOptions = React.useMemo(
@@ -166,7 +185,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               )}
             />
           ) : null}
-          {stateOptions.length && regionOptions.length ? (
+          {regionOptions.length ? (
             <Autocomplete
               fullWidth
               size="small"
@@ -184,6 +203,14 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               )}
             />
           ) : null}
+          {staleScope.length ? (
+            <Typography
+              variant="body2"
+              color="warning.main"
+            >
+              {t("ph_hc_scope_stale", staleScope.join(", "))}
+            </Typography>
+          ) : null}
           {!country && systemCountry ? (
             <Typography
               variant="body2"
@@ -200,7 +227,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
       {/* Tier 2 — holiday types */}
       <Stage title={t("ph_hc_types_title")}>
         <FormGroup row>
-          {TYPE_FLAGS.map(tf => (
+          {HOLIDAY_TYPES.map(tf => (
             <FormControlLabel
               key={tf.flag}
               control={
@@ -210,7 +237,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
                   onChange={e => onChange(tf.flag, e.target.checked)}
                 />
               }
-              label={t(`ph_hc_type_${tf.type}`)}
+              label={t(`ph_hc_type_${tf.key}`)}
             />
           ))}
         </FormGroup>
@@ -311,7 +338,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
                   key={h.date}
                   size="small"
                   variant={h.type === "bridge" ? "outlined" : "filled"}
-                  label={`${formatDay(h.date)} ${h.type === "bridge" ? t("ph_hc_bridge_day") : h.name}`}
+                  label={`${formatDay(h.date)} ${h.type === "bridge" ? bridgeDayName(lang) : h.name}`}
                 />
               ))}
             </Box>

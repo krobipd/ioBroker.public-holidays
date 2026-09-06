@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Detected holidays",
   "ph_hc_preview_count": "%s holidays detected for %s",
   "ph_hc_preview_none": "Select a country to see detected holidays",
-  "ph_hc_bridge_day": "Bridge day"
+  "ph_hc_scope_stale": "Stored but no longer available for this location: %s — please pick a new entry."
 }

@@ -11,5 +11,12 @@
   "supportHeader": "Unterstützung",
   "aboutInfo": "Dieser Adapter ist kostenlos und Open Source. Wenn du ihn nützlich findest, unterstütze die Entwicklung gerne mit einer kleinen Spende.",
   "donateKofi": "Unterstützen auf Ko-fi",
-  "donatePaypal": "Spenden via PayPal"
+  "donatePaypal": "Spenden via PayPal",
+  "descNext": "Der nächste noch bevorstehende Feiertag — ein Feiertag, der heute ist, bleibt im Kanal Heute.",
+  "descDayName": "Leer an einem Tag, der kein Feiertag ist.",
+  "descDayIsHoliday": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
+  "descNextName": "Leer, solange kein kommender Feiertag gefunden wurde.",
+  "descNextIsHoliday": "Falsch, wenn überhaupt kein kommender Feiertag gefunden wurde.",
+  "descNextDate": "Immer im ISO-Format (JJJJ-MM-TT), unabhängig vom in ioBroker eingestellten Datumsformat.",
+  "descNextDaysUntil": "0 bedeutet, dass kein kommender Feiertag gefunden wurde — ein echter liegt immer mindestens einen Tag voraus."
 }

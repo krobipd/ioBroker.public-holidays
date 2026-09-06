@@ -15,7 +15,8 @@ covers 206 countries including their states, provinces and regions.
 
 ## Setup
 
-1. Install the adapter and create an instance.
+1. Install the adapter from the ioBroker repository (stable or latest) and create an instance.
+   Installing from a GitHub URL is not supported.
 2. Open the instance settings. All settings live on one guided card, worked through from top to
    bottom.
 3. Save. The adapter calculates immediately and writes its data points.
@@ -41,9 +42,15 @@ Five types can be enabled independently:
 | Optional | Days that are a holiday only for parts of the population. |
 | Observance | Commemorative days that are not days off — e.g. Mother's Day. |
 
-If a day is covered by several enabled types, the highest-ranking one wins, in the order of the
-table above. This keeps the reported name stable instead of depending on the order the data
-happens to arrive in.
+If two holidays fall on the same day, three rules decide which name is reported, in this order:
+
+1. the higher-ranking type wins, in the order of the table above,
+2. a holiday that genuinely belongs on that day beats one that was only moved there off a weekend,
+3. and if that still ties, a fixed internal ordering decides.
+
+All three are unambiguous, so the name stays the same across data updates. Until version 0.15.1 a
+tie was settled by whichever holiday the data happened to list first, which could change silently
+with a data update — in 39 countries, among them Norway, Poland, Romania, Serbia and Taiwan.
 
 > If you switch **all** types off, the adapter reports no holidays at all — the settings card and
 > the log both say so.
@@ -94,7 +101,8 @@ the adapter calculates, so what you see is what you get.
 | `next.date` | string | Its date as `YYYY-MM-DD` — machine-readable, unaffected by your display format |
 | `next.daysUntil` | number | Days until that holiday |
 
-All data points are read-only. `next` looks strictly ahead: a holiday that is today appears in
+All data points are read-only, and each one carries a short explanation in your language that you
+can read in the object tree. `next` looks strictly ahead: a holiday that is today appears in
 `today`, not in `next`.
 
 The names of the channels and data points follow your ioBroker system language and are refreshed on
@@ -116,7 +124,9 @@ provide a usable country. "No holiday type is enabled" means every type checkbox
 **The state or region I configured seems to be ignored.**
 An unknown state or region silently falls back to the broader level. The adapter detects this and
 warns: "State 'XX' is unknown for YY — using country-level holidays". Pick the entry from the
-dropdown rather than typing it.
+dropdown rather than typing it. If a data update removed the entry you had stored, the settings
+card points it out above the dropdown and leaves your configuration untouched until you pick a new
+one.
 
 **A holiday is missing or appears unexpectedly.**
 Enable the matching holiday type — some days count as observances rather than public holidays, and

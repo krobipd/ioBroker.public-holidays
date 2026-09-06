@@ -11,5 +11,12 @@
   "supportHeader": "Ondersteuning",
   "aboutInfo": "Deze adapter is gratis en open source. Als je hem nuttig vindt, overweeg dan de ontwikkeling te steunen met een kleine donatie.",
   "donateKofi": "Steunen op Ko-fi",
-  "donatePaypal": "Doneren via PayPal"
+  "donatePaypal": "Doneren via PayPal",
+  "descNext": "De eerstvolgende feestdag die nog komt — een feestdag die vandaag valt blijft in het kanaal van vandaag.",
+  "descDayName": "Leeg op een dag die geen feestdag is.",
+  "descDayIsHoliday": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
+  "descNextName": "Leeg zolang er geen komende feestdag is gevonden.",
+  "descNextIsHoliday": "Onwaar wanneer er helemaal geen komende feestdag is gevonden.",
+  "descNextDate": "Altijd ISO-formaat (JJJJ-MM-DD), onafhankelijk van het in ioBroker ingestelde datumformaat.",
+  "descNextDaysUntil": "0 betekent dat er geen komende feestdag is gevonden — een echte ligt altijd minstens één dag vooruit."
 }

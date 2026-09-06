@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/lib/error-utils.ts"],
-  "sourcesContent": ["export function errText(err: unknown): string {\n  if (err instanceof Error) {\n    return oneLine(err.message);\n  }\n  if (typeof err === \"string\") {\n    return oneLine(err);\n  }\n  return oneLine(String(err));\n}\n\n/**\n * Collapse newlines / tabs to single spaces so externally-sourced strings\n * (holiday names, configured country/language, error text) cannot forge extra\n * log lines or smuggle line breaks into the log / Sentry breadcrumb.\n */\nexport function oneLine(s: string): string {\n  return s.replace(/[\\r\\n\\t]+/g, \" \").trim();\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,SAAS,QAAQ,KAAsB;AAC5C,MAAI,eAAe,OAAO;AACxB,WAAO,QAAQ,IAAI,OAAO;AAAA,EAC5B;AACA,MAAI,OAAO,QAAQ,UAAU;AAC3B,WAAO,QAAQ,GAAG;AAAA,EACpB;AACA,SAAO,QAAQ,OAAO,GAAG,CAAC;AAC5B;AAOO,SAAS,QAAQ,GAAmB;AACzC,SAAO,EAAE,QAAQ,cAAc,GAAG,EAAE,KAAK;AAC3C;",
-  "names": []
-}

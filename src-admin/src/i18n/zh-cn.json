@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "检测到的节假日",
   "ph_hc_preview_count": "检测到 %s 个节假日（%s）",
   "ph_hc_preview_none": "选择国家以查看检测到的节假日",
-  "ph_hc_bridge_day": "桥接日"
+  "ph_hc_scope_stale": "已保存，但此地点不再提供：%s — 请重新选择。"
 }

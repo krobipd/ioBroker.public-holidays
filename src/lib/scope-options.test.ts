@@ -196,3 +196,63 @@ describe("buildPreviewHolidays", () => {
     expect(bridges).toEqual(["2026-05-11", "2026-05-13", "2026-05-15"]);
   });
 });
+
+// ─── the DEFAULT makers (audit finding F10) ─────────────────────────────────
+//
+// Same gap as in exclude-options: every case above injects a fake, leaving the constructors the
+// admin card actually runs (lines 86-92) untouched by any test. These go through the real library.
+describe("the cascade and the preview with the real date-holidays constructor", () => {
+  it("getCountryOptions lists the countries date-holidays supports", () => {
+    const options = getCountryOptions("en");
+    expect(options.length).toBeGreaterThan(200);
+    expect(options.some(o => o.value === "DE")).toBe(true);
+    expect(options.find(o => o.value === "DE")?.label).toContain("(DE)");
+  });
+
+  it("getStateOptions/getRegionOptions walk down the real taxonomy", () => {
+    expect(getStateOptions("DE", "en").some(o => o.value === "BY")).toBe(true);
+    expect(getRegionOptions("DE", "BY", "en").some(o => o.value === "A")).toBe(true);
+    expect(getRegionOptions("DE", "", "en")).toEqual([]);
+  });
+
+  it("buildPreviewHolidays passes country/state/region to the constructor in that order", () => {
+    const country = buildPreviewHolidays(
+      { country: "DE", state: "", region: "", types: ["public"], excludeHolidays: [] },
+      false,
+      "en",
+      2026,
+    );
+    const state = buildPreviewHolidays(
+      { country: "DE", state: "BY", region: "", types: ["public"], excludeHolidays: [] },
+      false,
+      "en",
+      2026,
+    );
+    const region = buildPreviewHolidays(
+      { country: "DE", state: "BY", region: "A", types: ["public"], excludeHolidays: [] },
+      false,
+      "en",
+      2026,
+    );
+    expect(state.length).toBeGreaterThan(country.length);
+    expect(region.length).toBeGreaterThan(state.length);
+    expect(region.some(h => h.date === "2026-08-08")).toBe(true);
+  });
+
+  it("adds bridge days to the real preview when they are switched on", () => {
+    const plain = buildPreviewHolidays(
+      { country: "DE", state: "BY", region: "", types: ["public"], excludeHolidays: [] },
+      false,
+      "en",
+      2026,
+    );
+    const bridged = buildPreviewHolidays(
+      { country: "DE", state: "BY", region: "", types: ["public"], excludeHolidays: [] },
+      true,
+      "en",
+      2026,
+    );
+    expect(bridged.length).toBeGreaterThan(plain.length);
+    expect(bridged.filter(h => h.type === "bridge").length).toBeGreaterThan(0);
+  });
+});

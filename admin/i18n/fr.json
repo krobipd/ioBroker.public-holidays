@@ -11,5 +11,12 @@
   "supportHeader": "Support",
   "aboutInfo": "Cet adaptateur est gratuit et open source. Si vous le trouvez utile, pensez à soutenir son développement par un petit don.",
   "donateKofi": "Soutenir sur Ko-fi",
-  "donatePaypal": "Faire un don via PayPal"
+  "donatePaypal": "Faire un don via PayPal",
+  "descNext": "Le prochain jour férié à venir — un jour férié qui tombe aujourd'hui reste dans le canal du jour.",
+  "descDayName": "Vide un jour qui n'est pas férié.",
+  "descDayIsHoliday": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
+  "descNextName": "Vide tant qu'aucun jour férié à venir n'a été trouvé.",
+  "descNextIsHoliday": "Faux lorsqu'aucun jour férié à venir n'a été trouvé.",
+  "descNextDate": "Toujours au format ISO (AAAA-MM-JJ), indépendamment du format de date configuré dans ioBroker.",
+  "descNextDaysUntil": "0 signifie qu'aucun jour férié à venir n'a été trouvé — un vrai est toujours à au moins un jour."
 }

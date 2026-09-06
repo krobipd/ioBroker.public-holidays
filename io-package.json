@@ -3,6 +3,19 @@
     "name": "public-holidays",
     "version": "0.15.1",
     "news": {
+      "NEXT": {
+        "en": "Two holidays on one day no longer swap the reported name with a data update, every data point now explains itself in the object tree, and installation runs through the ioBroker repository.",
+        "de": "Zwei Feiertage an einem Tag tauschen den gemeldeten Namen nicht mehr mit einem Datenupdate, jeder Datenpunkt erklärt sich jetzt im Objektbaum, und die Installation läuft über das ioBroker-Repository.",
+        "ru": "Два праздника в один день больше не меняют сообщаемое название при обновлении данных, каждый датапоинт теперь поясняется в дереве объектов, а установка идёт через репозиторий ioBroker.",
+        "pt": "Dois feriados no mesmo dia já não trocam o nome comunicado numa atualização de dados, cada ponto de dados explica-se agora na árvore de objetos e a instalação passa pelo repositório ioBroker.",
+        "nl": "Twee feestdagen op één dag wisselen de gemelde naam niet meer bij een data-update, elk datapunt legt zichzelf nu uit in de objectboom en de installatie loopt via de ioBroker-repository.",
+        "fr": "Deux jours fériés le même jour n'échangent plus le nom signalé lors d'une mise à jour, chaque point de données s'explique dans l'arbre d'objets, installation via le dépôt ioBroker.",
+        "it": "Due festività nello stesso giorno non scambiano più il nome riportato con un aggiornamento dati, ogni datapoint si spiega nell'albero degli oggetti, installazione dal repository ioBroker.",
+        "es": "Dos festivos el mismo día ya no intercambian el nombre indicado al actualizar datos, cada punto de datos se explica en el árbol de objetos, instalación desde el repositorio ioBroker.",
+        "pl": "Dwa święta w jednym dniu nie zamieniają już zgłaszanej nazwy przy aktualizacji danych, każdy punkt danych opisuje się teraz w drzewie obiektów, a instalacja przebiega przez repozytorium ioBroker.",
+        "uk": "Два свята в один день більше не міняють повідомлювану назву під час оновлення даних, кожна точка даних тепер пояснюється в дереві об'єктів, а встановлення відбувається через репозиторій ioBroker.",
+        "zh-cn": "同一天的两个节日不会再因数据更新而互换所报名称，每个数据点现在都会在对象树中自我说明，并且只能通过 ioBroker 仓库安装。"
+      },
       "0.15.1": {
         "en": "Installations kept whatever holiday data was already on the system; an update now brings the current data along, including corrected holiday classifications.",
         "de": "Anlagen behielten die Feiertagsdaten, die schon auf dem System lagen; ein Update bringt jetzt die aktuellen Daten mit, samt korrigierter Einstufungen.",
@@ -80,19 +93,6 @@
         "pl": "Ustawienia adaptera to teraz jedna prowadzona karta — kraj, region, typy świąt i wykluczenia na jednej stronie, z podglądem wykrywanych świąt na żywo.",
         "uk": "Налаштування адаптера тепер єдина керована картка — країна, регіон, типи свят і виключення на одній сторінці, з попереднім переглядом виявлених свят.",
         "zh-cn": "适配器设置现在是一张引导式卡片——国家、地区、假日类型和排除项都在一个页面上，并实时预览将检测到的假日。"
-      },
-      "0.11.0": {
-        "en": "Breaking change: the states that flag whether each day is a holiday were renamed for clarity. Update any scripts or views that read them.",
-        "de": "Breaking Change: Die Datenpunkte, die anzeigen ob ein Tag ein Feiertag ist, wurden zur Klarheit umbenannt. Passe Skripte oder Ansichten an, die sie lesen.",
-        "ru": "Важное изменение: состояния, показывающие, является ли день праздником, переименованы для ясности. Обновите скрипты, которые их читают.",
-        "pt": "Alteração incompatível: os estados que indicam se um dia é feriado foram renomeados para maior clareza. Atualize scripts ou vistas que os leem.",
-        "nl": "Ingrijpende wijziging: de states die aangeven of een dag een feestdag is, zijn hernoemd voor de duidelijkheid. Pas scripts of weergaven aan die ze lezen.",
-        "fr": "Changement incompatible : les états indiquant si un jour est férié ont été renommés pour plus de clarté. Adaptez les scripts qui les lisent.",
-        "it": "Modifica incompatibile: gli stati che indicano se un giorno è festivo sono stati rinominati per chiarezza. Aggiorna gli script o le viste che li leggono.",
-        "es": "Cambio incompatible: los estados que indican si un día es festivo se renombraron para mayor claridad. Actualiza los scripts o vistas que los leen.",
-        "pl": "Zmiana niekompatybilna: stany wskazujące, czy dzień jest świętem, zmieniono dla jasności. Zaktualizuj skrypty lub widoki, które je odczytują.",
-        "uk": "Несумісна зміна: стани, що вказують, чи є день святом, перейменовано для ясності. Оновіть скрипти, що їх читають.",
-        "zh-cn": "重大变更：用于标识某天是否为假日的状态已重命名以更清晰。请更新读取它们的脚本或视图。"
       }
     },
     "plugins": {
@@ -177,7 +177,8 @@
       "bridge days",
       "calendar",
       "date-holidays"
-    ]
+    ],
+    "nogit": true
   },
   "native": {
     "country": "",
@@ -233,7 +234,20 @@
         "role": "text",
         "read": true,
         "write": false,
-        "def": ""
+        "def": "",
+        "desc": {
+          "en": "Empty on a day that is not a holiday.",
+          "de": "Leer an einem Tag, der kein Feiertag ist.",
+          "ru": "Пусто в день, который не является праздником.",
+          "pt": "Vazio num dia que não é feriado.",
+          "nl": "Leeg op een dag die geen feestdag is.",
+          "fr": "Vide un jour qui n'est pas férié.",
+          "it": "Vuoto in un giorno che non è festivo.",
+          "es": "Vacío en un día que no es festivo.",
+          "pl": "Puste w dniu, który nie jest świętem.",
+          "uk": "Порожньо в день, який не є святом.",
+          "zh-cn": "非节日的日子为空。"
+        }
       },
       "native": {}
     },
@@ -258,7 +272,20 @@
         "role": "indicator",
         "read": true,
         "write": false,
-        "def": false
+        "def": false,
+        "desc": {
+          "en": "Also true for bridge days while bridge days are switched on.",
+          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
+          "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
+          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
+          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
+          "it": "Vero anche per i ponti finché i ponti sono attivati.",
+          "es": "También verdadero en los días puente mientras los días puente estén activados.",
+          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
+          "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+          "zh-cn": "启用桥接日时，桥接日同样为真。"
+        }
       },
       "native": {}
     },
@@ -303,7 +330,20 @@
         "role": "text",
         "read": true,
         "write": false,
-        "def": ""
+        "def": "",
+        "desc": {
+          "en": "Empty on a day that is not a holiday.",
+          "de": "Leer an einem Tag, der kein Feiertag ist.",
+          "ru": "Пусто в день, который не является праздником.",
+          "pt": "Vazio num dia que não é feriado.",
+          "nl": "Leeg op een dag die geen feestdag is.",
+          "fr": "Vide un jour qui n'est pas férié.",
+          "it": "Vuoto in un giorno che non è festivo.",
+          "es": "Vacío en un día que no es festivo.",
+          "pl": "Puste w dniu, który nie jest świętem.",
+          "uk": "Порожньо в день, який не є святом.",
+          "zh-cn": "非节日的日子为空。"
+        }
       },
       "native": {}
     },
@@ -328,7 +368,20 @@
         "role": "indicator",
         "read": true,
         "write": false,
-        "def": false
+        "def": false,
+        "desc": {
+          "en": "Also true for bridge days while bridge days are switched on.",
+          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
+          "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
+          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
+          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
+          "it": "Vero anche per i ponti finché i ponti sono attivati.",
+          "es": "También verdadero en los días puente mientras los días puente estén activados.",
+          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
+          "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+          "zh-cn": "启用桥接日时，桥接日同样为真。"
+        }
       },
       "native": {}
     },
@@ -373,7 +426,20 @@
         "role": "text",
         "read": true,
         "write": false,
-        "def": ""
+        "def": "",
+        "desc": {
+          "en": "Empty on a day that is not a holiday.",
+          "de": "Leer an einem Tag, der kein Feiertag ist.",
+          "ru": "Пусто в день, который не является праздником.",
+          "pt": "Vazio num dia que não é feriado.",
+          "nl": "Leeg op een dag die geen feestdag is.",
+          "fr": "Vide un jour qui n'est pas férié.",
+          "it": "Vuoto in un giorno che non è festivo.",
+          "es": "Vacío en un día que no es festivo.",
+          "pl": "Puste w dniu, który nie jest świętem.",
+          "uk": "Порожньо в день, який не є святом.",
+          "zh-cn": "非节日的日子为空。"
+        }
       },
       "native": {}
     },
@@ -398,7 +464,20 @@
         "role": "indicator",
         "read": true,
         "write": false,
-        "def": false
+        "def": false,
+        "desc": {
+          "en": "Also true for bridge days while bridge days are switched on.",
+          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
+          "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
+          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
+          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
+          "it": "Vero anche per i ponti finché i ponti sono attivati.",
+          "es": "También verdadero en los días puente mientras los días puente estén activados.",
+          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
+          "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+          "zh-cn": "启用桥接日时，桥接日同样为真。"
+        }
       },
       "native": {}
     },
@@ -443,7 +522,20 @@
         "role": "text",
         "read": true,
         "write": false,
-        "def": ""
+        "def": "",
+        "desc": {
+          "en": "Empty on a day that is not a holiday.",
+          "de": "Leer an einem Tag, der kein Feiertag ist.",
+          "ru": "Пусто в день, который не является праздником.",
+          "pt": "Vazio num dia que não é feriado.",
+          "nl": "Leeg op een dag die geen feestdag is.",
+          "fr": "Vide un jour qui n'est pas férié.",
+          "it": "Vuoto in un giorno che non è festivo.",
+          "es": "Vacío en un día que no es festivo.",
+          "pl": "Puste w dniu, który nie jest świętem.",
+          "uk": "Порожньо в день, який не є святом.",
+          "zh-cn": "非节日的日子为空。"
+        }
       },
       "native": {}
     },
@@ -468,7 +560,20 @@
         "role": "indicator",
         "read": true,
         "write": false,
-        "def": false
+        "def": false,
+        "desc": {
+          "en": "Also true for bridge days while bridge days are switched on.",
+          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
+          "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
+          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
+          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
+          "it": "Vero anche per i ponti finché i ponti sono attivati.",
+          "es": "También verdadero en los días puente mientras los días puente estén activados.",
+          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
+          "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+          "zh-cn": "启用桥接日时，桥接日同样为真。"
+        }
       },
       "native": {}
     },
@@ -488,6 +593,19 @@
           "pl": "Następne święto",
           "uk": "Наступне свято",
           "zh-cn": "下一个假日"
+        },
+        "desc": {
+          "en": "The next holiday still ahead — a holiday that falls today stays in the today channel.",
+          "de": "Der nächste noch bevorstehende Feiertag — ein Feiertag, der heute ist, bleibt im Kanal Heute.",
+          "ru": "Ближайший предстоящий праздник — праздник, выпадающий на сегодня, остаётся в канале сегодняшнего дня.",
+          "pt": "O próximo feriado ainda por vir — um feriado que cai hoje permanece no canal de hoje.",
+          "nl": "De eerstvolgende feestdag die nog komt — een feestdag die vandaag valt blijft in het kanaal van vandaag.",
+          "fr": "Le prochain jour férié à venir — un jour férié qui tombe aujourd'hui reste dans le canal du jour.",
+          "it": "La prossima festività ancora futura — una festività che cade oggi resta nel canale di oggi.",
+          "es": "El próximo festivo aún por llegar — un festivo que cae hoy permanece en el canal de hoy.",
+          "pl": "Najbliższe nadchodzące święto — święto przypadające dzisiaj pozostaje w kanale dzisiejszym.",
+          "uk": "Найближче майбутнє свято — свято, що припадає на сьогодні, залишається в каналі сьогоднішнього дня.",
+          "zh-cn": "下一个尚未到来的节日 — 落在今天的节日仍留在今天通道中。"
         }
       },
       "native": {}
@@ -513,7 +631,20 @@
         "role": "text",
         "read": true,
         "write": false,
-        "def": ""
+        "def": "",
+        "desc": {
+          "en": "Empty while no upcoming holiday was found.",
+          "de": "Leer, solange kein kommender Feiertag gefunden wurde.",
+          "ru": "Пусто, пока не найден предстоящий праздник.",
+          "pt": "Vazio enquanto nenhum feriado futuro for encontrado.",
+          "nl": "Leeg zolang er geen komende feestdag is gevonden.",
+          "fr": "Vide tant qu'aucun jour férié à venir n'a été trouvé.",
+          "it": "Vuoto finché non è stata trovata alcuna festività futura.",
+          "es": "Vacío mientras no se haya encontrado ningún festivo próximo.",
+          "pl": "Puste, dopóki nie znaleziono nadchodzącego święta.",
+          "uk": "Порожньо, доки не знайдено майбутнього свята.",
+          "zh-cn": "尚未找到下一个节日时为空。"
+        }
       },
       "native": {}
     },
@@ -538,7 +669,20 @@
         "role": "indicator",
         "read": true,
         "write": false,
-        "def": false
+        "def": false,
+        "desc": {
+          "en": "False when no upcoming holiday was found at all.",
+          "de": "Falsch, wenn überhaupt kein kommender Feiertag gefunden wurde.",
+          "ru": "Ложь, если предстоящий праздник вообще не найден.",
+          "pt": "Falso quando nenhum feriado futuro foi encontrado.",
+          "nl": "Onwaar wanneer er helemaal geen komende feestdag is gevonden.",
+          "fr": "Faux lorsqu'aucun jour férié à venir n'a été trouvé.",
+          "it": "Falso quando non è stata trovata alcuna festività futura.",
+          "es": "Falso cuando no se ha encontrado ningún festivo próximo.",
+          "pl": "Fałsz, gdy nie znaleziono żadnego nadchodzącego święta.",
+          "uk": "Хибно, якщо майбутнього свята взагалі не знайдено.",
+          "zh-cn": "完全没有找到下一个节日时为假。"
+        }
       },
       "native": {}
     },
@@ -563,7 +707,20 @@
         "role": "date",
         "read": true,
         "write": false,
-        "def": ""
+        "def": "",
+        "desc": {
+          "en": "Always ISO format (YYYY-MM-DD), independent of the date format set in ioBroker.",
+          "de": "Immer im ISO-Format (JJJJ-MM-TT), unabhängig vom in ioBroker eingestellten Datumsformat.",
+          "ru": "Всегда в формате ISO (ГГГГ-ММ-ДД), независимо от формата даты, заданного в ioBroker.",
+          "pt": "Sempre em formato ISO (AAAA-MM-DD), independentemente do formato de data definido no ioBroker.",
+          "nl": "Altijd ISO-formaat (JJJJ-MM-DD), onafhankelijk van het in ioBroker ingestelde datumformaat.",
+          "fr": "Toujours au format ISO (AAAA-MM-JJ), indépendamment du format de date configuré dans ioBroker.",
+          "it": "Sempre in formato ISO (AAAA-MM-GG), indipendentemente dal formato data impostato in ioBroker.",
+          "es": "Siempre en formato ISO (AAAA-MM-DD), independientemente del formato de fecha configurado en ioBroker.",
+          "pl": "Zawsze w formacie ISO (RRRR-MM-DD), niezależnie od formatu daty ustawionego w ioBroker.",
+          "uk": "Завжди у форматі ISO (РРРР-ММ-ДД), незалежно від формату дати, заданого в ioBroker.",
+          "zh-cn": "始终为 ISO 格式（YYYY-MM-DD），与 ioBroker 中设置的日期格式无关。"
+        }
       },
       "native": {}
     },
@@ -589,7 +746,20 @@
         "read": true,
         "write": false,
         "unit": "days",
-        "def": 0
+        "def": 0,
+        "desc": {
+          "en": "0 means no upcoming holiday was found — a real one is always at least one day ahead.",
+          "de": "0 bedeutet, dass kein kommender Feiertag gefunden wurde — ein echter liegt immer mindestens einen Tag voraus.",
+          "ru": "0 означает, что предстоящий праздник не найден — настоящий всегда минимум через один день.",
+          "pt": "0 significa que nenhum feriado futuro foi encontrado — um real está sempre a pelo menos um dia de distância.",
+          "nl": "0 betekent dat er geen komende feestdag is gevonden — een echte ligt altijd minstens één dag vooruit.",
+          "fr": "0 signifie qu'aucun jour férié à venir n'a été trouvé — un vrai est toujours à au moins un jour.",
+          "it": "0 significa che non è stata trovata alcuna festività futura — una reale dista sempre almeno un giorno.",
+          "es": "0 significa que no se encontró ningún festivo próximo — uno real está siempre al menos a un día de distancia.",
+          "pl": "0 oznacza, że nie znaleziono nadchodzącego święta — prawdziwe jest zawsze oddalone o co najmniej jeden dzień.",
+          "uk": "0 означає, що майбутнього свята не знайдено — справжнє завжди щонайменше через один день.",
+          "zh-cn": "0 表示没有找到下一个节日 — 真正的节日总是至少在一天之后。"
+        }
       },
       "native": {}
     }

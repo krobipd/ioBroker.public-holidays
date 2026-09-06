@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Erkannte Feiertage",
   "ph_hc_preview_count": "%s Feiertage für %s erkannt",
   "ph_hc_preview_none": "Land auswählen, um erkannte Feiertage zu sehen",
-  "ph_hc_bridge_day": "Brückentag"
+  "ph_hc_scope_stale": "Gespeichert, aber für diesen Standort nicht mehr verfügbar: %s — bitte neu auswählen."
 }

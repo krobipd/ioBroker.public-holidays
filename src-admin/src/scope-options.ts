@@ -1,14 +1,15 @@
 // Pure cascade logic for the guided admin card, deliberately free of React/MUI so a vitest test
-// under src/ can import and exercise it directly. src-admin is an isolated Module-Federation/Vite
-// bundle — this file must NOT import from src/ (that would risk the MF build). The country/state/
-// region taxonomy is served client-side from the card's own bundled date-holidays, replacing the
-// 145 KB static jsonConfig the generator used to emit. Its bundled version is held equal to the
-// runtime's by scripts/check-date-holidays.mjs (guard: date-holidays-version-parity.test.ts).
+// under src/ can import and exercise it directly. The country/state/region taxonomy is served
+// client-side from the card's own bundled date-holidays, replacing the 145 KB static jsonConfig
+// the generator used to emit. Its bundled version is held equal to the runtime's by
+// scripts/check-date-holidays.mjs (guard: date-holidays-version-parity.test.ts).
+//
+// The collision rule and the bridge-day algorithm come from src/lib/holiday-shared.ts — the SAME
+// module the runtime uses, so the preview cannot drift from what gets published. The explicit
+// `.js` extension is required because the ROOT tsconfig (node16 ESM resolution) type-checks this
+// file too.
 import Holidays from "date-holidays";
-// Explicit .js extension: this module is imported by the src/lib vitest suite, so the ROOT tsconfig
-// (node16 ESM resolution) type-checks it too and requires an extension on relative imports. Vite
-// and the src-admin tsconfig resolve it to the .ts file all the same.
-import { toHolidayId, TYPE_FLAGS } from "./exclude-options.js";
+import { beats, detectBridgeKeys, toHolidayId } from "../../src/lib/holiday-shared.js";
 
 export interface ScopeOption {
   value: string;
@@ -92,19 +93,12 @@ const defaultMakeScoped: MakeScopedHolidays = (country, state, region) => {
   return new Holidays(country);
 };
 
-// Same-date collision priority: index in TYPE_FLAGS (public = 0 wins); unknown ranks last.
-// Mirrors typeRank in holiday-engine.ts, both sourced from the shared type list — the runtime's
-// TYPE_PRIORITY comes from HOLIDAY_TYPES, the admin's from TYPE_FLAGS, kept identical by
-// exclude-type-flags-parity.test.ts.
-function typeRank(type: string): number {
-  const i = TYPE_FLAGS.findIndex(t => t.type === type);
-  return i === -1 ? TYPE_FLAGS.length : i;
-}
-
 // The holidays the runtime would publish for `scope` in `referenceYear`: type filter + exclude
-// filter + same-date dedupe by type priority — mirroring holiday-engine.getFilteredHolidays for a
-// single year (the preview shows one year, "N holidays for 2026"). `makeHolidays` is injectable so
-// the logic is testable without the date-holidays constructor.
+// filter + same-date collision resolved by the SHARED rule (holiday-shared.beats) — mirroring
+// holiday-engine.getFilteredHolidays for a single year (the preview shows one year, "N holidays
+// for 2026"). `makeHolidays` is injectable so the logic is testable without the date-holidays
+// constructor; the DEFAULT maker is exercised too (scope-options.test.ts), because it is the one
+// the admin actually runs (audit finding F10).
 export function buildPreviewHolidays(
   scope: PreviewScope,
   includeBridgeDays: boolean,
@@ -127,7 +121,7 @@ export function buildPreviewHolidays(
   }
   hd.setLanguages([lang]);
 
-  const byDate = new Map<string, PreviewHoliday>();
+  const byDate = new Map<string, PreviewHoliday & { id: string; substitute?: boolean }>();
   for (const h of hd.getHolidays(referenceYear) || []) {
     if (!scope.types.includes(h.type)) {
       continue;
@@ -138,65 +132,24 @@ export function buildPreviewHolidays(
     }
     const dateKey = (h.date || "").substring(0, 10);
     const existing = byDate.get(dateKey);
-    if (!existing || typeRank(h.type) < typeRank(existing.type)) {
-      byDate.set(dateKey, { date: dateKey, name: h.name, type: h.type });
+    const candidate = { date: dateKey, name: h.name, type: h.type, id, substitute: h.substitute };
+    if (!existing || beats(candidate, existing)) {
+      byDate.set(dateKey, candidate);
     }
   }
 
   if (includeBridgeDays) {
     const keys = new Set(byDate.keys());
-    for (const bridgeKey of detectPreviewBridgeDays(keys, referenceYear)) {
+    for (const bridgeKey of detectBridgeKeys(keys, referenceYear)) {
       // A bridge day never overrides a real holiday (mirrors addBridgeDays in holiday-engine.ts).
       // The localized "bridge day" name is filled in by the card; the preview only needs the date.
       if (!byDate.has(bridgeKey)) {
-        byDate.set(bridgeKey, { date: bridgeKey, name: "", type: "bridge" });
+        byDate.set(bridgeKey, { date: bridgeKey, name: "", type: "bridge", id: `bridge_${bridgeKey}` });
       }
     }
   }
 
-  return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
-}
-
-// Shift a YYYY-MM-DD key by whole days, staying on local calendar dates. Parsing with an explicit
-// T00:00:00 (never bare "YYYY-MM-DD", which is UTC) keeps the weekday correct in negative-UTC
-// zones — the same construction holiday-engine.ts uses.
-function shiftKey(dateKey: string, days: number): string {
-  const d = new Date(`${dateKey}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-// Bridge days for a set of holiday date-keys in `year`. MUST stay behaviourally identical to
-// detectBridgeDays in src/lib/holiday-engine.ts (Thu→Fri, Tue→Mon, plus a Wed bracketed by a Tue
-// and a Thu holiday); src-admin can't import it, so it is duplicated and guarded by
-// scope-options-bridge-parity.test.ts.
-export function detectPreviewBridgeDays(holidayKeys: Set<string>, year: number): string[] {
-  const bridges: string[] = [];
-  for (const dateKey of holidayKeys) {
-    if (!dateKey.startsWith(String(year))) {
-      continue;
-    }
-    const dow = new Date(`${dateKey}T00:00:00`).getDay();
-    if (dow === 4) {
-      const friday = shiftKey(dateKey, 1);
-      if (!holidayKeys.has(friday)) {
-        bridges.push(friday);
-      }
-    }
-    if (dow === 2) {
-      const monday = shiftKey(dateKey, -1);
-      if (!holidayKeys.has(monday)) {
-        bridges.push(monday);
-      }
-      const wednesday = shiftKey(dateKey, 1);
-      const thursday = shiftKey(dateKey, 2);
-      if (!holidayKeys.has(wednesday) && holidayKeys.has(thursday)) {
-        bridges.push(wednesday);
-      }
-    }
-  }
-  return bridges;
+  return Array.from(byDate.values())
+    .map(({ date, name, type }) => ({ date, name, type }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }

@@ -197,8 +197,11 @@ describe("resolveCountryCode — rejects what is not a country", () => {
 });
 
 describe("getSystemConfig", () => {
+  const warnings: string[] = [];
+
   function makeAdapter(common: unknown, reject = false): ioBroker.Adapter {
     return {
+      log: { warn: (msg: string) => warnings.push(msg), debug: () => undefined },
       getForeignObjectAsync: vi.fn(() => {
         if (reject) {
           return Promise.reject(new Error("boom"));
@@ -232,6 +235,21 @@ describe("getSystemConfig", () => {
   it("returns defaults on read error", async () => {
     const res = await getSystemConfig(makeAdapter({}, true));
     expect(res).toEqual({ country: "", language: "en", dateFormat: "" });
+  });
+
+  // audit finding F8 — three user-visible things change at once, so the log has to say why
+  it("says WHY it fell back instead of degrading silently", async () => {
+    warnings.length = 0;
+    await getSystemConfig(makeAdapter({}, true));
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("boom");
+    expect(warnings[0]).toContain("auto-detection");
+  });
+
+  it("stays silent when the read works", async () => {
+    warnings.length = 0;
+    await getSystemConfig(makeAdapter({ country: "DE" }));
+    expect(warnings).toEqual([]);
   });
 });
 

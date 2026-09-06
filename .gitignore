@@ -30,16 +30,20 @@ coverage/
 .env
 .env.local
 
-# Admin custom component: the BUILT admin/custom/ is tracked (like build/) so a GitHub-URL install
-# carries the component — needed for this admin-8-only release, whose npm deploy stays blocked by
-# the version-gate until admin 8 is stable. Only the src-admin work dirs stay ignored.
+# Admin custom component: the BUILT admin/custom/ stays tracked so the component ships with the
+# npm package exactly as it was verified, without a build step in between. (The original reason —
+# carrying it into a GitHub-URL install — is gone: `common.nogit` switched that install path off,
+# and the npm deploy has been unblocked since 2026-08-21.) Only the src-admin work dirs are ignored.
 /src-admin/build
 /src-admin/.__mf__temp
+/src-admin/.mf
 /src-admin/node_modules
 /src-admin/package-lock.json
-.dev-server/
 
 # Claude Code local files (not published)
 .claude/settings.local.json
 .claude/dev-history.md
 CLAUDE.local.md
+
+# Build output is not versioned: the CI builds before test and publish (common.nogit)
+build/

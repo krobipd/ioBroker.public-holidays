@@ -11,5 +11,12 @@
   "supportHeader": "Wsparcie",
   "aboutInfo": "Ten adapter jest darmowy i open source. Jeśli uważasz go za przydatny, rozważ wsparcie rozwoju niewielką darowizną.",
   "donateKofi": "Wesprzyj na Ko-fi",
-  "donatePaypal": "Przekaż darowiznę przez PayPal"
+  "donatePaypal": "Przekaż darowiznę przez PayPal",
+  "descNext": "Najbliższe nadchodzące święto — święto przypadające dzisiaj pozostaje w kanale dzisiejszym.",
+  "descDayName": "Puste w dniu, który nie jest świętem.",
+  "descDayIsHoliday": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
+  "descNextName": "Puste, dopóki nie znaleziono nadchodzącego święta.",
+  "descNextIsHoliday": "Fałsz, gdy nie znaleziono żadnego nadchodzącego święta.",
+  "descNextDate": "Zawsze w formacie ISO (RRRR-MM-DD), niezależnie od formatu daty ustawionego w ioBroker.",
+  "descNextDaysUntil": "0 oznacza, że nie znaleziono nadchodzącego święta — prawdziwe jest zawsze oddalone o co najmniej jeden dzień."
 }

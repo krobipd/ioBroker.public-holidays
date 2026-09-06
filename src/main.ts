@@ -1,13 +1,13 @@
 import * as utils from "@iobroker/adapter-core";
 import { I18n } from "@iobroker/adapter-core";
 import { join } from "node:path";
+import { configuredCountry, parseConfig } from "./lib/config";
 import { errText, oneLine } from "./lib/error-utils";
-import { computeHolidays, createHolidaysInstance, detectScopeIssues, logAvailableHolidays } from "./lib/holiday-engine";
+import { computeHolidays, createHolidaysInstance, detectScopeIssue, logAvailableHolidays } from "./lib/holiday-engine";
 import { formatDateForDisplay, getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
-import { HOLIDAY_TYPES, type AdapterConfig } from "./lib/types";
 
-// Exported so the orchestration unit tests can drive onReady/validateConfig directly.
+// Exported so the orchestration unit tests can drive onReady directly.
 export class PublicHolidaysAdapter extends utils.Adapter {
   constructor(options: Partial<utils.AdapterOptions> = {}) {
     super({ ...options, name: "public-holidays" });
@@ -96,17 +96,17 @@ export class PublicHolidaysAdapter extends utils.Adapter {
 
       this.log.debug("Computing holidays...");
       const sysConfig = await getSystemConfig(this);
+      const raw = this.config as Record<string, unknown>;
 
       let detectedCountry = "";
-      const explicitCountry = this.configuredCountry();
-      if (!explicitCountry && sysConfig.country) {
+      if (!configuredCountry(raw) && sysConfig.country) {
         detectedCountry = resolveCountryCode(sysConfig.country);
         if (detectedCountry) {
           this.log.info(`Using system country: ${detectedCountry}`);
         }
       }
 
-      const config = this.validateConfig(detectedCountry);
+      const config = parseConfig(raw, detectedCountry);
       if (!config) {
         this.log.warn("No country configured — open adapter settings");
         void this.stop?.();
@@ -129,18 +129,17 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       hd.setLanguages(languages);
       this.log.debug(`System language: ${oneLine(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
 
-      for (const issue of detectScopeIssues(config, languages, hd)) {
-        if (issue.kind === "country") {
-          this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
-        } else if (issue.kind === "state") {
-          this.log.warn(
-            `State '${oneLine(config.state)}' is unknown for ${oneLine(config.country)} — using country-level holidays`,
-          );
-        } else {
-          this.log.warn(
-            `Region '${oneLine(config.region)}' is unknown for ${oneLine(config.country)}/${oneLine(config.state)} — using broader holidays`,
-          );
-        }
+      const issue = detectScopeIssue(config, languages, hd);
+      if (issue?.kind === "country") {
+        this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
+      } else if (issue?.kind === "state") {
+        this.log.warn(
+          `State '${oneLine(config.state)}' is unknown for ${oneLine(config.country)} — using country-level holidays`,
+        );
+      } else if (issue?.kind === "region") {
+        this.log.warn(
+          `Region '${oneLine(config.region)}' is unknown for ${oneLine(config.country)}/${oneLine(config.state)} — using broader holidays`,
+        );
       }
 
       const computed = computeHolidays(config, languages, { instance: hd });
@@ -152,7 +151,11 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         );
       }
 
-      logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
+      // Guarded, not unconditional: the listing computes an extra year and builds a line naming
+      // every holiday, which is pure waste while nobody reads debug output (audit finding F12).
+      if (this.log.level === "debug" || this.log.level === "silly") {
+        logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
+      }
 
       // The log line shows the date the way the user's ioBroker displays dates
       // (system.config dateFormat, e.g. "26.10.2026"); the next.date STATE stays ISO.
@@ -177,42 +180,6 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       this.log.error(`onReady failed: ${errText(err)}`);
     }
     void this.stop?.();
-  }
-
-  /** The raw (untyped) native config — single cast point for all config reads. */
-  private rawConfig(): Record<string, unknown> {
-    return this.config as Record<string, unknown>;
-  }
-
-  /** The explicitly configured country, trimmed; "" when unset/non-string. */
-  private configuredCountry(): string {
-    const c = this.rawConfig().country;
-    return typeof c === "string" ? c.trim() : "";
-  }
-
-  private validateConfig(fallbackCountry = ""): AdapterConfig | null {
-    const raw = this.rawConfig();
-    const country = this.configuredCountry() || fallbackCountry;
-    if (!country) {
-      return null;
-    }
-
-    const holidayTypes = HOLIDAY_TYPES.filter(t => (t.defaultOn ? raw[t.flag] !== false : raw[t.flag] === true)).map(
-      t => t.key,
-    );
-
-    return {
-      country,
-      state: typeof raw.state === "string" ? raw.state.trim() : "",
-      region: typeof raw.region === "string" ? raw.region.trim() : "",
-      holidayTypes,
-      excludeHolidays: PublicHolidaysAdapter.toStringArray(raw.excludeHolidays),
-      includeBridgeDays: raw.includeBridgeDays === true,
-    };
-  }
-
-  private static toStringArray(val: unknown): string[] {
-    return Array.isArray(val) ? val.filter((x): x is string => typeof x === "string") : [];
   }
 
   /**

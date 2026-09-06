@@ -11,5 +11,12 @@
   "supportHeader": "支持",
   "aboutInfo": "此适配器免费且开源。如果您觉得有用，请考虑通过小额捐赠支持开发。",
   "donateKofi": "在 Ko-fi 上支持",
-  "donatePaypal": "通过 PayPal 捐赠"
+  "donatePaypal": "通过 PayPal 捐赠",
+  "descNext": "下一个尚未到来的节日 — 落在今天的节日仍留在今天通道中。",
+  "descDayName": "非节日的日子为空。",
+  "descDayIsHoliday": "启用桥接日时，桥接日同样为真。",
+  "descNextName": "尚未找到下一个节日时为空。",
+  "descNextIsHoliday": "完全没有找到下一个节日时为假。",
+  "descNextDate": "始终为 ISO 格式（YYYY-MM-DD），与 ioBroker 中设置的日期格式无关。",
+  "descNextDaysUntil": "0 表示没有找到下一个节日 — 真正的节日总是至少在一天之后。"
 }

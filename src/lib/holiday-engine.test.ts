@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeHolidays,
   detectBridgeDays,
-  detectScopeIssues,
+  detectScopeIssue,
   logAvailableHolidays,
   toHolidayId,
   toDateKey,
@@ -786,24 +786,24 @@ describe("unmatched excludes", () => {
   });
 });
 
-// ─── detectScopeIssues (SoC: date-holidays scope lookups live in the engine) ─
+// ─── detectScopeIssue (SoC: date-holidays scope lookups live in the engine) ──
 
-describe("detectScopeIssues", () => {
+describe("detectScopeIssue", () => {
   it("flags an unrecognized country (no holidays at all)", () => {
-    expect(detectScopeIssues(makeConfig({ country: "XX" }), ["en"])).toEqual([{ kind: "country" }]);
+    expect(detectScopeIssue(makeConfig({ country: "XX" }), ["en"])).toEqual({ kind: "country" });
   });
 
   it("flags an unknown state for a valid country", () => {
-    expect(detectScopeIssues(makeConfig({ country: "DE", state: "XX" }), ["en"])).toEqual([{ kind: "state" }]);
+    expect(detectScopeIssue(makeConfig({ country: "DE", state: "XX" }), ["en"])).toEqual({ kind: "state" });
   });
 
   it("flags an unknown region for a valid state", () => {
-    expect(detectScopeIssues(makeConfig({ country: "DE", state: "BY", region: "ZZ" }), ["en"])).toEqual([
-      { kind: "region" },
-    ]);
+    expect(detectScopeIssue(makeConfig({ country: "DE", state: "BY", region: "ZZ" }), ["en"])).toEqual({
+      kind: "region",
+    });
   });
 
-  it("returns no issues for a fully valid scope", () => {
-    expect(detectScopeIssues(makeConfig({ country: "DE", state: "BY" }), ["en"])).toEqual([]);
+  it("returns null for a fully valid scope", () => {
+    expect(detectScopeIssue(makeConfig({ country: "DE", state: "BY" }), ["en"])).toBeNull();
   });
 });

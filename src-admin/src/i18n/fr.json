@@ -22,5 +22,5 @@
   "ph_hc_preview_title": "Jours fériés détectés",
   "ph_hc_preview_count": "%s jours fériés détectés pour %s",
   "ph_hc_preview_none": "Sélectionnez un pays pour voir les jours fériés détectés",
-  "ph_hc_bridge_day": "Jour de pont"
+  "ph_hc_scope_stale": "Enregistré, mais plus disponible pour cet emplacement : %s — veuillez choisir une nouvelle entrée."
 }
