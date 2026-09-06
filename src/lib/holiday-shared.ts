@@ -61,7 +61,7 @@ export function enabledTypeKeys(getFlag: (flag: string) => unknown): string[] {
 /**
  * The stable id of a holiday: its calculation rule, cleaned. Ids are written by the admin card and
  * matched verbatim against the ids the runtime computes, so both sides MUST derive them here.
- * Measured against date-holidays 3.36.0 over all 206 countries and 2025-2027: 0 of 10 173 holidays
+ * Measured against date-holidays 3.36.1 over all 206 countries and 2025-2027: 0 of 10 180 holidays
  * fall back to the name branch — every id comes from the rule and is therefore language-independent.
  *
  * @param name the localized holiday name (fallback only)
@@ -99,14 +99,14 @@ export interface HolidayRanking {
  *
  * Three rules, applied in order — all three are total, so the outcome never depends on the order
  * date-holidays happens to emit its holidays in (which is what happened until v0.15.1: measured
- * over 2025-2027, 64 collisions in 39 countries were decided by emit order alone, so a library
- * update could silently swap the published name):
+ * over 2025-2027 against date-holidays 3.36.1, 77 collisions in 42 countries were decided by emit
+ * order alone, so a library update could silently swap the published name):
  *
  * 1. **Type priority** — public beats bank beats school beats optional beats observance.
  * 2. **A real holiday beats a substitute** — where a moved day lands on another holiday, the day
  *    that genuinely belongs there is the one worth reporting (AL, KZ, SZ, TW, VI).
  * 3. **The smaller id wins** — arbitrary but stable and language-independent, for the remaining
- *    case of two substitutes on one date (AG, AI, KR, TT).
+ *    case of two substitutes on one date (AG, AI, AL, KR, TT).
  *
  * @param candidate the newly seen holiday
  * @param incumbent the holiday already held for that date

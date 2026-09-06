@@ -50,7 +50,7 @@ If two holidays fall on the same day, three rules decide which name is reported,
 
 All three are unambiguous, so the name stays the same across data updates. Until version 0.15.1 a
 tie was settled by whichever holiday the data happened to list first, which could change silently
-with a data update — in 39 countries, among them Norway, Poland, Romania, Serbia and Taiwan.
+with a data update — in 42 countries, among them Norway, Poland, Romania, Serbia and Taiwan.
 
 > If you switch **all** types off, the adapter reports no holidays at all — the settings card and
 > the log both say so.

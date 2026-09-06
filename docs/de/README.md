@@ -54,7 +54,7 @@ Name gemeldet wird:
 
 Alle drei sind eindeutig, der Name bleibt über Datenaktualisierungen hinweg also derselbe. Bis
 Version 0.15.1 gewann bei Gleichstand schlicht der zuerst gelieferte Eintrag, was sich mit einer
-Datenaktualisierung still ändern konnte — in 39 Ländern, darunter Norwegen, Polen, Rumänien,
+Datenaktualisierung still ändern konnte — in 42 Ländern, darunter Norwegen, Polen, Rumänien,
 Serbien und Taiwan.
 
 > Sind **alle** Typen abgeschaltet, meldet der Adapter überhaupt keine Feiertage — die Karte und das
