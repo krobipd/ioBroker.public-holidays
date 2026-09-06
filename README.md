@@ -101,14 +101,14 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 0.16.0 (2026-09-06)
 
 - Fixed: Two holidays on one day could swap the reported name on their own with a data update. A fixed rule decides now — the name changes in 39 countries, among them Norway, Poland and Taiwan.
 - Fixed: A day moved off a weekend no longer pushes aside the holiday that genuinely belongs on that date.
 - New: Every data point now explains itself in the object tree, in your language.
 - Fixed: Opening the settings marked them as changed when a stored state or province had vanished from the holiday data. The card points that entry out now instead.
 - Fixed: A country written as a name instead of its code was rejected in the settings, although the same name worked when it came from the ioBroker system settings.
+- Fixed: Refreshed holiday data — Belgian holidays now carry English names, and the entries for Albania and Andorra were corrected.
 - Changed: Install the adapter from the ioBroker repository (stable or latest) — installing from GitHub is no longer supported.
 
 ### 0.15.1 (2026-09-04)
@@ -128,10 +128,6 @@ Bridge days appear in the state tree with the localized name matching the system
 
 - Fixed: Stopping or restarting the instance while the holidays were being worked out cut that run short, which could leave half-written values and errors in the log.
 - Changed: Heads-up for Austria — St. Martin's, Rupert's and Referendum Day count as observances now and disappear unless that type is enabled. Plus data fixes for Ireland, Russia and others.
-
-### 0.13.1 (2026-08-22)
-
-- Fixed: The support links were missing from the settings page since the new card was introduced; they are back below it.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

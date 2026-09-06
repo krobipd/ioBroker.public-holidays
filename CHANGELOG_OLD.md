@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.13.1 (2026-08-22)
+
+- Fixed: The support links were missing from the settings page since the new card was introduced; they are back below it.
+
 ## 0.13.0 (2026-08-13)
 
 - The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the holidays that will be detected.

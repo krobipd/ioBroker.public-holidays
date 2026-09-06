@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.15.1",
+    "version": "0.16.0",
     "news": {
-      "NEXT": {
+      "0.16.0": {
         "en": "Two holidays on one day no longer swap the reported name with a data update, every data point now explains itself in the object tree, and installation runs through the ioBroker repository.",
         "de": "Zwei Feiertage an einem Tag tauschen den gemeldeten Namen nicht mehr mit einem Datenupdate, jeder Datenpunkt erklärt sich jetzt im Objektbaum, und die Installation läuft über das ioBroker-Repository.",
         "ru": "Два праздника в один день больше не меняют сообщаемое название при обновлении данных, каждый датапоинт теперь поясняется в дереве объектов, а установка идёт через репозиторий ioBroker.",
