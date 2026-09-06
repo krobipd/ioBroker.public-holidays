@@ -17,14 +17,23 @@ const adapterDir = join(__dirname, "..", "..");
 const ROOTS = [join(adapterDir, "src"), join(adapterDir, "src-admin", "src")];
 const SHARED = join(adapterDir, "src", "lib", "holiday-shared.ts");
 
-/** Every .ts/.tsx source file (tests excluded — a test may legitimately spell a rule out). */
+/**
+ * Every .ts/.tsx source file. Tests are excluded (a test may legitimately spell a rule out), and so
+ * are `.d.ts` files: `vite build` in src-admin/ drops a generated declaration next to every src/
+ * module the card imports, and a mirror of the shared file is not a second definition of it.
+ */
 function sourceFiles(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir)) {
     const p = join(dir, entry);
     if (statSync(p).isDirectory()) {
       out.push(...sourceFiles(p));
-    } else if (/\.tsx?$/.test(entry) && !entry.endsWith(".test.ts") && !entry.endsWith(".test.tsx")) {
+    } else if (
+      /\.tsx?$/.test(entry) &&
+      !entry.endsWith(".d.ts") &&
+      !entry.endsWith(".test.ts") &&
+      !entry.endsWith(".test.tsx")
+    ) {
       out.push(p);
     }
   }
