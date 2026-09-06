@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // Until v0.15.1 the runtime and the admin card each carried their own copy of the holiday id, the
@@ -40,6 +40,17 @@ function sourceFiles(dir: string): string[] {
   return out;
 }
 
+/**
+ * A path with forward slashes, whatever the platform uses. The first version of this file compared
+ * against literal "/src/lib/" and passed on macOS/Linux while failing on the Windows CI leg.
+ *
+ * @param p an absolute path
+ * @returns the same path with "/" separators
+ */
+function posix(p: string): string {
+  return p.split(sep).join("/");
+}
+
 /** Markers that must occur in holiday-shared.ts and nowhere else. */
 const SINGLE_SOURCE: Array<{ what: string; marker: RegExp }> = [
   // Matched on the BODY, not the name: a copy pasted back under another name would otherwise
@@ -57,14 +68,14 @@ describe("one definition, not two (src/ and src-admin/ share holiday-shared.ts)"
   const files = ROOTS.flatMap(sourceFiles);
 
   it("finds source files on both sides", () => {
-    expect(files.some(f => f.includes("/src/lib/"))).toBe(true);
-    expect(files.some(f => f.includes("/src-admin/src/"))).toBe(true);
+    expect(files.some(f => posix(f).includes("/src/lib/"))).toBe(true);
+    expect(files.some(f => posix(f).includes("/src-admin/src/"))).toBe(true);
   });
 
   for (const { what, marker } of SINGLE_SOURCE) {
     it(`${what} is defined only in holiday-shared.ts`, () => {
-      const defining = files.filter(f => marker.test(readFileSync(f, "utf8")));
-      expect(defining).toEqual([SHARED]);
+      const defining = files.filter(f => marker.test(readFileSync(f, "utf8"))).map(posix);
+      expect(defining).toEqual([posix(SHARED)]);
     });
   }
 
