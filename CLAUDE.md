@@ -65,10 +65,17 @@ scripts/check-date-holidays.mjs     → Release-Gate, DREI Teile: (1) Currency E
 
 4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, isHoliday. Next: name, isHoliday, date, daysUntil. (Der Flag-State hieß bis v0.10.0 `boolean` — in v0.11.0 zu `isHoliday` umbenannt, alte `*.boolean` per `cleanupDeprecatedStates` migriert.)
 
-## Tests (411 vitest + 69 package + Objekt-Inventar)
+## Tests (412 vitest + 69 package + Objekt-Inventar)
 
 `npm run test:inventory` (mocha, Wegwerf-js-controller) erzeugt `test/objects.inventory.json` — alle 17 Objekte im Dump-Format des Objektstruktur-Bots, zwei Läufe byte-gleich. Der Adapter ist katalog-getrieben (kein Gerät, keine Cloud), `feedFixtures` wartet deshalb nur darauf, dass der Katalog vollständig ist: er läuft im SCHEDULE-Modus, `startAdapterAndWait` kommt schon bei `alive` zurück und der Prozess beendet sich danach selbst.
 
 Wächter im vitest-Satz: `single-source.test.ts` (keine zweite Definition der geteilten Logik), `instance-objects-reach.test.ts` (alle 17 Manifest-Objekte per LITERALER ID aufgefrischt, kein `preserve`, **und Form + Beschreibungs-Schlüssel deckungsgleich mit `FIELD_SPECS`**), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version), `date-holidays-floor.test.ts` (deklarierter Boden == installierte Version), `bridge-days-real-data.test.ts` (der Brückentag-Algorithmus gegen ECHTE Daten, 5 Länder × 4 Jahre — der frühere Paritätstest wäre nach der Zusammenführung eine Tautologie), `holiday-shared.test.ts` (Kollisionsregel inkl. der beiden echten Fälle AL/TW), `config.test.ts` (die Konfigurations-Matrix, ohne Adapter-Stub). **Die Standard-Baumeister der Karte (`new Holidays(country, state, region)`) laufen jetzt in echten Tests** — bis 0.15.1 injizierten alle Tests einen Ersatz, ein vertauschtes Argument wäre grün durchgelaufen. Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
+
+**`format:check` (Release-Gate D01b) klammert `admin/custom/**` aus** — das ist der erzeugte
+Module-Federation-Bau (`npm run build:admin`), der git-getrackt sein MUSS, damit eine
+GitHub-Installation kein leeres `custom/` bekommt. Ein Handformat wäre beim nächsten Bau wieder weg,
+also Ausschlussmuster im Skript statt Formatierung — und bewusst **keine `.prettierignore`**: neben
+`prettier.config.mjs` meldet der Repochecker sie als veraltete Konfigurationsdatei (W0084 + W5048)
+und blockt den Vorlauf. Alles andere unter `src/`, `admin/` und `scripts/` ist prettier-sauber.
 
 Die pure Logik (Kaskade/Vorschau/Exclude/Engine/Kollisionsregel) ist vitest-getestet; die React-Karte wird NICHT unit-getestet (kein @testing-library/react — jede src-admin-devDep landet dauerhaft unter dependabot-`ignore`), sondern über den turnkey Admin-8-`render-check` im echten Wegwerf-Admin verifiziert.
