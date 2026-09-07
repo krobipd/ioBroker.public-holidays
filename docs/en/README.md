@@ -34,13 +34,13 @@ used. If that country cannot be matched, the adapter says "No country configured
 
 Five types can be enabled independently:
 
-| Type | Meaning |
-| --- | --- |
-| Public | Statutory public holidays. Enabled by default. |
-| Bank | Days on which banks and public offices are closed but which are not public holidays. |
-| School | School holidays. |
-| Optional | Days that are a holiday only for parts of the population. |
-| Observance | Commemorative days that are not days off — e.g. Mother's Day. |
+| Type       | Meaning                                                                              |
+| ---------- | ------------------------------------------------------------------------------------ |
+| Public     | Statutory public holidays. Enabled by default.                                       |
+| Bank       | Days on which banks and public offices are closed but which are not public holidays. |
+| School     | School holidays.                                                                     |
+| Optional   | Days that are a holiday only for parts of the population.                            |
+| Observance | Commemorative days that are not days off — e.g. Mother's Day.                        |
 
 If two holidays fall on the same day, three rules decide which name is reported, in this order:
 
@@ -62,7 +62,7 @@ the adapter adds them as holidays in their own right, named "Bridge day" in your
 
 - a holiday on **Thursday** → the **Friday** becomes a bridge day,
 - a holiday on **Tuesday** → the **Monday** becomes a bridge day,
-- a **Wednesday** framed by a holiday on Tuesday *and* Thursday becomes a bridge day.
+- a **Wednesday** framed by a holiday on Tuesday _and_ Thursday becomes a bridge day.
 
 A Wednesday holiday alone creates none: reaching the weekend from there would need two days off.
 A bridge day never overwrites a real holiday, and it never creates further bridge days.
@@ -89,17 +89,17 @@ the adapter calculates, so what you see is what you get.
 
 ## Data points
 
-| Data point | Type | Meaning |
-| --- | --- | --- |
-| `today.name` | string | Name of today's holiday, empty on a normal day |
-| `today.isHoliday` | boolean | Whether today is a holiday |
-| `yesterday.name` / `yesterday.isHoliday` | string / boolean | Same for yesterday |
-| `tomorrow.name` / `tomorrow.isHoliday` | string / boolean | Same for tomorrow |
-| `dayAfterTomorrow.name` / `dayAfterTomorrow.isHoliday` | string / boolean | Same for the day after tomorrow |
-| `next.name` | string | Name of the next upcoming holiday |
-| `next.isHoliday` | boolean | Whether an upcoming holiday was found at all |
-| `next.date` | string | Its date as `YYYY-MM-DD` — machine-readable, unaffected by your display format |
-| `next.daysUntil` | number | Days until that holiday |
+| Data point                                             | Type             | Meaning                                                                        |
+| ------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------ |
+| `today.name`                                           | string           | Name of today's holiday, empty on a normal day                                 |
+| `today.isHoliday`                                      | boolean          | Whether today is a holiday                                                     |
+| `yesterday.name` / `yesterday.isHoliday`               | string / boolean | Same for yesterday                                                             |
+| `tomorrow.name` / `tomorrow.isHoliday`                 | string / boolean | Same for tomorrow                                                              |
+| `dayAfterTomorrow.name` / `dayAfterTomorrow.isHoliday` | string / boolean | Same for the day after tomorrow                                                |
+| `next.name`                                            | string           | Name of the next upcoming holiday                                              |
+| `next.isHoliday`                                       | boolean          | Whether an upcoming holiday was found at all                                   |
+| `next.date`                                            | string           | Its date as `YYYY-MM-DD` — machine-readable, unaffected by your display format |
+| `next.daysUntil`                                       | number           | Days until that holiday                                                        |
 
 All data points are read-only, and each one carries a short explanation in your language that you
 can read in the object tree. `next` looks strictly ahead: a holiday that is today appears in

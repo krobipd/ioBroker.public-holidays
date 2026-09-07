@@ -36,13 +36,13 @@ hält an.
 
 Fünf Typen lassen sich unabhängig voneinander aktivieren:
 
-| Typ | Bedeutung |
-| --- | --- |
-| Gesetzliche Feiertage | Die staatlich festgelegten Feiertage. Standardmäßig aktiv. |
-| Bankfeiertage | Tage, an denen Banken und Ämter schließen, die aber keine gesetzlichen Feiertage sind. |
-| Schulferien | Ferientage der Schulen. |
-| Optionale Feiertage | Tage, die nur für einen Teil der Bevölkerung frei sind. |
-| Gedenktage | Gedenk- und Aktionstage ohne arbeitsfreie Wirkung — z. B. Muttertag. |
+| Typ                   | Bedeutung                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| Gesetzliche Feiertage | Die staatlich festgelegten Feiertage. Standardmäßig aktiv.                             |
+| Bankfeiertage         | Tage, an denen Banken und Ämter schließen, die aber keine gesetzlichen Feiertage sind. |
+| Schulferien           | Ferientage der Schulen.                                                                |
+| Optionale Feiertage   | Tage, die nur für einen Teil der Bevölkerung frei sind.                                |
+| Gedenktage            | Gedenk- und Aktionstage ohne arbeitsfreie Wirkung — z. B. Muttertag.                   |
 
 Fallen zwei Feiertage auf denselben Tag, entscheiden drei Regeln in dieser Reihenfolge, welcher
 Name gemeldet wird:
@@ -68,7 +68,7 @@ der eingestellten Sprache:
 
 - Feiertag am **Donnerstag** → der **Freitag** wird Brückentag,
 - Feiertag am **Dienstag** → der **Montag** wird Brückentag,
-- ein **Mittwoch**, der von einem Feiertag am Dienstag *und* am Donnerstag eingerahmt ist, wird
+- ein **Mittwoch**, der von einem Feiertag am Dienstag _und_ am Donnerstag eingerahmt ist, wird
   Brückentag.
 
 Ein einzelner Mittwochs-Feiertag erzeugt keinen: bis zum Wochenende wären zwei Fehltage nötig. Ein
@@ -96,17 +96,17 @@ rechnet genauso wie der Adapter selbst, die Vorschau zeigt also den echten spät
 
 ## Datenpunkte
 
-| Datenpunkt | Typ | Bedeutung |
-| --- | --- | --- |
-| `today.name` | string | Name des heutigen Feiertags, an normalen Tagen leer |
-| `today.isHoliday` | boolean | Ob heute ein Feiertag ist |
-| `yesterday.name` / `yesterday.isHoliday` | string / boolean | Dasselbe für gestern |
-| `tomorrow.name` / `tomorrow.isHoliday` | string / boolean | Dasselbe für morgen |
-| `dayAfterTomorrow.name` / `dayAfterTomorrow.isHoliday` | string / boolean | Dasselbe für übermorgen |
-| `next.name` | string | Name des nächsten kommenden Feiertags |
-| `next.isHoliday` | boolean | Ob überhaupt ein kommender Feiertag gefunden wurde |
-| `next.date` | string | Dessen Datum als `YYYY-MM-DD` — maschinenlesbar, unabhängig vom Anzeigeformat |
-| `next.daysUntil` | number | Tage bis zu diesem Feiertag |
+| Datenpunkt                                             | Typ              | Bedeutung                                                                     |
+| ------------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------- |
+| `today.name`                                           | string           | Name des heutigen Feiertags, an normalen Tagen leer                           |
+| `today.isHoliday`                                      | boolean          | Ob heute ein Feiertag ist                                                     |
+| `yesterday.name` / `yesterday.isHoliday`               | string / boolean | Dasselbe für gestern                                                          |
+| `tomorrow.name` / `tomorrow.isHoliday`                 | string / boolean | Dasselbe für morgen                                                           |
+| `dayAfterTomorrow.name` / `dayAfterTomorrow.isHoliday` | string / boolean | Dasselbe für übermorgen                                                       |
+| `next.name`                                            | string           | Name des nächsten kommenden Feiertags                                         |
+| `next.isHoliday`                                       | boolean          | Ob überhaupt ein kommender Feiertag gefunden wurde                            |
+| `next.date`                                            | string           | Dessen Datum als `YYYY-MM-DD` — maschinenlesbar, unabhängig vom Anzeigeformat |
+| `next.daysUntil`                                       | number           | Tage bis zu diesem Feiertag                                                   |
 
 Alle Datenpunkte sind nur lesbar und tragen im Objektbaum eine kurze Erklärung in der eingestellten
 Sprache. `next` schaut strikt nach vorn: Ein Feiertag, der heute ist, steht in `today`, nicht in
