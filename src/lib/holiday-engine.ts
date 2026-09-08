@@ -192,12 +192,13 @@ function getFilteredHolidays(
   // the normal case — all excludes still match — the expensive walk is skipped entirely
   // (audit finding F7).
   let unmatchedExcludes: string[] = [];
-  if (config.excludeHolidays.length) {
-    const notInScope = config.excludeHolidays.filter(id => !scopeIds.has(id));
-    if (notInScope.length) {
-      const countryWideIds = collectCountryWideIds(config.country, years);
-      unmatchedExcludes = notInScope.filter(id => !countryWideIds.has(id));
-    }
+  // No `excludeHolidays.length` guard around this: an empty list yields an empty
+  // `notInScope`, and the aggregation below is gated on that alone — the outer guard
+  // was a measured equivalent mutant (Q8, removed 2026-09-08).
+  const notInScope = config.excludeHolidays.filter(id => !scopeIds.has(id));
+  if (notInScope.length) {
+    const countryWideIds = collectCountryWideIds(config.country, years);
+    unmatchedExcludes = notInScope.filter(id => !countryWideIds.has(id));
   }
   return { holidays: result, unmatchedExcludes };
 }
