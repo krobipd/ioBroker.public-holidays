@@ -76,6 +76,8 @@ Module-Federation-Bau (`npm run build:admin`), der git-getrackt sein MUSS, damit
 GitHub-Installation kein leeres `custom/` bekommt. Ein Handformat wäre beim nächsten Bau wieder weg,
 also Ausschlussmuster im Skript statt Formatierung — und bewusst **keine `.prettierignore`**: neben
 `prettier.config.mjs` meldet der Repochecker sie als veraltete Konfigurationsdatei (W0084 + W5048)
-und blockt den Vorlauf. Alles andere unter `src/`, `admin/` und `scripts/` ist prettier-sauber.
+und blockt den Vorlauf. Seit 2026-09-08 ist der **ganze Baum** prettier-sauber: die Flotten-Fassung von
+`format:check` prüft `.` mit festen Ausschlüssen (B02 setzt sie beim nächsten Vorlauf); das frühere Skript
+prüfte nur `src/ admin/ scripts/`, und neun Handdateien daneben waren nie formatiert.
 
 Die pure Logik (Kaskade/Vorschau/Exclude/Engine/Kollisionsregel) ist vitest-getestet; die React-Karte wird NICHT unit-getestet (kein @testing-library/react — jede src-admin-devDep landet dauerhaft unter dependabot-`ignore`), sondern über den turnkey Admin-8-`render-check` im echten Wegwerf-Admin verifiziert.
