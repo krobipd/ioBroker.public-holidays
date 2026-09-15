@@ -1,0 +1,42 @@
+{
+  "_comment": "Adapter-specific declarations for the fleet tooling (Entwicklung/scripts). They live HERE so that a change in this adapter never touches the locked tooling. Readers: sync-iopackage-from-i18n.py (manifestI18n, release gate B03) and submit-stable.py (forumThread). Keys starting with an underscore are comments.",
+  "manifestI18n": {
+    "_comment": "instanceObjects id -> key in admin/i18n/<lang>.json. Every manifest object needs a `name` entry (an object without one is a structural error, and so is an entry whose object no longer exists); `desc` only where the name does not already say it - an empty desc beats an invented sentence.",
+    "_note": "The four day channels explain themselves through their names (Today, Yesterday, ...). Explained is only what the name does NOT say: that a holiday today is not listed under `next`, that `next.date` stays ISO regardless of the display format, that `daysUntil` 0 means 'none found', and that the flags are also true for bridge days.",
+    "name": {
+      "today": "today",
+      "today.name": "name",
+      "today.isHoliday": "isHoliday",
+      "yesterday": "yesterday",
+      "yesterday.name": "name",
+      "yesterday.isHoliday": "isHoliday",
+      "tomorrow": "tomorrow",
+      "tomorrow.name": "name",
+      "tomorrow.isHoliday": "isHoliday",
+      "dayAfterTomorrow": "dayAfterTomorrow",
+      "dayAfterTomorrow.name": "name",
+      "dayAfterTomorrow.isHoliday": "isHoliday",
+      "next": "next",
+      "next.name": "name",
+      "next.isHoliday": "isHoliday",
+      "next.date": "date",
+      "next.daysUntil": "daysUntil"
+    },
+    "desc": {
+      "today.name": "descDayName",
+      "today.isHoliday": "descDayIsHoliday",
+      "yesterday.name": "descDayName",
+      "yesterday.isHoliday": "descDayIsHoliday",
+      "tomorrow.name": "descDayName",
+      "tomorrow.isHoliday": "descDayIsHoliday",
+      "dayAfterTomorrow.name": "descDayName",
+      "dayAfterTomorrow.isHoliday": "descDayIsHoliday",
+      "next": "descNext",
+      "next.name": "descNextName",
+      "next.isHoliday": "descNextIsHoliday",
+      "next.date": "descNextDate",
+      "next.daysUntil": "descNextDaysUntil"
+    }
+  },
+  "forumThread": "https://forum.iobroker.net/topic/84918/test-adapter-public-holidays"
+}
