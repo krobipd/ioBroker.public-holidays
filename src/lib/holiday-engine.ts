@@ -59,6 +59,24 @@ export function computeHolidays(
 }
 
 /**
+ * The result of a scope with no holidays at all — what `computeHolidays` yields when nothing
+ * matches, and the manifest defaults of the twelve states. Published when no country can be
+ * resolved, so the previous run's values do not stand forever.
+ *
+ * @returns an all-empty result
+ */
+export function emptyResult(): ComputedHolidays {
+  return {
+    yesterday: EMPTY_DAY,
+    today: EMPTY_DAY,
+    tomorrow: EMPTY_DAY,
+    dayAfterTomorrow: EMPTY_DAY,
+    next: { ...EMPTY_DAY, date: "", daysUntil: 0 },
+    unmatchedExcludes: [],
+  };
+}
+
+/**
  * The debug line listing every holiday of the current year with its exclude id — the reference a
  * user needs when an exclude does not match.
  *

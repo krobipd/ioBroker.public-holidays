@@ -125,6 +125,8 @@ interface StubSurface {
   instanceObjectWrites: number;
   failNextForeignObjectRead: boolean;
   extendObjectAsync: (id: string, obj: Partial<ObjEntry>, options?: unknown) => Promise<void>;
+  supportsFeature?: (feature: string) => boolean;
+  getPluginInstance?: (name: string) => { getSentryObject: () => { captureException: (e: unknown) => void } } | null;
 }
 
 /** Typed access to the private members the orchestration tests drive. */
@@ -433,24 +435,48 @@ describe("onReady — country detection chain", () => {
     expect(logsOf(stub, "info").some(m => m.includes("Using system country"))).toBe(false);
   });
 
-  it("warns and stops when no country is configured and none can be detected", async () => {
+  it("warns, publishes an empty result and stops when no country is configured and none can be detected", async () => {
     const { internal, stub } = setup({});
 
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("No country configured"))).toBe(true);
-    expect(stub.states.size).toBe(0);
+    // A truthful empty result, not silence: the twelve states carry their manifest defaults.
+    expect(stub.states.size).toBe(12);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
+    expect(stub.states.get("public-holidays.0.next.date")).toEqual({ val: "", ack: true });
+    expect(stub.states.get("public-holidays.0.next.daysUntil")).toEqual({ val: 0, ack: true });
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
-  it("warns and stops when the system country name cannot be resolved", async () => {
+  it("warns and publishes an empty result when the system country name cannot be resolved", async () => {
     const { internal, stub } = setup({});
     stub.objects.set("system.config", { common: { country: "Atlantis", language: "de" } });
 
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("No country configured"))).toBe(true);
-    expect(stub.states.size).toBe(0);
+    expect(stub.states.size).toBe(12);
+    expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
+  });
+
+  it("overwrites the previous run's holiday with the empty result once the country is gone (audit E2)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
+    const { internal, stub } = setup({ country: "DE" });
+
+    await internal.onReady();
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: true, ack: true });
+
+    // The user clears the country; the next run must not leave New Year standing forever.
+    stub.config = {};
+    stub.stop.mockClear();
+    await internal.onReady();
+
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
+    expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
+    expect(stub.states.get("public-holidays.0.next.date")).toEqual({ val: "", ack: true });
+    expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
   it("warns when the configured country yields zero raw holidays (A3)", async () => {
@@ -474,6 +500,38 @@ describe("onReady — error handling", () => {
 
     await internal.onReady();
 
+    expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  // The Sentry plugin only hooks uncaught exceptions; a caught one reaches it only when handed
+  // over explicitly — before this, no error of this adapter ever arrived there (audit E1).
+  it("hands a caught error to the Sentry plugin when it is loaded", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    const failure = new Error("broker write refused");
+    stub.extendObjectAsync = () => Promise.reject(failure);
+    const captureException = vi.fn();
+    stub.supportsFeature = vi.fn((feature: string) => feature === "PLUGINS");
+    stub.getPluginInstance = vi.fn((name: string) =>
+      name === "sentry" ? { getSentryObject: () => ({ captureException }) } : null,
+    );
+
+    await internal.onReady();
+
+    expect(captureException).toHaveBeenCalledTimes(1);
+    expect(captureException).toHaveBeenCalledWith(failure);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs and stops as before when no Sentry plugin is loaded", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.extendObjectAsync = () => Promise.reject(new Error("broker write refused"));
+    stub.supportsFeature = vi.fn(() => true);
+    stub.getPluginInstance = vi.fn(() => null);
+
+    await internal.onReady();
+
+    expect(stub.getPluginInstance).toHaveBeenCalledWith("sentry");
     expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });

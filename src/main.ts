@@ -3,7 +3,13 @@ import { I18n } from "@iobroker/adapter-core";
 import { join } from "node:path";
 import { configuredCountry, parseConfig } from "./lib/config";
 import { errText, oneLine } from "./lib/error-utils";
-import { computeHolidays, createHolidaysInstance, detectScopeIssue, logAvailableHolidays } from "./lib/holiday-engine";
+import {
+  computeHolidays,
+  createHolidaysInstance,
+  detectScopeIssue,
+  emptyResult,
+  logAvailableHolidays,
+} from "./lib/holiday-engine";
 import { formatDateForDisplay, getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
 
@@ -109,6 +115,11 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       const config = parseConfig(raw, detectedCountry);
       if (!config) {
         this.log.warn("No country configured — open adapter settings");
+        // Publish a truthful empty result instead of leaving the previous run's values standing
+        // (the same reasoning as the empty type selection below): a `today.isHoliday` that stays
+        // `true` forever because the country was cleared is a wrong datapoint with no expiry.
+        await ensureObjects(this);
+        await publishStates(this, emptyResult());
         void this.stop?.();
         return;
       }
@@ -178,6 +189,13 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       this.log.debug("All holidays computed and published");
     } catch (err: unknown) {
       this.log.error(`onReady failed: ${errText(err)}`);
+      // The Sentry plugin only hooks uncaught exceptions — a caught error has to be handed over
+      // (plugin README, "Send specific errors to Sentry"). The two other catches (instance-object
+      // repair, deprecated-state cleanup) stay quiet on purpose: expected broker hiccups with a
+      // local fallback, not adapter defects.
+      if (this.supportsFeature?.("PLUGINS")) {
+        this.getPluginInstance("sentry")?.getSentryObject()?.captureException(err);
+      }
     }
     void this.stop?.();
   }
