@@ -30,6 +30,14 @@ updates:
           - 'version-update:semver-major'
       # date-holidays is held at npm-latest by the release currency gate + `npm run generate` — no dependabot PRs needed.
       - dependency-name: 'date-holidays'
+      # TEMPORARY (2026-09-15): @iobroker/testing 6.2.2 rejects the WIP changelog block `news.NEXT`
+      # (js-controller master schema). A green update on a released tree would auto-merge and turn every
+      # following WIP commit red in `test:package`. Remove this entry as soon as a testing release carries
+      # the NEXT fix (PR ioBroker/testing #737).
+      - dependency-name: '@iobroker/testing'
+        update-types:
+          - 'version-update:semver-minor'
+          - 'version-update:semver-patch'
 
   # src-admin (Module-Federation admin component): hand-pinned compatibility matrix
   # (React 18 / MUI 6 / @module-federation/vite 1.2.6 …). npm-latest breaks the MF build.
