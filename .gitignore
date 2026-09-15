@@ -53,3 +53,6 @@ build/
 # resolution always prefers the .ts, so a stale one cannot shadow the source (also measured).
 /src/**/*.d.ts
 !/src/lib/adapter-config.d.ts
+
+# Session memory of the note-taking hook — never repository content
+.remember/
