@@ -13,7 +13,6 @@
     "date-holidays": "3.36.1"
   },
   "devDependencies": {
-    "@iobroker/build-tools": "^2.0.15",
     "@iobroker/eslint-config": "^2.3.4",
     "@iobroker/gui-components": "^10.0.5",
     "@iobroker/json-config": "^9.0.8",

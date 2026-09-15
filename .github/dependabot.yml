@@ -28,7 +28,7 @@ updates:
       - dependency-name: 'eslint'
         update-types:
           - 'version-update:semver-major'
-      # date-holidays is held at npm-latest by the release currency gate + `npm run generate` — no dependabot PRs needed.
+      # date-holidays is held at npm-latest by the release currency gate (scripts/check-date-holidays.mjs) — no dependabot PRs needed.
       - dependency-name: 'date-holidays'
       # TEMPORARY (2026-09-15): @iobroker/testing 6.2.2 rejects the WIP changelog block `news.NEXT`
       # (js-controller master schema). A green update on a released tree would auto-merge and turn every
@@ -40,7 +40,7 @@ updates:
           - 'version-update:semver-patch'
 
   # src-admin (Module-Federation admin component): hand-pinned compatibility matrix
-  # (React 18 / MUI 6 / @module-federation/vite 1.2.6 …). npm-latest breaks the MF build.
+  # (React 19 / MUI 9 / @module-federation/vite 1.19.1 …). npm-latest breaks the MF build.
   # This entry exists ONLY to satisfy repochecker W8905 (a non-root package.json must be
   # covered by a dependabot npm directory). Ignoring all dependencies means it generates
   # ZERO pull requests, so the pinned matrix is never moved. (open-pull-requests-limit: 0

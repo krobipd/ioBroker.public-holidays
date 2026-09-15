@@ -83,7 +83,8 @@ A bridge day is a working day (Monday–Friday) between a holiday and a weekend:
 
 - Holiday on **Thursday** → Friday is a bridge day
 - Holiday on **Tuesday** → Monday is a bridge day
-- Holiday on **Wednesday** → no bridge day (two days missing)
+- Holidays on **Tuesday and Thursday** → the Wednesday between them is a bridge day
+- Holiday on **Wednesday** alone → no bridge day (two days missing)
 
 Bridge days appear in the state tree with the localized name matching the system language.
 
