@@ -125,6 +125,8 @@ interface StubSurface {
   instanceObjectWrites: number;
   failNextForeignObjectRead: boolean;
   extendObjectAsync: (id: string, obj: Partial<ObjEntry>, options?: unknown) => Promise<void>;
+  extendForeignObjectAsync: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
+  getForeignObjectAsync: (id: string) => Promise<ObjEntry | null>;
   supportsFeature?: (feature: string) => boolean;
   getPluginInstance?: (name: string) => { getSentryObject: () => { captureException: (e: unknown) => void } } | null;
 }
@@ -132,6 +134,7 @@ interface StubSurface {
 /** Typed access to the private members the orchestration tests drive. */
 interface Internal {
   onReady: () => Promise<void>;
+  onUnload: (callback: () => void) => void;
 }
 
 function setup(config: Record<string, unknown> = {}): {
@@ -407,6 +410,23 @@ describe("onReady — instance-object repair", () => {
     expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
+
+  it("computes normally when the repair write is refused — the next run retries it", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "daemon" },
+      native: {},
+    });
+    stub.extendForeignObjectAsync = () => Promise.reject(new Error("objects db read-only"));
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "debug").some(m => m.includes("Could not check the instance object"))).toBe(true);
+    expect(logsOf(stub, "error")).toEqual([]);
+    expect(stub.states.size).toBe(12);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("onReady — country detection chain", () => {
@@ -479,6 +499,23 @@ describe("onReady — country detection chain", () => {
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
+  it("warns and runs with English names and the configured country when system.config cannot be read", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
+    const { internal, stub } = setup({ country: "DE" });
+    const read = stub.getForeignObjectAsync.bind(stub);
+    stub.getForeignObjectAsync = (id: string) =>
+      id === "system.config" ? Promise.reject(new Error("objects db unreachable")) : read(id);
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn").some(m => m.includes("Could not read the ioBroker system settings"))).toBe(true);
+    expect(stub.states.get("public-holidays.0.today.name")?.val).toBe("New Year's Day");
+    expect(stub.states.size).toBe(12);
+    expect(logsOf(stub, "error")).toEqual([]);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
   it("warns when the configured country yields zero raw holidays (A3)", async () => {
     const { internal, stub } = setup({ country: "XX" });
 
@@ -534,6 +571,17 @@ describe("onReady — error handling", () => {
     expect(stub.getPluginInstance).toHaveBeenCalledWith("sentry");
     expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("onUnload", () => {
+  it("reports done immediately — nothing to flush, no timer, no connection", () => {
+    const { internal } = setup({ country: "DE" });
+    const callback = vi.fn();
+
+    internal.onUnload(callback);
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 });
 

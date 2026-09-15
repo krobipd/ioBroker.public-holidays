@@ -497,6 +497,18 @@ describe("next holiday", () => {
     expect(result.next.daysUntil).toBe(1);
   });
 
+  it("counts whole days across the spring DST switch", () => {
+    // Sat 28 Mar 2026 → Good Friday 3 Apr 2026 crosses the switch of 29 Mar. Local midnight to
+    // local midnight is then 5 d 23 h — 5.958 days raw, and only `Math.round` makes it 6
+    // (`Math.floor` says 5). In UTC the difference is exact and this is trivially green; on any
+    // host with daylight-saving time (every local run and the release run) it measures the
+    // rounding. No `TZ` is pinned for the whole suite on purpose: the suite's claim is that it
+    // passes in ANY zone, and a pinned zone would silently re-interpret all other tests.
+    const result = computeHolidays(makeConfig(), ["de"], { referenceDate: new Date(2026, 2, 28, 12) });
+    expect(result.next.date).toBe("2026-04-03");
+    expect(result.next.daysUntil).toBe(6);
+  });
+
   it("skips today when finding next", () => {
     const result = computeHolidays(makeConfig(), ["de"], { referenceDate: makeDate("2026-01-01") });
     expect(result.next.daysUntil).toBeGreaterThan(0);

@@ -111,6 +111,13 @@ describe("buildPreviewHolidays", () => {
     expect(calls[0]).toEqual(["DE", "BY", "A"]);
   });
 
+  it("previews nothing when the date-holidays constructor throws — the card has no outer handler", () => {
+    const make = (): Holidays => {
+      throw new Error("no data for this scope");
+    };
+    expect(buildPreviewHolidays(pscope({}), true, "en", 2026, make)).toEqual([]);
+  });
+
   it("previews nothing when no type is enabled — mirrors what the runtime publishes", () => {
     // The runtime's type filter drops every holiday when the list is empty. A preview that
     // showed a full year here would promise states the adapter never writes.
