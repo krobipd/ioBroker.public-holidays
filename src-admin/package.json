@@ -6,7 +6,7 @@
   "scripts": {
     "start": "vite --port 4173",
     "lint": "eslint -c eslint.config.mjs",
-    "check:test": "tsc -p tsconfig.test.json",
+    "check:test": "node node_modules/typescript/bin/tsc -p tsconfig.test.json",
     "build": "tsc && vite build"
   },
   "dependencies": {
