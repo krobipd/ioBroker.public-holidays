@@ -1,0 +1,8 @@
+{
+  // Type-checks the jsdom tests of the card (`npm run test:admin`). The component build's own
+  // tsconfig excludes them; `exclude` is inherited through `extends`, so it is reset here on
+  // purpose — otherwise this config would compile zero test files and be silently green.
+  "extends": "./tsconfig.json",
+  "include": ["src"],
+  "exclude": []
+}

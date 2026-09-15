@@ -14,9 +14,18 @@ import { HolidayPanel } from "./HolidayPanel";
  * jsdom-friendly {@link HolidayPanel}.
  */
 export default class HolidayConfig extends ConfigGeneric<ConfigGenericProps, ConfigGenericState> {
-  // Bound once so it is referentially stable — HolidayPanel's clear-effects depend on it and would
-  // re-run on every render if this were a fresh arrow each time.
+  // Both callbacks are bound once so they are referentially stable across renders.
   private readonly handleChange = (attr: string, value: unknown): void => void this.onChange(attr, value);
+
+  // Several fields in ONE write. `ConfigGeneric.onChange` snapshots `props.data` per call, so two
+  // calls in the same tick both start from the unchanged record and the second write wins over the
+  // first (measured against @iobroker/json-config 9.0.16 — audit finding B1). This is the same
+  // whole-record path `ConfigGeneric.onChange` ends in (`this.props.onChange(data)`), minus the
+  // schema hooks (confirm / *DependsOn) this schema does not use.
+  private readonly handleChangeMany = (patch: Record<string, unknown>): void => {
+    const data = { ...(JSON.parse(JSON.stringify(this.props.data)) as Record<string, unknown>), ...patch };
+    this.props.onChange(data);
+  };
 
   renderItem(): React.JSX.Element {
     const sys = this.props.oContext?.systemConfig as ioBroker.SystemConfigCommon | undefined;
@@ -26,6 +35,7 @@ export default class HolidayConfig extends ConfigGeneric<ConfigGenericProps, Con
         data={this.props.data as Record<string, unknown>}
         systemCountry={systemCountry}
         onChange={this.handleChange}
+        onChangeMany={this.handleChangeMany}
       />
     );
   }

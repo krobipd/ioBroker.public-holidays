@@ -10,6 +10,19 @@ export default [
     ignores: [".__mf__temp/", "admin/", "**/*.test.js", "test/**/*.js", "*.config.mjs", "build/"],
   },
   {
+    // The jsdom tests (`npm run test:admin`) are excluded from the component build's tsconfig.json
+    // so `tsc && vite build` never compiles them; the type-aware rules therefore read them through
+    // tsconfig.test.json instead of the project service.
+    files: ["src/**/*.test.tsx"],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: "./tsconfig.test.json",
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     rules: {
       "jsdoc/require-jsdoc": "off",
       "jsdoc/require-param-description": "off",

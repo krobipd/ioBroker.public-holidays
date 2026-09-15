@@ -35,6 +35,13 @@ export interface HolidayPanelProps {
   systemCountry: string;
   /** Persist one native attribute (wires the admin Save button). Must be referentially stable. */
   onChange: (attr: string, value: unknown) => void;
+  /**
+   * Persist several native attributes in ONE write. Needed wherever a user action changes more
+   * than one field at once (a country change clears state and region): two `onChange` calls in
+   * the same tick each snapshot the still-unchanged record, and the second write wins over the
+   * first (measured against `@iobroker/json-config` 9.0.16 — audit finding B1, v0.16.0).
+   */
+  onChangeMany: (patch: Record<string, unknown>) => void;
 }
 
 function readString(data: Record<string, unknown>, attr: string): string {
@@ -83,7 +90,7 @@ function Stage({ title, children }: { title: string; children: React.ReactNode }
  * @param props card data, detected system country and the change callback
  */
 export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
-  const { data, systemCountry, onChange } = props;
+  const { data, systemCountry, onChange, onChangeMany } = props;
   const lang = I18n.getLanguage();
   const t = (key: string, ...args: (string | number)[]): string => I18n.t(key, ...args);
   const year = new Date().getFullYear();
@@ -99,34 +106,16 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
   const stateOptions = React.useMemo(() => getStateOptions(country, lang), [country, lang]);
   const regionOptions = React.useMemo(() => getRegionOptions(country, state, lang), [country, state, lang]);
 
-  // A stored state/region that no longer belongs to the chosen scope has two very different
-  // causes, and until v0.15.1 both were treated the same — cleared reactively (audit finding F13):
-  //
-  // - The USER just picked another country. Clearing is right, and the resulting "unsaved changes"
-  //   state is honest: they did change something.
-  // - A date-holidays update dropped the state code. Then merely OPENING the settings page wrote
-  //   an empty value and armed the Save button without anybody touching anything.
-  //
-  // So the write now happens only on a country change this component actually witnessed; a value
-  // that was already stale when the page opened is surfaced the way stale excludes have always
-  // been surfaced — visibly, for the user to resolve.
-  const seenCountry = React.useRef(country);
-  React.useEffect(() => {
-    if (seenCountry.current === country) {
-      return;
-    }
-    seenCountry.current = country;
-    if (state) {
-      onChange("state", "");
-    }
-    if (region) {
-      onChange("region", "");
-    }
-  }, [country, state, region, onChange]);
-
+  // A stored state/region that no longer belongs to the chosen scope is NOT cleared here: the
+  // narrower scope is cleared in the very write that changes the wider one (see the country and
+  // state pickers below), so a value that was already stale when the page opened — a date-holidays
+  // update dropped the code — is never written on its own. Writing it would arm the Save button
+  // without anybody touching anything (audit finding F13); instead it is surfaced the way stale
+  // excludes have always been surfaced — visibly, for the user to resolve. No `…Options.length`
+  // guard: a stale state must stay visible even when the new country has no states at all.
   const staleScope = [
-    state && stateOptions.length && !stateOptions.some(o => o.value === state) ? state : "",
-    region && regionOptions.length && !regionOptions.some(o => o.value === region) ? region : "",
+    state && !stateOptions.some(o => o.value === state) ? state : "",
+    region && !regionOptions.some(o => o.value === region) ? region : "",
   ].filter(Boolean);
 
   const enabledKey = enabled.join(",");
@@ -157,7 +146,10 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
             value={countryOptions.find(o => o.value === country) ?? null}
             getOptionLabel={o => o.label}
             isOptionEqualToValue={(o, v) => o.value === v.value}
-            onChange={(_e, v) => onChange("country", v?.value ?? "")}
+            // The narrower scope goes with the wider one, in the same write: a state code left
+            // standing is valid in 12 other countries (NL/ZH → CH/ZH publishes Zurich's holidays
+            // without a word) — audit finding B1.
+            onChange={(_e, v) => onChangeMany({ country: v?.value ?? "", state: "", region: "" })}
             renderInput={p => (
               <TextField
                 {...p}
@@ -175,7 +167,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               value={stateOptions.find(o => o.value === state) ?? null}
               getOptionLabel={o => o.label}
               isOptionEqualToValue={(o, v) => o.value === v.value}
-              onChange={(_e, v) => onChange("state", v?.value ?? "")}
+              onChange={(_e, v) => onChangeMany({ state: v?.value ?? "", region: "" })}
               renderInput={p => (
                 <TextField
                   {...p}

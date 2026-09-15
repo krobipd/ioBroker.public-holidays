@@ -19,6 +19,7 @@
     "types": ["@iobroker/types"]
   },
   "include": ["src"],
+  "exclude": ["src/**/*.test.tsx"],
   "references": [
     {
       "path": "./tsconfig.node.json"
