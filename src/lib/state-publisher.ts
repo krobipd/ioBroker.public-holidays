@@ -1,7 +1,6 @@
 import type { ComputedHolidays, DayInfo, NextHoliday } from "./types";
 import { errText } from "./error-utils";
 import { tName, type I18nKey } from "./i18n";
-import { FIELD_SPECS } from "./state-specs";
 
 const DAY_CHANNELS = ["today", "yesterday", "tomorrow", "dayAfterTomorrow"] as const;
 const DAY_FIELDS = ["name", "isHoliday"] as const;
@@ -58,55 +57,47 @@ export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter): Promis
 }
 
 /**
- * The channel object for one of the five channels. NO `preserve` on `common.name`: these names
- * belong to the adapter (translated from `admin/i18n`), not to a user or a manufacturer — with
- * `preserve` a renamed channel would only ever reach FRESH installs, every existing tree would
- * keep the old text (js-controller applies the manifest `instanceObjects` with exactly that
- * preserve, so the runtime call is the only way a rename reaches an existing install).
+ * The runtime refresh of one channel: name and explanation only.
+ *
+ * js-controller applies the manifest's `instanceObjects` on EVERY adapter start (7.2.2
+ * `_createInstancesObjects` → `_extendObjects`) with `preserve: { common: ["name"], native: true }`
+ * — so `type`, `role`, `unit`, `def` and `desc` reach an existing tree by themselves, and
+ * `common.name` is the one field frozen to whatever the version that created the object wrote.
+ * This call is what makes a rename reach an existing install; it deliberately carries NO
+ * `preserve`: these names belong to the adapter (translated from `admin/i18n`), not to a user or
+ * a manufacturer. Everything else stays in the manifest, the single source of the object shape.
  *
  * @param channel the channel id, which doubles as its i18n key
  * @param descKey the i18n key of the explanation, omitted where the name says it all
- * @returns the object passed to `extendObject`
+ * @returns the patch passed to `extendObject`
  */
-function channelObj(channel: string, descKey?: I18nKey): ioBroker.SettableChannelObject {
+function channelObj(channel: string, descKey?: I18nKey): ioBroker.PartialChannelObject {
   return {
     type: "channel",
     common: {
       name: tName(channel as I18nKey),
       ...(descKey ? { desc: tName(descKey) } : {}),
     },
-    native: {},
   };
 }
 
 /**
- * The state object for one field, built from {@link FIELD_SPECS}. Same no-`preserve` reasoning as
- * {@link channelObj}.
- *
- * `def` is part of the spec, not manifest-only: `extendObject` cannot delete a key, so a default
- * that lives in the manifest alone reaches fresh installs and never an existing tree — the same
- * one-way street the `preserve` fix closed for names (audit finding F9). Guard:
- * instance-objects-reach.test.ts compares the manifest against this table field by field.
+ * The runtime refresh of one state: name and explanation only — same reasoning as
+ * {@link channelObj}. (Until v0.16.0 this carried a hand copy of type/role/read/write/unit/def,
+ * built on the premise that a manifest-only field never reaches an existing tree; the platform
+ * source says otherwise, see above.)
  *
  * @param field the field name, which doubles as its i18n key
  * @param descKey the i18n key of the explanation, omitted where the name says it all
- * @returns the object passed to `extendObject`
+ * @returns the patch passed to `extendObject`
  */
-function stateObj(field: string, descKey?: I18nKey): ioBroker.SettableStateObject {
-  const spec = FIELD_SPECS[field];
+function stateObj(field: string, descKey?: I18nKey): ioBroker.PartialStateObject {
   return {
     type: "state",
     common: {
       name: tName(field as I18nKey),
       ...(descKey ? { desc: tName(descKey) } : {}),
-      type: spec.type,
-      role: spec.role,
-      read: spec.read,
-      write: spec.write,
-      def: spec.def,
-      ...(spec.unit ? { unit: spec.unit } : {}),
     },
-    native: {},
   };
 }
 

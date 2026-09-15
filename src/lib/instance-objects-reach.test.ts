@@ -1,20 +1,19 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { FIELD_SPECS } from "./state-specs";
 
 // js-controller applies the manifest's `instanceObjects` on every start, but with
 // `preserve: { common: ["name"] }` — so a renamed channel/state reaches FRESH installs only.
 // The runtime `extendObject` call is the single path an updated name can take to an existing
-// tree, and the fleet consistency gate (`audit_instanceobjects_reach`) checks it by looking for
-// a LITERAL id at the call site. A template-built id (`${channel}.${field}`) writes the same
-// tree but is invisible to that check — and to every behavioural test, because the string it
-// produces is identical. This guard is the local half of the gate: it reads the source text.
+// tree, and the package check `instance-objects-refresh` looks for a LITERAL id at the call
+// site. A template-built id (`${channel}.${field}`) writes the same tree but is invisible to that
+// check — and to every behavioural test, because the string it produces is identical. This guard
+// is the local half of the check: it reads the source text.
 //
-// Since v0.16.0 it also compares the SHAPE (audit finding F9): the manifest and `FIELD_SPECS` are
-// two hand-maintained descriptions of the same 17 objects, and nothing used to stop a role, a
-// unit, a default or a description from drifting between them. A fresh install would then get one
-// tree and an updated install another, with every gate green.
+// Shape is NOT compared here: the runtime refresh carries name and explanation only, everything
+// else lives in the manifest alone and reaches existing trees through the platform (v0.17.0; the
+// v0.16.0 hand copy rested on the opposite premise). What IS held together is the explanation:
+// the manifest must carry a `desc` exactly where the runtime writes one, from a key that exists.
 
 const adapterDir = join(__dirname, "..", "..");
 
@@ -70,36 +69,14 @@ describe("instanceObjects reach existing installations", () => {
     expect([...refreshed.keys()].sort()).toEqual([...ids].sort());
   });
 
-  describe("manifest shape == the shape the runtime writes", () => {
+  describe("explanations: manifest and runtime agree", () => {
     for (const obj of objects) {
       const id = obj._id as string;
 
-      it(`${id}: type, role, unit and default match FIELD_SPECS`, () => {
+      it(`${id}: is refreshed by the builder of its object type`, () => {
         const call = refreshed.get(id);
         expect(call, `${id} is not refreshed at runtime`).toBeDefined();
-        const common = obj.common ?? {};
-        if (obj.type === "channel") {
-          expect(call?.builder).toBe("channelObj");
-          return;
-        }
-        expect(call?.builder).toBe("stateObj");
-        const spec = FIELD_SPECS[call!.key];
-        expect(spec, `no FIELD_SPECS entry for "${call!.key}"`).toBeDefined();
-        expect({
-          type: common.type,
-          role: common.role,
-          read: common.read,
-          write: common.write,
-          def: common.def,
-          unit: common.unit,
-        }).toEqual({
-          type: spec.type,
-          role: spec.role,
-          read: spec.read,
-          write: spec.write,
-          def: spec.def,
-          unit: spec.unit,
-        });
+        expect(call?.builder).toBe(obj.type === "channel" ? "channelObj" : "stateObj");
       });
 
       it(`${id}: carries an explanation exactly where the runtime writes one`, () => {

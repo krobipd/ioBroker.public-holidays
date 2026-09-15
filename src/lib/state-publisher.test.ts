@@ -88,32 +88,16 @@ describe("ensureObjects", () => {
     expect(adapter.extendObjectAsync).toHaveBeenCalledTimes(17);
   });
 
-  it("state objects have correct common.type", async () => {
+  it("refreshes name and explanation only — the object shape lives in the manifest alone", async () => {
+    // js-controller applies the manifest on every start and preserves just `common.name`; a
+    // second copy of type/role/unit/def here would be one more place for the shape to drift.
     await ensureObjects(adapter as any);
-    const nameObj = adapter.objects["today.name"] as any;
-    expect(nameObj.common.type).toBe("string");
-    const holidayObj = adapter.objects["today.isHoliday"] as any;
-    expect(holidayObj.common.type).toBe("boolean");
-    const durObj = adapter.objects["next.daysUntil"] as any;
-    expect(durObj.common.type).toBe("number");
-  });
-
-  it("state objects have correct roles", async () => {
-    await ensureObjects(adapter as any);
-    const dateObj = adapter.objects["next.date"] as any;
-    expect(dateObj.common.role).toBe("date");
-    const holidayObj = adapter.objects["today.isHoliday"] as any;
-    expect(holidayObj.common.role).toBe("indicator");
-    const daysObj = adapter.objects["next.daysUntil"] as any;
-    expect(daysObj.common.role).toBe("value.interval");
-    expect(daysObj.common.unit).toBe("days");
-  });
-
-  it("state objects have read=true, write=false", async () => {
-    await ensureObjects(adapter as any);
-    const nameObj = adapter.objects["today.name"] as any;
-    expect(nameObj.common.read).toBe(true);
-    expect(nameObj.common.write).toBe(false);
+    for (const [id, obj] of Object.entries(adapter.objects)) {
+      const common = (obj as { common: Record<string, unknown> }).common;
+      expect(Object.keys(common).sort(), `${id} writes more than name/desc`).toEqual(
+        Object.keys(common).includes("desc") ? ["desc", "name"] : ["name"],
+      );
+    }
   });
 
   it("channel objects have translation object name", async () => {
@@ -231,6 +215,31 @@ describe("cleanupDeprecatedStates", () => {
     await cleanupDeprecatedStates(adapter as any);
     expect(adapter.delObjectAsync).not.toHaveBeenCalled();
   });
+
+  it("logs a failed delete and carries on with the remaining deprecated states", async () => {
+    // A leftover object is cosmetic, losing today's holiday over it is not (audit F8, v0.15.1):
+    // one refused delete must neither throw out of the cleanup nor stop the loop.
+    const present = ["today.region", "today.type", "next.boolean"];
+    const deleted: string[] = [];
+    const adapter = {
+      getObjectAsync: vi.fn((id: string) => Promise.resolve(present.includes(id) ? { type: "state" } : null)),
+      delObjectAsync: vi.fn((id: string) => {
+        if (id === "today.region") {
+          return Promise.reject(new Error("objects db busy"));
+        }
+        deleted.push(id);
+        return Promise.resolve();
+      }),
+      log: { debug: vi.fn() },
+    };
+
+    await expect(cleanupDeprecatedStates(adapter as any)).resolves.toBeUndefined();
+
+    expect(deleted).toEqual(["today.type", "next.boolean"]);
+    expect(adapter.log.debug).toHaveBeenCalledWith(
+      expect.stringContaining("Could not remove the deprecated state today.region: objects db busy"),
+    );
+  });
 });
 
 describe("publishStates", () => {
@@ -284,26 +293,18 @@ describe("publishStates", () => {
   });
 });
 
-// Guard against drift between the two state-schema sources:
-// io-package.json:instanceObjects (install) ↔ state-publisher FIELD_SPECS (runtime).
+// The manifest (install + every start) and the runtime refresh describe the same 17 objects.
 describe("io-package consistency", () => {
   const ioPkg = JSON.parse(readFileSync(join(__dirname, "../../io-package.json"), "utf8"));
   const byId: Record<string, any> = Object.fromEntries(ioPkg.instanceObjects.map((o: any) => [o._id, o]));
 
-  it("runtime objects match io-package instanceObjects (type/role/read/write)", async () => {
+  it("every runtime-refreshed object is a manifest object of the same type", async () => {
     const adapter = makeMockAdapter();
     await ensureObjects(adapter as any);
     for (const [id, obj] of Object.entries(adapter.objects)) {
       const io = byId[id];
-      expect(io, `${id} created at runtime but missing in io-package.json instanceObjects`).toBeDefined();
-      expect(io.type).toBe((obj as any).type);
-      if ((obj as any).type === "state") {
-        expect(io.common.type, `${id} type`).toBe((obj as any).common.type);
-        expect(io.common.role, `${id} role`).toBe((obj as any).common.role);
-        expect(io.common.read, `${id} read`).toBe((obj as any).common.read);
-        expect(io.common.write, `${id} write`).toBe((obj as any).common.write);
-        expect(io.common.unit, `${id} unit`).toBe((obj as any).common.unit);
-      }
+      expect(io, `${id} refreshed at runtime but missing in io-package.json instanceObjects`).toBeDefined();
+      expect(io.type, `${id} object type`).toBe((obj as any).type);
     }
   });
 
@@ -313,5 +314,24 @@ describe("io-package consistency", () => {
     for (const o of ioPkg.instanceObjects) {
       expect(adapter.objects[o._id], `${o._id} in io-package.json but not created by ensureObjects`).toBeDefined();
     }
+  });
+});
+
+// Nothing structural ties the published fields to the manifest: `DAY_FIELDS`/`NEXT_FIELDS` and the
+// value maps are hand lists. A manifest state that is created and refreshed but never written
+// would only show up as a stale default in the tree — so the two sets are held equal here.
+describe("published states == manifest states", () => {
+  it("writes exactly the twelve state ids the manifest declares", async () => {
+    const ioPkg = JSON.parse(readFileSync(join(__dirname, "../../io-package.json"), "utf8"));
+    const manifestStates = (ioPkg.instanceObjects as { _id: string; type: string }[])
+      .filter(o => o.type === "state")
+      .map(o => o._id)
+      .sort();
+    const adapter = makeMockAdapter();
+
+    await publishStates(adapter as any, makeComputed());
+
+    expect(Object.keys(adapter.states).sort()).toEqual(manifestStates);
+    expect(manifestStates).toHaveLength(12);
   });
 });
