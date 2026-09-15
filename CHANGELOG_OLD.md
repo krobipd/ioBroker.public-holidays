@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.13.2 (2026-08-27) — stable
+
+- Fixed: Stopping or restarting the instance while the holidays were being worked out cut that run short, which could leave half-written values and errors in the log.
+- Changed: Heads-up for Austria — St. Martin's, Rupert's and Referendum Day count as observances now and disappear unless that type is enabled. Plus data fixes for Ireland, Russia and others.
+
 ## 0.13.1 (2026-08-22)
 
 - Fixed: The support links were missing from the settings page since the new card was introduced; they are back below it.

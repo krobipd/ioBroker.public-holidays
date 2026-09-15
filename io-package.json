@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.16.0",
+    "version": "0.17.0",
     "news": {
+      "0.17.0": {
+        "en": "Country and state changes now clear the narrower selection, bridge days carry their name in your language, and without a country the adapter publishes an empty result instead of stale values.",
+        "de": "Land- und Bundeslandwechsel leeren jetzt die engere Auswahl, Brückentage tragen ihren Namen in Ihrer Sprache, und ohne Land publiziert der Adapter ein leeres Ergebnis statt alter Werte.",
+        "ru": "Смена страны или региона теперь очищает более узкий выбор, мостовые дни называются на вашем языке, а без страны адаптер публикует пустой результат вместо устаревших значений.",
+        "pt": "Mudar de país ou estado limpa agora a seleção mais restrita, os dias de ponte têm o nome no seu idioma e sem país o adaptador publica um resultado vazio em vez de valores antigos.",
+        "nl": "Land- en deelstaatwissels wissen nu de nauwere keuze, brugdagen dragen hun naam in uw taal en zonder land publiceert de adapter een leeg resultaat in plaats van oude waarden.",
+        "fr": "Changer de pays ou d'État efface désormais la sélection plus fine, les jours de pont portent leur nom dans votre langue et, sans pays, l'adaptateur publie un résultat vide au lieu d'anciennes valeurs.",
+        "it": "Cambiare paese o stato ora azzera la selezione più ristretta, i giorni ponte portano il nome nella vostra lingua e senza paese l'adattatore pubblica un risultato vuoto invece di valori vecchi.",
+        "es": "Cambiar de país o de estado ahora borra la selección más estrecha, los días puente llevan su nombre en su idioma y sin país el adaptador publica un resultado vacío en lugar de valores antiguos.",
+        "pl": "Zmiana kraju lub regionu czyści teraz węższy wybór, dni pomostowe mają nazwę w Twoim języku, a bez kraju adapter publikuje pusty wynik zamiast nieaktualnych wartości.",
+        "uk": "Зміна країни або регіону тепер очищає вужчий вибір, мостові дні називаються вашою мовою, а без країни адаптер публікує порожній результат замість застарілих значень.",
+        "zh-cn": "更改国家或州现在会清除更细的选择，桥接日以您的语言命名，未设置国家时适配器发布空结果而不是旧值。"
+      },
       "0.16.0": {
         "en": "Two holidays on one day no longer swap the reported name with a data update, every data point now explains itself in the object tree, and installation runs through the ioBroker repository.",
         "de": "Zwei Feiertage an einem Tag tauschen den gemeldeten Namen nicht mehr mit einem Datenupdate, jeder Datenpunkt erklärt sich jetzt im Objektbaum, und die Installation läuft über das ioBroker-Repository.",
@@ -80,19 +93,6 @@
         "pl": "Odnośniki wsparcia znikły ze strony ustawień wraz z nową kartą; znów znajdują się pod nią.",
         "uk": "Посилання на підтримку зникли зі сторінки налаштувань після появи нової картки; тепер вони знову під нею.",
         "zh-cn": "自新卡片启用后，设置页面缺少了支持链接；现在它们重新显示在卡片下方。"
-      },
-      "0.13.0": {
-        "en": "The adapter settings are now a single guided card — country, region, holiday types and exclusions on one page, with a live preview of the detected holidays.",
-        "de": "Die Adapter-Einstellungen sind jetzt eine geführte Karte — Land, Region, Feiertagstypen und Ausschlüsse auf einer Seite, mit einer Live-Vorschau der erkannten Feiertage.",
-        "ru": "Настройки адаптера теперь единая карточка — страна, регион, типы праздников и исключения на одной странице, с предпросмотром обнаруживаемых праздников.",
-        "pt": "As definições do adaptador são agora um cartão guiado — país, região, tipos de feriados e exclusões numa página, com pré-visualização dos feriados detetados.",
-        "nl": "De adapterinstellingen zijn nu één begeleide kaart — land, regio, feestdagtypes en uitsluitingen op één pagina, met een live voorbeeld van de gedetecteerde feestdagen.",
-        "fr": "Les réglages de l'adaptateur tiennent sur une carte guidée — pays, région, types de jours fériés et exclusions sur une page, avec un aperçu des jours fériés détectés.",
-        "it": "Le impostazioni dell'adattatore sono ora un'unica scheda guidata — paese, regione, tipi di festività ed esclusioni in una pagina, con anteprima delle festività rilevate.",
-        "es": "Los ajustes del adaptador son ahora una única tarjeta guiada — país, región, tipos de festivos y exclusiones en una página, con vista previa de los festivos detectados.",
-        "pl": "Ustawienia adaptera to teraz jedna prowadzona karta — kraj, region, typy świąt i wykluczenia na jednej stronie, z podglądem wykrywanych świąt na żywo.",
-        "uk": "Налаштування адаптера тепер єдина керована картка — країна, регіон, типи свят і виключення на одній сторінці, з попереднім переглядом виявлених свят.",
-        "zh-cn": "适配器设置现在是一张引导式卡片——国家、地区、假日类型和排除项都在一个页面上，并实时预览将检测到的假日。"
       }
     },
     "plugins": {
