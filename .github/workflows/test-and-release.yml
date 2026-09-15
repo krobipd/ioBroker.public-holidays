@@ -142,6 +142,9 @@ jobs:
       - run: npm install --force
       - name: Build admin custom component (Vite / Module Federation)
         run: npm run build:admin
+      # Needs src-admin/node_modules from the build step; the root test matrix never has them.
+      - name: Type-check, lint and test the card against the real ConfigGeneric (jsdom)
+        run: npm run test:admin
 
   adapter-tests:
     # The tag push starts a COMPLETE second run: the matrix runs again there, and `deploy`
