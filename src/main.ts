@@ -142,7 +142,7 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         );
       }
 
-      const computed = computeHolidays(config, languages, { instance: hd });
+      const computed = computeHolidays(config, languages, { instance: hd, systemLanguage: sysConfig.language });
       if (computed.unmatchedExcludes.length > 0) {
         this.log.warn(
           `These excluded holidays no longer match any holiday (possibly renamed by a date-holidays update): ${oneLine(

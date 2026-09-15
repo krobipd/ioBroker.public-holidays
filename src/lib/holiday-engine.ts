@@ -30,6 +30,13 @@ export interface ComputeOptions {
   referenceDate?: Date;
   /** Pre-built date-holidays instance to reuse instead of constructing a fresh one. */
   instance?: Holidays;
+  /**
+   * The ioBroker system language. It names the adapter's OWN bridge-day text, which exists in all
+   * eleven languages — unlike the holiday names, whose language `languages` decides per what the
+   * country's data can deliver. Without it the bridge day follows the data language: a German
+   * system with a US scope published "Bridge day" while the card showed "Brückentag" (audit S1).
+   */
+  systemLanguage?: string;
 }
 
 export function computeHolidays(
@@ -39,7 +46,8 @@ export function computeHolidays(
 ): ComputedHolidays {
   const now = options.referenceDate ?? new Date();
   const hd = options.instance ?? createHolidaysInstance(config, languages);
-  const { holidays: filtered, unmatchedExcludes } = getFilteredHolidays(hd, now, config, languages);
+  const bridgeName = bridgeDayName(options.systemLanguage ?? languages[0] ?? "en");
+  const { holidays: filtered, unmatchedExcludes } = getFilteredHolidays(hd, now, config, bridgeName);
 
   const yesterday = getDayInfo(filtered, addDays(now, -1));
   const today = getDayInfo(filtered, now);
@@ -145,7 +153,7 @@ function getFilteredHolidays(
   hd: Holidays,
   referenceDate: Date,
   config: AdapterConfig,
-  languages: string[],
+  bridgeName: string,
 ): FilteredHolidays {
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
@@ -176,7 +184,7 @@ function getFilteredHolidays(
 
   if (config.includeBridgeDays) {
     for (const y of years) {
-      addBridgeDays(result, y, languages);
+      addBridgeDays(result, y, bridgeName);
     }
   }
 
@@ -293,8 +301,7 @@ export function detectBridgeDays(holidays: Map<string, ScopedHoliday | RawHolida
   return detectBridgeKeys(new Set(holidays.keys()), year).map(key => new Date(`${key}T00:00:00`));
 }
 
-function addBridgeDays(holidays: Map<string, ScopedHoliday>, year: number, languages: string[]): void {
-  const name = bridgeDayName(languages[0] ?? "en");
+function addBridgeDays(holidays: Map<string, ScopedHoliday>, year: number, name: string): void {
   for (const key of detectBridgeKeys(new Set(holidays.keys()), year)) {
     if (!holidays.has(key)) {
       holidays.set(key, {

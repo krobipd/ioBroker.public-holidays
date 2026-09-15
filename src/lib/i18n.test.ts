@@ -17,7 +17,7 @@ import {
   tName,
   formatDateForDisplay,
 } from "./i18n";
-import { BRIDGE_DAY_NAMES } from "./holiday-engine";
+import { BRIDGE_DAY_NAMES, computeHolidays, createHolidaysInstance } from "./holiday-engine";
 
 describe("tName", () => {
   it("delegates to I18n.getTranslatedObject", () => {
@@ -280,5 +280,39 @@ describe("formatDateForDisplay", () => {
 describe("language set consistency (drift guard)", () => {
   it("BRIDGE_DAY_NAMES keys match SUPPORTED_LANGS", () => {
     expect(Object.keys(BRIDGE_DAY_NAMES).sort()).toEqual([...SUPPORTED_LANGS].sort());
+  });
+});
+
+// The production path end to end: `resolveLanguages` picks what the country's DATA can deliver, and
+// US data has no German — so the holiday names come in English. The bridge day is the adapter's own
+// text and must follow the SYSTEM language regardless (audit S1: a German system with a US scope
+// published "Bridge day" while the card showed "Brückentag").
+describe("bridge-day language over the production path", () => {
+  it("follows the system language even when the holiday data cannot (US scope, German system)", () => {
+    const config = {
+      country: "US",
+      state: "",
+      region: "",
+      holidayTypes: ["public"],
+      excludeHolidays: [],
+      includeBridgeDays: true,
+    };
+    const hd = createHolidaysInstance(config);
+    const languages = resolveLanguages("de", hd);
+    expect(languages).toEqual(["en"]);
+    hd.setLanguages(languages);
+    // Friday after Thanksgiving 2026 (Thu 26 Nov): an observance in the data, filtered away by the
+    // public-only type selection, so the Friday is bridged.
+    const friday = new Date("2026-11-27T12:00:00");
+
+    const withSystemLanguage = computeHolidays(config, languages, {
+      referenceDate: friday,
+      instance: hd,
+      systemLanguage: "de",
+    });
+    expect(withSystemLanguage.today).toEqual({ name: "Brückentag", isHoliday: true });
+
+    const withoutSystemLanguage = computeHolidays(config, languages, { referenceDate: friday, instance: hd });
+    expect(withoutSystemLanguage.today.name).toBe("Bridge day");
   });
 });
