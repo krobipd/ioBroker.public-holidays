@@ -102,7 +102,7 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### 0.17.0 (2026-09-15)
+### 0.17.0 (2026-09-15) — stable
 
 - Fixed: Changing the country or the state in the settings now clears the narrower selection too — a leftover state code could silently publish another region's holidays.
 - Fixed: Bridge days now carry their name in your language even for countries whose holiday data has no translation for it — they used to fall back to the English "Bridge day".
