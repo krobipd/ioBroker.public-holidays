@@ -8,8 +8,8 @@
 // Currency (ENFORCED, krobi 2026-09-04: "immer die aktuelle Release-Version eingepackt"): if the
 // installed copy is behind npm's latest, this gate INSTALLS the latest one — including a new
 // major. It does not warn and move on: a warning is exactly how six data releases went by
-// unnoticed. The safety net is the release flow itself, which runs `npm test` + `npm run build`
-// right after this gate, so an API break fails the release instead of shipping stale data.
+// unnoticed. The safety net is step 4 below: after a bump this gate runs `npm test` against the
+// new library, so an API break fails the release instead of shipping stale data.
 //
 // Parity (the reason this gate touches src-admin): the admin card (src-admin) bundles its OWN
 // date-holidays at build time and computes the country/state/region cascade + live preview from
@@ -18,6 +18,11 @@
 // runtime doesn't compute. This gate pins src-admin to the version the runtime actually resolves
 // and installs it, so the shipped card always sees the same holiday data. The independent guard
 // src/lib/date-holidays-version-parity.test.ts fails CI if this ever drifts.
+//
+// Rebuild (step 4): the release pre-run builds the card (gate D05) BEFORE this gate runs, so after
+// a bump the tracked card bundle in admin/custom/ would still carry the old data. Only when this
+// gate actually changed a version does it re-run the tests and rebuild the card; an up-to-date run
+// changes nothing and costs nothing.
 import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -40,6 +45,7 @@ function readInstalled() {
 // --- 1. currency: install npm's latest when we are behind (ENFORCED, not a warning) ---
 let installed = readInstalled();
 let latest = null;
+let changed = false;
 try {
   latest = execSync("npm view date-holidays version", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 } catch (e) {
@@ -61,7 +67,8 @@ if (latest && installed !== latest) {
     console.error(`✗ date-holidays is still ${installed} after installing ${latest} — aborting.`);
     process.exit(1);
   }
-  console.log(`✓ date-holidays updated to ${installed}. The tests right after this gate cover the data change.`);
+  changed = true;
+  console.log(`✓ date-holidays updated to ${installed}.`);
 } else if (latest) {
   console.log(`✓ date-holidays is up to date (${installed}).`);
 }
@@ -104,7 +111,25 @@ if (adminPinned !== installed) {
   console.log(`↻ Syncing src-admin date-holidays ${adminPinned} → ${installed} (must match the runtime).`);
   writeFileSync(adminPkgPath, adminSrc.replace(pinRe, `$1${installed}$3`));
   execSync("npm install", { cwd: `${adapterRoot}src-admin`, stdio: "inherit" });
+  changed = true;
   console.log(`✓ src-admin date-holidays synced to ${installed} — 'git add src-admin/package.json' before commit.`);
 } else {
   console.log(`✓ src-admin date-holidays matches the runtime (${installed}).`);
+}
+
+// --- 4. after a bump: prove the new library and ship it in the card ---
+if (changed) {
+  for (const [script, why] of [
+    ["test", "the tests against the new holiday data"],
+    ["build:admin", "the card bundle with the new holiday data"],
+  ]) {
+    console.log(`↻ npm run ${script} — ${why}.`);
+    try {
+      execSync(`npm run ${script}`, { cwd: adapterRoot, stdio: "inherit" });
+    } catch (e) {
+      console.error(`✗ npm run ${script} failed after the date-holidays update: ${e.message}`);
+      process.exit(1);
+    }
+  }
+  console.log("✓ tests green and card rebuilt — 'git add admin/custom' before commit.");
 }

@@ -11,7 +11,7 @@ Einstellungen, danach täglich um Mitternacht, ausgelöst vom ioBroker-Controlle
 schreibt sein Ergebnis, danach endet der Prozess wieder — zwischen zwei Durchgängen belegt der
 Adapter keinen Speicher.
 
-Die Feiertagsdaten stammen aus der mitgelieferten Bibliothek `date-holidays`, die 206 Länder samt
+Die Feiertagsdaten stammen aus der mitgelieferten Bibliothek `date-holidays`, die 207 Länder samt
 Bundesländern, Kantonen, Provinzen und Regionen abdeckt.
 
 ## Einrichtung

@@ -114,17 +114,17 @@
       "zh-cn": "公共假日"
     },
     "desc": {
-      "en": "Detects public holidays for 206 countries — runs offline, updates daily at midnight",
-      "de": "Erkennt Feiertage für 206 Länder — läuft offline, aktualisiert täglich um Mitternacht",
-      "ru": "Определяет государственные праздники для 206 стран — работает офлайн, обновляется ежедневно в полночь",
-      "pt": "Detecta feriados para 206 países — funciona offline, atualiza diariamente à meia-noite",
-      "nl": "Detecteert feestdagen voor 206 landen — werkt offline, vernieuwt dagelijks om middernacht",
-      "fr": "Détecte les jours fériés pour 206 pays — fonctionne hors ligne, mise à jour quotidienne à minuit",
-      "it": "Rileva i giorni festivi per 206 paesi — funziona offline, aggiornamento giornaliero a mezzanotte",
-      "es": "Detecta festivos para 206 países — funciona offline, se actualiza diariamente a medianoche",
-      "pl": "Wykrywa święta dla 206 krajów — działa offline, aktualizacja codziennie o północy",
-      "uk": "Визначає святкові дні для 206 країн — працює офлайн, оновлення щодня опівночі",
-      "zh-cn": "检测206个国家的公共假日——离线运行，每日午夜自动更新"
+      "en": "Detects public holidays for 207 countries — runs offline, updates daily at midnight",
+      "de": "Erkennt Feiertage für 207 Länder — läuft offline, aktualisiert täglich um Mitternacht",
+      "ru": "Определяет государственные праздники для 207 стран — работает офлайн, обновляется ежедневно в полночь",
+      "pt": "Detecta feriados para 207 países — funciona offline, atualiza diariamente à meia-noite",
+      "nl": "Detecteert feestdagen voor 207 landen — werkt offline, vernieuwt dagelijks om middernacht",
+      "fr": "Détecte les jours fériés pour 207 pays — fonctionne hors ligne, mise à jour quotidienne à minuit",
+      "it": "Rileva i giorni festivi per 207 paesi — funziona offline, aggiornamento giornaliero a mezzanotte",
+      "es": "Detecta festivos para 207 países — funciona offline, se actualiza diariamente a medianoche",
+      "pl": "Wykrywa święta dla 207 krajów — działa offline, aktualizacja codziennie o północy",
+      "uk": "Визначає святкові дні для 207 країн — працює офлайн, оновлення щодня опівночі",
+      "zh-cn": "检测207个国家的公共假日——离线运行，每日午夜自动更新"
     },
     "authors": [
       "krobi <krobi@power-dreams.com>"

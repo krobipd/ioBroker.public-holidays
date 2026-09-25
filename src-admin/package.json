@@ -10,7 +10,7 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "date-holidays": "3.36.1"
+    "date-holidays": "3.37.0"
   },
   "devDependencies": {
     "@iobroker/eslint-config": "^2.3.4",

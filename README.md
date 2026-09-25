@@ -6,7 +6,7 @@
 
 **Support:** [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b?logo=ko-fi)](https://ko-fi.com/krobipd) [![PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/krobipd)
 
-Detects public holidays for 206 countries. Runs completely offline — no cloud, no API calls. Updates daily at midnight.
+Detects public holidays for 207 countries. Runs completely offline — no cloud, no API calls. Updates daily at midnight.
 
 Holiday data provided by [date-holidays](https://github.com/commenthol/date-holidays) (ISC + CC-BY-SA-3.0).
 
@@ -14,7 +14,7 @@ Holiday data provided by [date-holidays](https://github.com/commenthol/date-holi
 
 ## Features
 
-- **206 countries** with state/province and region support
+- **207 countries** with state/province and region support
 - **Fully offline** — all holiday data is bundled, no internet required
 - **5 holiday types** — public, bank, school, optional, observance (configurable)
 - **Bridge day detection** — detects working days between holidays and weekends
@@ -44,7 +44,7 @@ All settings live on a single guided card. Work through it from top to bottom:
 
 | Step              | Description                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Location          | Country (206 available); state/province and region appear only for countries that have them. If country is left empty it is auto-detected from your ioBroker system settings. |
+| Location          | Country (207 available); state/province and region appear only for countries that have them. If country is left empty it is auto-detected from your ioBroker system settings. |
 | Holiday types     | Public (default on), bank, school, optional and observance days.                                                                                        |
 | Bridge days       | Adds bridge days between a holiday and the weekend.                                                                                                      |
 | Excluded holidays | Pick individual holidays to exclude from detection.                                                                                                      |

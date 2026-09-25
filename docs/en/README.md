@@ -11,7 +11,7 @@ settings, and after that once a day at midnight, triggered by the ioBroker contr
 writes its results and the process ends again — it does not stay in memory between runs.
 
 The holiday data comes from the `date-holidays` library, which is shipped with the adapter and
-covers 206 countries including their states, provinces and regions.
+covers 207 countries including their states, provinces and regions.
 
 ## Setup
 
