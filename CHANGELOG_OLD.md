@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.14.0 (2026-09-01)
+
+- New: the next-holiday log line now shows the date in your system's date format — for example 26.10.2026 instead of 2026-10-26. The date data point itself stays machine-readable for scripts.
+
 ## 0.13.2 (2026-08-27) — stable
 
 - Fixed: Stopping or restarting the instance while the holidays were being worked out cut that run short, which could leave half-written values and errors in the log.

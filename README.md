@@ -104,7 +104,7 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.18.0 (2026-09-25)
 
 - Fixed: Holidays lasting several days now count on every day (Russian New Year, Chuseok, Tết, Eid …); the next holiday skips the rest of the one running today.
 - Fixed: Bridge days follow the country's own weekend (Friday and Saturday in Israel, Saudi Arabia, Egypt …) and come only from whole-day public and bank holidays.
@@ -142,10 +142,6 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
 
 - Fixed: With no holiday type enabled the adapter reported nothing without a word while the card still previewed a full year. Card and log now say it.
 - Changed: Channel and data point names are refreshed on every run, so renames reach updated installations too — a manual rename of them is overwritten.
-
-### 0.14.0 (2026-09-01)
-
-- New: the next-holiday log line now shows the date in your system's date format — for example 26.10.2026 instead of 2026-10-26. The date data point itself stays machine-readable for scripts.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

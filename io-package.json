@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.17.0",
+    "version": "0.18.0",
     "news": {
+      "0.18.0": {
+        "en": "Holidays lasting several days count on every day (Russian New Year, Chuseok, Tết, Eid …), and the next holiday skips the rest of the one running today\nBridge days follow the country's own weekend and come from public and bank holidays only; excluding a holiday also excludes its substitute days\nThe system country is detected for more names, the settings card shows holiday names in your language and previews the detected country; Uzbekistan added",
+        "de": "Mehrtägige Feiertage zählen an jedem Tag (russisches Neujahr, Chuseok, Tết, Opferfest …), und der nächste Feiertag überspringt den Rest des heute laufenden\nBrückentage richten sich nach dem Wochenende des Landes und entstehen nur aus gesetzlichen und Bankfeiertagen; ein ausgeschlossener Feiertag schließt seine Ersatztage mit aus\nDas Systemland wird für mehr Namen erkannt, die Einstellungskarte zeigt Feiertagsnamen in der Systemsprache und eine Vorschau für das erkannte Land; Usbekistan neu",
+        "ru": "Многодневные праздники учитываются каждый день (Новый год в России, Чхусок, Тет, Курбан-байрам …), а следующий праздник пропускает остаток текущего\nДни-мосты учитывают выходные страны и возникают только из государственных и банковских праздников; исключённый праздник исключает и его переносы\nСистемная страна распознаётся по большему числу названий, карточка настроек показывает названия на языке системы и предпросмотр для распознанной страны; добавлен Узбекистан",
+        "pt": "Feriados de vários dias contam em todos os dias (Ano Novo russo, Chuseok, Tết, Eid …) e o próximo feriado ignora o resto do que decorre hoje\nOs dias de ponte seguem o fim de semana do país e surgem apenas de feriados públicos e bancários; excluir um feriado exclui também os seus dias de substituição\nO país do sistema é reconhecido por mais nomes, o cartão de definições mostra os nomes no idioma do sistema e uma pré-visualização do país reconhecido; Usbequistão adicionado",
+        "nl": "Meerdaagse feestdagen tellen op elke dag (Russisch Nieuwjaar, Chuseok, Tết, Offerfeest …) en de volgende feestdag slaat de rest van de lopende over\nBrugdagen volgen het weekend van het land en ontstaan alleen uit wettelijke en bankfeestdagen; een uitgesloten feestdag sluit ook zijn vervangende dagen uit\nHet systeemland wordt voor meer namen herkend, de instellingenkaart toont namen in de systeemtaal en een voorbeeld voor het herkende land; Oezbekistan toegevoegd",
+        "fr": "Les jours fériés de plusieurs jours comptent chaque jour (Nouvel An russe, Chuseok, Tết, Aïd …) et le prochain jour férié saute le reste de celui en cours\nLes jours de pont suivent le week-end du pays et ne naissent que des jours fériés légaux et bancaires ; exclure un jour férié exclut aussi ses jours de remplacement\nLe pays système est reconnu pour plus de noms, la carte des réglages affiche les noms dans la langue du système et un aperçu du pays reconnu ; Ouzbékistan ajouté",
+        "it": "Le festività di più giorni contano in ogni giorno (Capodanno russo, Chuseok, Tết, Eid …) e la prossima festività salta il resto di quella in corso\nI ponti seguono il fine settimana del paese e nascono solo da festività pubbliche e bancarie; escludere una festività esclude anche i suoi giorni sostitutivi\nIl paese di sistema viene riconosciuto per più nomi, la scheda impostazioni mostra i nomi nella lingua di sistema e un'anteprima del paese riconosciuto; aggiunto l'Uzbekistan",
+        "es": "Los festivos de varios días cuentan cada día (Año Nuevo ruso, Chuseok, Tết, Eid …) y el próximo festivo omite el resto del que está en curso\nLos días puente siguen el fin de semana del país y solo surgen de festivos públicos y bancarios; excluir un festivo excluye también sus días sustitutivos\nEl país del sistema se reconoce por más nombres, la tarjeta de ajustes muestra los nombres en el idioma del sistema y una vista previa del país reconocido; se añade Uzbekistán",
+        "pl": "Wielodniowe święta liczą się każdego dnia (rosyjski Nowy Rok, Chuseok, Tết, Id …), a następne święto pomija resztę trwającego\nDni pomostowe uwzględniają weekend danego kraju i powstają tylko ze świąt państwowych i bankowych; wykluczenie święta wyklucza też jego dni zastępcze\nKraj systemowy jest rozpoznawany dla większej liczby nazw, karta ustawień pokazuje nazwy w języku systemu i podgląd rozpoznanego kraju; dodano Uzbekistan",
+        "uk": "Багатоденні свята враховуються щодня (російський Новий рік, Чхусок, Тет, Курбан-байрам …), а наступне свято пропускає решту поточного\nДні-мости враховують вихідні країни й виникають лише з державних і банківських свят; виключене свято виключає і його перенесення\nСистемна країна розпізнається за більшою кількістю назв, картка налаштувань показує назви мовою системи та попередній перегляд для розпізнаної країни; додано Узбекистан",
+        "zh-cn": "多日节假日的每一天都会计入（俄罗斯新年、中秋、越南新年、开斋节等），下一个节假日会跳过今天正在进行的节假日的剩余天数\n桥接日遵循该国的周末，且只由法定和银行节假日产生；排除一个节假日也会排除其调休日\n系统国家可识别更多名称，设置卡片以系统语言显示节假日名称并预览识别出的国家；新增乌兹别克斯坦"
+      },
       "0.17.0": {
         "en": "Country and state changes now clear the narrower selection, bridge days carry their name in your language, and without a country the adapter publishes an empty result instead of stale values.",
         "de": "Land- und Bundeslandwechsel leeren jetzt die engere Auswahl, Brückentage tragen ihren Namen in Ihrer Sprache, und ohne Land publiziert der Adapter ein leeres Ergebnis statt alter Werte.",
@@ -80,19 +93,6 @@
         "pl": "Uwaga Austria: św. Marcin, św. Rupert i Dzień Referendum liczą się teraz jako dni pamięci i znikają, jeśli ten typ nie jest włączony. Do tego poprawki dla Irlandii, Rosji i innych.",
         "uk": "Увага, Австрія: День св. Мартина, День св. Руперта та День референдуму тепер пам'ятні дати й зникають, якщо цей тип не увімкнено. Також виправлення для Ірландії, Росії та інших.",
         "zh-cn": "奥地利请注意：圣马丁节、圣鲁伯特节和公投日现在算作纪念日，若未启用该类型则不再显示。另有爱尔兰、俄罗斯等国的数据修正。"
-      },
-      "0.13.1": {
-        "en": "The support links were missing from the settings page since the new card was introduced; they are back below it.",
-        "de": "Die Unterstützungs-Links fehlten seit der neuen Karte auf der Einstellungsseite; sie stehen jetzt wieder darunter.",
-        "ru": "Ссылки на поддержку отсутствовали на странице настроек после появления новой карточки; теперь они снова под ней.",
-        "pt": "As ligações de apoio faltavam na página de definições desde a nova ficha; voltaram a aparecer por baixo dela.",
-        "nl": "De ondersteuningslinks ontbraken op de instellingenpagina sinds de nieuwe kaart; ze staan er weer onder.",
-        "fr": "Les liens de soutien manquaient sur la page des réglages depuis la nouvelle carte ; ils sont de nouveau en dessous.",
-        "it": "I collegamenti di supporto mancavano nella pagina delle impostazioni dalla nuova scheda; sono di nuovo sotto di essa.",
-        "es": "Los enlaces de apoyo faltaban en la página de ajustes desde la nueva tarjeta; vuelven a estar debajo de ella.",
-        "pl": "Odnośniki wsparcia znikły ze strony ustawień wraz z nową kartą; znów znajdują się pod nią.",
-        "uk": "Посилання на підтримку зникли зі сторінки налаштувань після появи нової картки; тепер вони знову під нею.",
-        "zh-cn": "自新卡片启用后，设置页面缺少了支持链接；现在它们重新显示在卡片下方。"
       }
     },
     "plugins": {
