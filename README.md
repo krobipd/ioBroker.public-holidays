@@ -103,13 +103,16 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
 ### **WORK IN PROGRESS**
 
-- Fixed: Holidays that last several days now count on every one of their days — the New Year holidays in Russia, Chuseok, Tết and Eid were reported on their first day only. The next holiday skips the rest of the one running today.
-- Fixed: Bridge days follow the country's own weekend (Friday and Saturday in Israel, Saudi Arabia, Egypt, Bangladesh …) and come from whole-day public and bank holidays only, no longer from observances. A single working day between two holidays is a bridge day now too, e.g. 2 May in Poland.
+- Fixed: Holidays lasting several days now count on every day (Russian New Year, Chuseok, Tết, Eid …); the next holiday skips the rest of the one running today.
+- Fixed: Bridge days follow the country's own weekend (Friday and Saturday in Israel, Saudi Arabia, Egypt …) and come only from whole-day public and bank holidays.
+- New: A single working day between two holidays is a bridge day too, e.g. 2 May in Poland or 7 December in Spain.
 - Fixed: Excluding a holiday now excludes its substitute day as well, e.g. Boxing Day moved to the Monday.
-- Fixed: The ioBroker system country is recognised for the names of the first-run wizard (Korea, Vietnam, Serbia, Ivory Coast …), and a system country the adapter cannot use is named in the log.
-- Fixed: The settings card shows holiday names in the system language like the data points, lists countries in your admin language, previews the detected system country and keeps exclusions of switched-off holiday types.
+- Fixed: The system country is recognised for the names of the first-run wizard (Korea, Vietnam, Serbia …); a country the adapter cannot use is named in the log.
+- Fixed: The settings card shows holiday names in your language like the data points and previews the country detected from the system settings.
+- Improved: The settings card lists countries in your admin language and keeps exclusions of holiday types you switched off.
 - Changed: The bridge-day name in Russian and Ukrainian is now "День-мост" / "День-міст"; next.daysUntil uses the unit "d".
 - Fixed: Error reporting via Sentry is active by default — the README and the documentation said otherwise.
 - New: Holiday data for Uzbekistan.
