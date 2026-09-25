@@ -215,6 +215,21 @@ describe("addBridgeDays — triggers and the country's weekend", () => {
     expect(days.get("2026-09-25")?.type).toBe("public");
   });
 
+  it("a follow-up day of a multi-day holiday starts a bridge day like any whole day off", () => {
+    // Tuesday 12 to Thursday 14 May 2026 (synthetic P3D): only the THIRD day is a Thursday.
+    const multi: SourceHoliday = {
+      date: "2026-05-12 00:00:00",
+      start: new Date("2026-05-12T00:00:00"),
+      end: new Date("2026-05-15T00:00:00"),
+      name: "Three days",
+      type: "public",
+      rule: "05-12 P3D",
+    };
+    const days = buildDayMap([multi], { types: ["public"], excludes: [] });
+    addBridgeDays(days, [2026], weekendDays("DE"), "Bridge day");
+    expect(days.get("2026-05-15")?.type).toBe("bridge");
+  });
+
   it("with a Friday + Saturday weekend the Friday is never a bridge day (SA 2026)", () => {
     const days = buildDayMap(raws([2025, 2026, 2027], "SA"), { types: ["public"], excludes: [] });
     addBridgeDays(days, [2026], weekendDays("SA"), "Bridge day");

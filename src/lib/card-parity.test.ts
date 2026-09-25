@@ -126,6 +126,11 @@ describe("exclude list: substitutes go with their holiday, switched-off types ar
     expect(opts.some(o => o.label.includes("substitute"))).toBe(false);
   });
 
+  it("names holidays in the system language like the runtime (Russian system, Andorra: English)", () => {
+    const opts = buildExcludeOptions({ country: "AD", state: "", region: "", types: ["public"] }, "ru", 2026);
+    expect(opts.map(o => o.label)).toContain("Epiphany (06.01.)");
+  });
+
   it("the label follows the system date format", () => {
     const [first] = buildExcludeOptions(
       { country: "DE", state: "", region: "", types: ["public"] },

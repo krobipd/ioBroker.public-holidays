@@ -308,6 +308,19 @@ describe("HolidayConfig shows what the runtime will publish (0.18.0)", () => {
     expect(excludes.length).toBe(3);
   });
 
+  it("a hand-written lower-case state is the state, not a stale value", async () => {
+    const { container: el, writes } = await mount({
+      country: "DE",
+      state: "by",
+      typePublic: true,
+      excludeHolidays: [],
+    });
+    await settle(100);
+    expect(el.textContent).not.toContain(en.ph_hc_scope_stale.split(":")[0]);
+    expect(picker(el, en.ph_hc_state_label)?.value).toMatch(/\(BY\)$/);
+    expect(writes).toHaveLength(0);
+  });
+
   it("a stale state with no picker for it is cleared in ONE write", async () => {
     const { container: el, writes } = await mount({
       country: "JP",

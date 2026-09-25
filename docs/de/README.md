@@ -28,9 +28,14 @@ Land auswählen. Bundesland und Region erscheinen nur bei Ländern, die sie habe
 zum Beispiel Bundesländer, Italien numerische Provinzcodes.
 
 Bleibt das Land leer, übernimmt der Adapter das Land aus den **ioBroker-Systemeinstellungen**
-(Systemeinstellungen → Basiseinstellungen → Land) und schreibt eine Logzeile, welches Land er
-verwendet hat. Lässt sich dieses Land nicht zuordnen, meldet der Adapter „No country configured" und
-hält an.
+(Systemeinstellungen → Basiseinstellungen → Land). Erkannt werden beide Listen, aus denen ioBroker ein
+Land speichert — die Systemeinstellungen und der Einrichtungsassistent (bis Admin 8.0.14 schreibt der
+Assistent Namen anders, z. B. „Vietnam" statt „Viet Nam") —, und die Karte zeigt die Vorschau für
+das erkannte Land. Hat dieses Land keine Feiertagsdaten (z. B. Katar) oder steht es für mehrere
+Länder („Serbia and Montenegro", „Netherlands Antilles"), sagt das Log das, und der Adapter
+veröffentlicht ein leeres Ergebnis, bis ein Land gewählt ist. Sieben Länder der Feiertagsdaten haben
+in der ioBroker-Liste gar keinen Namen — Saint-Barthélemy, Karibische Niederlande, Curaçao, die
+Kanarischen Inseln, Saint-Martin, Südsudan und Sint Maarten: sie auf der Karte wählen.
 
 ### Feiertagstypen
 
@@ -60,19 +65,34 @@ Serbien und Taiwan.
 > Sind **alle** Typen abgeschaltet, meldet der Adapter überhaupt keine Feiertage — die Karte und das
 > Log sagen das ausdrücklich.
 
+### Mehrtägige Feiertage
+
+Manche Feiertage dauern mehrere Tage — die Neujahrsferien in Russland, Chuseok in Korea, Tết in
+Vietnam, das Opferfest in vielen Ländern. Jeder dieser Tage zählt: `today.isHoliday` ist an jedem
+von ihnen wahr. `next` zeigt den nächsten Feiertag nach dem heute laufenden, nicht den zweiten Tag
+desselben Feiertags. Ein Feiertag, der am Vorabend beginnt (jüdische und islamische Tage beginnen
+mit der Dämmerung), zählt ab seinem ersten vollen Tag.
+
 ### Brückentage
 
-Ein Brückentag ist ein Arbeitstag, der zwischen einem Feiertag und dem Wochenende eingeklemmt ist.
-Mit aktivierter Option nimmt der Adapter ihn als eigenen Feiertag auf, benannt als „Brückentag" in
-der eingestellten Sprache:
+Ein Brückentag ist ein einzelner Arbeitstag zwischen zwei freien Tagen, von denen mindestens einer
+ein Feiertag ist — wer ihn freinimmt, überbrückt die Lücke zum Wochenende oder zum nächsten
+Feiertag. Mit aktivierter Option nimmt der Adapter ihn als eigenen Feiertag auf, benannt als
+„Brückentag" in der ioBroker-Systemsprache. Bei einem Wochenende Samstag + Sonntag:
 
 - Feiertag am **Donnerstag** → der **Freitag** wird Brückentag,
 - Feiertag am **Dienstag** → der **Montag** wird Brückentag,
-- ein **Mittwoch**, der von einem Feiertag am Dienstag _und_ am Donnerstag eingerahmt ist, wird
-  Brückentag.
+- ein Wochentag, der von zwei Feiertagen eingerahmt ist, wird Brückentag — ein Mittwoch zwischen
+  Dienstag und Donnerstag, ein Dienstag zwischen Montag und Mittwoch (z. B. der 2. Mai in Polen).
 
-Ein einzelner Mittwochs-Feiertag erzeugt keinen: bis zum Wochenende wären zwei Fehltage nötig. Ein
-Brückentag überschreibt nie einen echten Feiertag und erzeugt nie weitere Brückentage.
+Das Wochenende ist das des Landes: Wo es auf Freitag und Samstag fällt (Israel, Saudi-Arabien,
+Ägypten, Bangladesch …), überbrückt ein Mittwochs-Feiertag den Donnerstag, und ein Freitag wird nie
+Brückentag. Einen Brückentag lösen nur ganztägige gesetzliche und Bankfeiertage aus — Gedenktage,
+Schulferien, optionale Feiertage und Halbtags-Einträge wie Heiligabend ab 14 Uhr nicht. Ein
+einzelner Mittwochs-Feiertag erzeugt bei einem Wochenende Samstag + Sonntag keinen: bis zum
+Wochenende wären zwei Fehltage nötig. Ein Brückentag überschreibt nie einen echten Feiertag und
+erzeugt nie weitere Brückentage; ein Tag, auf dem nur ein Feiertag eines abgeschalteten Typs liegt,
+gilt als Arbeitstag.
 
 ### Ausgeschlossene Feiertage
 
@@ -80,10 +100,16 @@ Manche Feiertage sind für den eigenen Haushalt ohne Bedeutung — einzelne Eint
 ausschließen. Die Auswahlliste bietet genau die Feiertage des gewählten Standorts und der
 aktivierten Typen an, also das, was der Adapter sonst melden würde.
 
+Ein ausgeschlossener Feiertag schließt seine Ersatztage mit aus — den Tag, auf den ein Feiertag
+verschoben wird, wenn er auf ein Wochenende fällt (etwa Boxing Day auf den Montag); die Liste bietet
+deshalb nur den Feiertag an. Ein Ausschluss eines abgeschalteten Feiertagstyps bleibt erhalten und
+wird getrennt angezeigt: Er wirkt wieder, sobald der Typ eingeschaltet ist.
+
 Ein Ausschluss wird über eine interne Kennung gespeichert, die aus der Berechnungsregel des
-Feiertags stammt. Wird diese Regel durch ein späteres Datenupdate umbenannt oder entfernt, trifft
-der Ausschluss ins Leere — der Adapter schreibt dann eine Warnung mit dem betroffenen Eintrag, und
-die Karte zeigt ihn als entfernbaren Chip unter der Auswahlliste.
+Feiertags stammt. Wird diese Regel durch ein späteres Datenupdate umbenannt oder entfernt — oder ist
+ein einmaliges Datum vorbei —, trifft der Ausschluss ins Leere: Der Adapter schreibt dann eine
+Warnung mit dem betroffenen Eintrag, und die Karte zeigt ihn als entfernbaren Chip unter der
+Auswahlliste.
 
 Ausschlüsse greifen **vor** der Brückentagsberechnung: Wer einen Donnerstags-Feiertag ausschließt,
 verliert damit auch den zugehörigen Freitags-Brückentag.
@@ -92,7 +118,9 @@ verliert damit auch den zugehörigen Freitags-Brückentag.
 
 Unten auf der Karte steht eine Vorschau der Feiertage, die der Adapter mit den aktuellen
 Einstellungen für dieses Jahr erkennt — inklusive Brückentage und abzüglich der Ausschlüsse. Sie
-rechnet genauso wie der Adapter selbst, die Vorschau zeigt also den echten späteren Stand.
+entsteht mit denselben Funktionen wie im Adapter und nennt die Feiertage in der
+ioBroker-Systemsprache wie die Datenpunkte, zeigt also den echten späteren Stand. Ist kein Land
+gewählt, zeigt sie das erkannte Systemland.
 
 ## Datenpunkte
 
@@ -110,7 +138,7 @@ rechnet genauso wie der Adapter selbst, die Vorschau zeigt also den echten spät
 
 Alle Datenpunkte sind nur lesbar und tragen im Objektbaum eine kurze Erklärung in der eingestellten
 Sprache. `next` schaut strikt nach vorn: Ein Feiertag, der heute ist, steht in `today`, nicht in
-`next`.
+`next` — ebenso die restlichen Tage eines Feiertags, der heute läuft.
 
 Die Namen der Kanäle und Datenpunkte folgen der ioBroker-Systemsprache und werden bei jedem
 Durchgang aufgefrischt — auch auf Anlagen, die aktualisiert statt neu installiert wurden. Ein von
@@ -119,23 +147,39 @@ Hand vergebener eigener Name wird dabei wieder überschrieben.
 ## Sprache
 
 Feiertagsnamen erscheinen in der ioBroker-Systemsprache, sofern die Feiertagsdaten diese Sprache
-führen, sonst auf Englisch. Unterstützt sind elf Sprachen: Deutsch, Englisch, Spanisch,
-Französisch, Italienisch, Niederländisch, Polnisch, Portugiesisch, Russisch, Ukrainisch und
-Chinesisch.
+führen, sonst auf Englisch — in den Datenpunkten wie in der Vorschau der Karte. Unterstützt sind
+elf Sprachen: Deutsch, Englisch, Spanisch, Französisch, Italienisch, Niederländisch, Polnisch,
+Portugiesisch, Russisch, Ukrainisch und Chinesisch. Die Ländernamen auf der Karte folgen der Sprache
+der Admin-Seite.
 
 ## Fehlersuche
 
 **Es werden überhaupt keine Feiertage gemeldet.**
 Ins Log sehen. „No country configured" heißt, dass weder der Adapter noch die
-ioBroker-Systemeinstellungen ein verwertbares Land liefern. „No holiday type is enabled" heißt, dass
-alle Typ-Häkchen aus sind.
+ioBroker-Systemeinstellungen ein Land liefern. „System country '…' has no holiday data" / „… covers
+several countries" / „… is not recognized" nennt das Systemland, das der Adapter nicht verwenden
+konnte — auf der Karte ein Land wählen. „No holiday type is enabled" heißt, dass alle Typ-Häkchen
+aus sind.
 
 **Das eingestellte Bundesland oder die Region wird scheinbar ignoriert.**
 Ein unbekanntes Bundesland oder eine unbekannte Region fällt still auf die gröbere Ebene zurück. Der
 Adapter erkennt das und warnt: „State 'XX' is unknown for YY — using country-level holidays". Den
 Eintrag aus der Auswahlliste wählen, statt ihn einzutippen. Ist der gespeicherte Eintrag durch eine
 Datenaktualisierung weggefallen, weist die Karte oberhalb der Auswahlliste darauf hin und lässt die
-Konfiguration unangetastet, bis ein neuer Eintrag gewählt wird.
+Konfiguration unangetastet, bis ein neuer Eintrag gewählt wird. Zwölf Gebiete kann die
+Feiertagsbibliothek gar nicht laden (bekannter Fehler — zehn Inseln der Cookinseln, Timaru und
+Buller in Neuseeland): Der Adapter verwendet die Feiertage des übergeordneten Gebiets und sagt das
+im Log und auf der Karte.
+
+**Der Tag wechselt einige Stunden zu früh oder zu spät.**
+Die Tage folgen der Uhr des ioBroker-Hosts. Ein Docker-Container ohne Zeitzone läuft auf UTC — für
+den Container `TZ` setzen. Mit Debug-Log nennt der Adapter eine Host-Zeitzone, die keine des Landes
+ist.
+
+**Am Tag der Sommerzeit-Umstellung bleiben die Werte auf dem Vortag.**
+In einigen Zeitzonen überspringt die Uhr bei Beginn der Sommerzeit die Mitternacht (Chile, Kuba,
+Ägypten, Libanon, Azoren). Der Mitternachtslauf findet an diesem Tag nicht statt; die Werte des
+Vortags bleiben bis zum nächsten Lauf stehen.
 
 **Ein Feiertag fehlt oder taucht unerwartet auf.**
 Den passenden Feiertagstyp aktivieren — manche Tage zählen als Gedenktag statt als gesetzlicher

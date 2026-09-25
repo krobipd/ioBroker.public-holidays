@@ -1,82 +1,89 @@
 # CLAUDE.md — ioBroker.public-holidays
 
 > Gemeinsame ioBroker-Wissensbasis: `../CLAUDE.md` (lokal, nicht im Git). Standards dort, Projekt-Spezifisches hier.
+> Belege, Messungen und Verlauf jeder Entscheidung: `.claude/dev-history.md` (lokal, gitignored).
 
 ## Projekt
 
-**ioBroker Public Holidays** — Offline-Feiertagserkennung für 206 Länder mit Brückentag-Support. Schedule-Mode (`allowInit: true`): berechnet einmalig bei Start/Config-Änderung, js-controller triggert täglich um Mitternacht per Cron.
+**ioBroker Public Holidays** — Offline-Feiertagserkennung für alle Länder der Bibliothek `date-holidays` (die Zahl
+bewacht `country-count.test.ts`) mit Brückentagen. Schedule-Mode (`allowInit: true`): rechnet bei Start und
+Config-Änderung, js-controller triggert täglich um Mitternacht per Cron, danach `this.stop()`.
 
-- **Version + Changelog:** current version in `io-package.json`; full internal dev history moved to `.claude/dev-history.md` (local, not auto-loaded). User-facing changelog: `README.md` + `io-package.json` news.
-- **GitHub:** https://github.com/krobipd/ioBroker.public-holidays
-- **npm:** `iobroker.public-holidays` — Zugang erhalten 2026-05-24
-- **Runtime-Deps:** `@iobroker/adapter-core`, `date-holidays` (ISC + CC-BY-SA-3.0). ⚠️ Der deklarierte **Mindeststand** ist das EINZIGE, was eine Installation erreicht — die Lock-Datei gilt nur für dieses Repo/CI, ioBroker installiert in den gemeinsamen `/opt/iobroker`-Baum und behält dort jede Kopie, die den Bereich erfüllt. Deshalb hebt `check-date-holidays.mjs` bei JEDEM Release den Boden auf die installierte Version (`^<installed>`); Wächter `date-holidays-floor.test.ts`. Gemessen 2026-09-04: krobis Server lief noch 3.30.2 bei Boden `^3.30.2`, sechs Datenstände zurück — mit sichtbarer Folge (ein Tag galt dort noch als gesetzlicher Feiertag).
-- **Test-Setup:** Tests unter `src/**/*.test.ts` via **vitest**. `test/package.js`, `test/integration.js` und `test/inventory.js` bleiben mocha. **`npm run test:admin`** (seit 0.17.0): die Karte gegen die ECHTE `ConfigGeneric` in jsdom (`vitest.admin.config.mts`, `root: src-admin`, Test `src-admin/src/HolidayConfig.test.tsx`), vorher Typprüfung mit src-admins EIGENEM tsc (`tsconfig.test.json`, `exclude: []` — `exclude` erbt sich über `extends`) und src-admin-Lint; braucht `src-admin/node_modules` aus `build:admin`, läuft deshalb NICHT in der Root-Matrix, sondern im CI-Job `admin-component` und lokal. `jsdom` ist Root-devDependency (vitest löst die Umgebung aus dem Root-`node_modules`).
-- ⚠️ **`npm run test:inventory` BAUT NICHT** — der Lauf startet den Adapter aus `build/`. Von Hand gehört `npm run build` davor, sonst misst er einen alten Bau-Ausgang; seit der nogit-Regel verrät `git status` den Rückstand nicht mehr.
-- **`@types/node` an `engines.node`-Min gekoppelt:** `^22` weil `engines.node: ">=22"`
+- **Version + Changelog:** `io-package.json`; Nutzer-Changelog `README.md` + news (Entwurf in
+  `Entwicklung/.cache/news-next/public-holidays.json`, nie `news.NEXT` im Commit).
+- **GitHub:** https://github.com/krobipd/ioBroker.public-holidays · **npm:** `iobroker.public-holidays` (Zugang
+  2026-05-24; Jey-Cee 0.0.x, krobi ab 0.1.0).
+- **Runtime-Deps:** `@iobroker/adapter-core`, `date-holidays` (ISC + CC-BY-SA-3.0). Der deklarierte **Boden** ist das
+  Einzige, was eine Installation erreicht; der Release-Lauf hebt date-holidays in Phase C wie jede Abhängigkeit
+  (kein Dependabot-Ignore), Wächter `date-holidays-floor.test.ts` + `date-holidays-version-parity.test.ts`, Fix
+  beider: `npm run update:date-holidays`.
+- **Test-Setup:** vitest unter `src/**/*.test.ts`; mocha nur `test/package.js`, `test/integration.js`,
+  `test/inventory.js`. Karten-Suite in `src-admin/` (Flottenform, s. Tests). `npm run test:inventory` BAUT NICHT —
+  `npm run build` davor.
+- **`@types/node` an `engines.node`-Min gekoppelt** (`^22`).
 
 ## Architektur
 
 ```
-src/main.ts                        → Adapter (onReady → resolve country → compute → publish → terminate)
-src/lib/
-├── holiday-shared.ts              → **EINZIGE QUELLE für alles, was Runtime UND Karte gleich sehen müssen**: HOLIDAY_TYPES, enabledTypeKeys, toHolidayId, typeRank, `beats` (Kollisionsregel), BRIDGE_DAY_NAMES/bridgeDayName, detectBridgeKeys, shiftKey. **Muss IMPORT-FREI bleiben** (landet in zwei unabhängigen Bündeln). src-admin importiert es per `../../src/lib/holiday-shared.js` — gemessen 2026-09-06, dass tsc UND der MF-Bau das mitmachen; die frühere Behauptung „würde den MF-Bau gefährden" war nie belegt. Wächter: `single-source.test.ts` (kein zweites Vorkommen im Baum)
-├── holiday-engine.ts              → date-holidays Wrapper, Type-Filter, Brückentag-Algo (alle 3 Jahre), createHolidaysInstance (injizierbar); getFilteredHolidays sammelt die Scope-IDs im selben Durchgang mit und startet die teure `collectCountryWideIds`-Aggregation (24-54 Instanzen, 110-140 ms) NUR, wenn ein Ausschluss im eigenen Scope fehlt
-├── config.ts                      → parseConfig/configuredCountry: das rohe `native` → AdapterConfig. Beide Länder-Pfade (konfiguriert + erkannt) laufen durch `resolveCountryCode`; ein unauflösbarer Wert bleibt WÖRTLICH stehen, damit die Scope-Warnung ihn nennen kann
-├── state-publisher.ts             → ComputedHolidays → ioBroker States; ensureObjects frischt alle 17 Manifest-Objekte mit LITERALEN IDs per extendObject auf (Paket-Check `instance-objects-refresh` liest den Quelltext) und OHNE preserve (die Namen gehören dem Adapter — mit preserve erreicht eine Umbenennung nur Neuinstallationen). Der Refresh schreibt NUR `name` + `desc` (0.17.0): js-controller 7.2.2 wendet das Manifest bei JEDEM Start mit `preserve: { common: ["name"], native: true }` an — `type/role/unit/def/desc` erreichen den Bestand von selbst, eingefroren ist nur `common.name`; die 0.16.0-Handkopie (`state-specs.ts`) ruhte auf der gegenteiligen, falschen Prämisse. Beweis: Objekt-Inventar + Aufstiegs-Suite byte-gleich vor/nach dem Umbau (gemessen). Nie setObject: common.custom (History) darf nicht wegfallen. Lokaler Wächter: instance-objects-reach.test.ts (IDs, Builder je Objektart, Beschreibungs-Schlüssel gegen das Manifest)
-├── i18n.ts                        → tName-Wrapper + getSystemConfig (1 Read, typed: country/language/dateFormat) + resolveLanguages + resolveCountryCode (Name→ISO via country-codes) + formatDateForDisplay (Log-Datum im System-Datumsformat, v0.14.0 — der next.date-STATE bleibt ISO)
-├── country-codes.ts              → ISO-3166 Name→alpha-2 Map (aus admin countries.json; Auto-Detect resolver)
-├── types.ts                       → AdapterConfig, DayInfo, NextHoliday, ComputedHolidays
-└── error-utils.ts                 → errText + oneLine (Log/Sentry-Newline-Hygiene)
-docs/<en|de>/README.md              → Nutzer-Dokumentation fürs ioBroker-Doku-Portal (verlinkt in io-package common.docs; erster Eintrag je Sprache ist die Hauptseite, dort setzt das Portal Changelog/Logo/Abzeichen ein)
-admin/
-├── jsonConfig.json                → statischer Mini-Wrapper: EIN type:custom-Element (_holidayCard, guiApi:2) = die geführte Karte, darunter der Flotten-Spenden-Block (header + staticText + 2 staticLink). Von 145 KB (206 Länder × Select-Panels) auf ~15 Zeilen — die Kaskade läuft jetzt client-seitig
-├── custom/                        → gebaute MF-Komponente (customComponents.js + assets + mf-manifest + i18n); seit 0.12.0 GIT-GETRACKT (nötig für GitHub-Installationen; npm-Verteilung läuft seit 2026-08-21 wieder regulär — der CI-Versions-Wächter erlaubt `admin` voraus)
-├── i18n/<lang>.json               → State-Namen (9) + Datenpunkt-ERKLÄRUNGEN (7 `desc*`-Keys, via `sync-iopackage-from-i18n.py` desc_mapping ins Manifest) für tName + io-package-Sync UND die 4 jsonConfig-Labels des Spenden-Blocks (supportHeader/aboutInfo/donateKofi/donatePaypal — Admin löst jsonConfig-`label`/`text` NUR von hier auf, nicht aus der Komponente); die Karten-Labels liegen in src-admin/src/i18n
-├── public-holidays.svg            → Icon (SVG 256×256, transparent)
-src-admin/                          → Custom-Admin-Komponente (Module-Federation/Vite Remote, eigenes package.json + vite.config.ts)
-├── src/HolidayConfig.tsx          → dünner ConfigGeneric-Mount (govee ConnectionConfig-Muster): reicht props.data an das Panel, schreibt jedes Feld via this.onChange(attr,val) — besitzt ALLE native-Felder, keine Migration (gleiche Feldnamen). ZWEITER Schreibpfad `handleChangeMany(patch)` (0.17.0): mehrere Felder in EINER Ganzschreibung `this.props.onChange(data)` — derselbe Endpunkt, in dem `ConfigGeneric.onChange` endet. Grund (gemessen, json-config 9.0.16): `ConfigGeneric.onChange` zieht pro Aufruf eine Kopie von `props.data`; zwei Aufrufe im selben Tick verlieren den ersten
-├── src/HolidayPanel.tsx           → plain React (kein ConfigGeneric, jsdom-freundlich): die geführte Stufen-Karte (Standort/Typen/Brückentage/Ausschluss/Live-Vorschau). Kein Draft-Puffer (nur diskrete Selects/Checkboxen/Chips). Der Landwechsel schreibt Land + leeres Bundesland + leere Region in EINEM Schreibvorgang (`onChangeMany`), der Bundeslandwechsel Bundesland + leere Region — kein Effekt, kein Ref (die 0.16.0-Fassung mit zwei `onChange` im Effekt ließ das Bundesland stehen: Audit B1, 12 Länder mit still gültigem Fremdcode). Ein beim Öffnen bereits verwaister Wert wird NICHT geschrieben, sondern als Hinweis gezeigt (auch bei einem Land ohne Bundesländer), sonst bewaffnet das bloße Öffnen den Speichern-Knopf. Der Brückentag-Name kommt aus `holiday-shared`, nicht aus der Karten-i18n
-├── src/scope-options.ts           → PURE Logik: getCountry/State/RegionOptions (Kaskade, client-seitig date-holidays) + buildPreviewHolidays. Kollisionsregel und Brückentag-Algorithmus kommen aus `holiday-shared` (`.js`-Import wegen root-tsc node16) — keine Kopie mehr. Von vitest aus src/ testbar, inkl. der ECHTEN Konstruktoren (der Standard-Baumeister lief bis 0.15.1 in keinem Test)
-├── src/exclude-options.ts         → PURE Logik: buildExcludeOptions (scope-exakt, dedupe+MM-DD-Sort), computeOrphanIds; toHolidayId/HOLIDAY_TYPES/enabledTypeKeys werden aus `holiday-shared` durchgereicht
-├── src/i18n/<lang>.json           → Karten-Übersetzungen (24 Keys × 11 Sprachen: ph_hc_* + ph_exclude*)
-├── package.json                   → Gen-2/Admin-8-Stack: gui-components ^10 + json-config ^9 + React 19 + MUI 9 + Vite 8 + @module-federation/vite 1.19.1 (guiApi:2, kein bundlerType). date-holidays exakt-gepinnt = root-installierte Version (Wächter: date-holidays-version-parity.test.ts)
-tasks.js                            → Komponenten-Build (@iobroker/build-tools: clean→npmInstall→buildReact→copyFiles → admin/custom); läuft als Master-Release-Schritt `npm run --if-present build:admin` (W0095-Umbau 2026-09-01: KEIN prepublishOnly mehr; Hand-Publish nur via `publish:manual`) + CI-Job admin-component
-scripts/check-date-holidays.mjs     → Release-Gate, DREI Teile: (1) Currency ERZWUNGEN — liegt die installierte Fassung hinter npm-latest, INSTALLIERT das Gate die neueste (auch eine neue Hauptversion) und bricht ab, wenn das misslingt; ein Release verpackt nie ältere Feiertagsdaten (krobi 2026-09-04). Netz: `npm test` + `npm run build` laufen unmittelbar danach im selben before_commit, (2) hebt den deklarierten date-holidays-Boden in package.json auf `^<installed>` — nur das erreicht bestehende Installationen, (3) pinnt src-admin auf die Runtime-Version (die client-seitige Kaskade muss dieselbe Library sehen wie der Adapter). Wächter: date-holidays-floor.test.ts + date-holidays-version-parity.test.ts
-../scripts/sync-iopackage-from-i18n.py → regeneriert io-package.json:instanceObjects.common.name aus admin/i18n/ (zentral, source: admin-i18n; läuft seit 2026-08-22 in pre-release.py Schritt 2b, NICHT mehr als before_commit-Hook — .releaseconfig.json enthält kein Python mehr)
+src/main.ts                   → onReady: Einstellungs-Migration → Instanz-Reparatur → Land auflösen → rechnen →
+                                Objekte auffrischen → States publizieren → Zusammenfassung → stop()
+src/lib/holiday-shared.ts     → EINZIGE Quelle für alles, was Runtime UND Karte gleich sehen müssen: Typen, toHolidayId,
+                                beats, Brückentag-Namen, Sprachregel, Tagesliste (buildDayMap: Typfilter → Exclude inkl.
+                                Ersatztage → mehrtägige Tage → beats), Brückentage (Wochenende je Land, Auslöser),
+                                Datumsformate. IMPORT-FREI (landet in zwei Bündeln); Wächter single-source.test.ts
+src/lib/holiday-engine.ts     → date-holidays-Wrapper: Instanz, drei-Jahres-Fenster, Stale-Exclude-Prüfung (teure
+                                Länder-Aggregation nur bei fehlendem Scope-Treffer), Scope-Diagnose, today/next
+src/lib/country-codes.ts      → Admin-Ländernamen beider Listen → Code, resolveCountryName mit Grund (IMPORT-FREI)
+src/lib/config.ts             → rohes native → AdapterConfig
+src/lib/state-publisher.ts    → 17 Objekte mit literalen IDs auffrischen (nur bei Abweichung), Altbestand räumen, publizieren
+src/lib/native-key-migration.ts (+ .test.ts) → Flotten-Master byte-gleich, nie hier ändern
+src/lib/i18n.ts · error-utils.ts · types.ts
+src-admin/                    → Admin-8-Karte (Module-Federation-Remote, guiApi 2): HolidayConfig.tsx (ConfigGeneric-Mount,
+                                reicht Systemland/-sprache/-datumsformat durch) + HolidayPanel.tsx (Stufen) + scope-options.ts /
+                                exclude-options.ts (pure Logik auf holiday-shared)
+admin/custom/                 → gebauter Karten-Bau, git-getrackt (`npm run build:admin`)
+scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-holidays` (Wurzel + Karten-Pin + Test + Neubau)
 ```
 
 ## Design-Entscheidungen
 
-1. **Schedule-Mode mit `allowInit: true`** — js-controller triggert per Cron (`0 0 * * *`) und einmalig bei Config-Änderung/Start. Adapter berechnet, publiziert, ruft `this.stop?.()` und beendet sich. Kein Daemon, kein Timer, kein Speicherverbrauch zwischen Runs.
-2. **date-holidays als einzige Engine** — 206 Länder, offline, stabile API seit 5+ Jahren, ISC-Lizenz (Daten CC-BY-SA-3.0 laut LICENSE-Datei; die package.json-SPDX `(ISC AND CC-BY-3.0)` understatet das ShareAlike — wir geben es korrekt an, ein Auto-SPDX-Check darf das nicht „korrigieren")
-   3b. **EINE Quelle für Runtime + Karte (`src/lib/holiday-shared.ts`, v0.16.0)** — Feiertags-Typenliste, `toHolidayId`, `typeRank`, die Kollisionsregel `beats`, der Brückentag-Algorithmus UND die Brückentag-Namen lagen bis 0.15.1 zweimal im Baum; vier Paritätstests bewachten vier der fünf Kopien, die fünfte (der NAME) hatte gar nichts. Begründung war „ein Import aus `src/` würde den MF-Bau gefährden" — **gemessen 2026-09-06 falsch**: `tsc` und `npm run build:admin` laufen durch, und `Brückentag`/`typePublic` stehen nachweislich im gebauten Bündel. Ersatz für die vier Wächter: `single-source.test.ts` (schlägt an, sobald eine zweite Definition auftaucht). Die Datei bleibt IMPORT-FREI.
-
-3. **Geführte Admin-8-Karte auf einer Seite** (Admin-8-Karten-Umbau) — EINE React-Stufen-Karte (`src-admin/HolidayConfig` + `HolidayPanel`, govee-Muster) statt 2 Tabs + generierter 145-KB-jsonConfig: Land→Bundesland→Region-Kaskade, Typen, Brückentage, Ausschluss + Live-Vorschau der erkannten Feiertage — alles client-seitig aus der gebündelten date-holidays. Die per-Country-Select-Panels + `generate-country-data.ts` entfielen; die Vorschau spiegelt die Runtime-Filterung (Typ/Exclude/Dedupe/Brückentage), verhaltens-parity-getestet gegen die Engine
-4. **Individuelle Type-Booleans in native** statt `holidayTypes: string[]` — sauberes jsonConfig-Mapping (5 Checkboxen)
-5. **referenceDate-Parameter** in computeHolidays — deterministische Tests ohne Mocking
-   6b. **Kollision auf einem Datum wird in DREI totalen Stufen entschieden (v0.16.0)** — Typ-Priorität, dann „echter Feiertag schlägt Ersatztag", dann kleinere `toHolidayId`. Vorher entschied bei gleichem Typ die Reihenfolge, in der date-holidays liefert: gemessen 2025-2027 gegen date-holidays 3.36.1 **77 echte Kollisionen in 42 Ländern** (NO, PL, RO, RS, TW, KR …), ein Bibliotheks-Update konnte den gemeldeten Namen still tauschen. Die Ersatztag-Stufe ist die inhaltlich richtige: AL 2027-11-29 meldet jetzt Liberation Day statt des verschobenen Independence Day, TW 2027-04-05 Tomb Sweeping Day statt des verschobenen Children's Day. Die Karte nutzt dieselbe Funktion, nicht eine Kopie.
-
-6. **Brückentag Do→Fr, Di→Mo, plus Mi zwischen Di+Do-Feiertag** — Mi→Wochenende braucht 2 Fehltage (kein Brückentag); ein Mi, der beidseitig von einem Di- und einem Do-Feiertag eingeklemmt ist, wird gebrückt (v0.8.0)
-7. **Leere Typ-Auswahl heißt ÜBERALL „keine Feiertage"** — die Runtime filtert mit `holidayTypes.includes(type)`, eine leere Liste wirft also alles weg. Karte (`buildPreviewHolidays`/`buildExcludeOptions`) spiegelt das seit dem Audit 2026-09-04 (vorher galt dort „leer = kein Filter", die Vorschau zeigte ein volles Jahr für eine Konfiguration, die nichts publiziert), und `onReady` warnt einmal pro Lauf. NICHT umgekehrt lösen (leer = alle): das weitete das Verhalten für jeden still auf, der bewusst alles abgewählt hat.
-8. **Instanz-Objekt-Reparatur in EINEM Schreibvorgang, danach Abbruch (v0.13.2)** — `repairInstanceObject()` bündelt die daemon→schedule-Migration und das Abschalten eines übriggebliebenen `common.supportedMessages.stopInstance`; jede Änderung am eigenen Instanz-Objekt löst einen Neustart aus, deshalb EIN Patch (ein Neustart, nicht zwei) und danach `stop()` + `return` statt weiterzurechnen. Der Schlüssel wird dabei GELÖSCHT (`supportedMessages: null`), ausgelöst davon, dass er überhaupt existiert — `supportedMessages` ist eine Positivliste: ein zurückgeschriebenes `{stopInstance:false}` lässt ein Objekt stehen und schaltet die Nachrichtenbox still ab, und ein Wächter auf `stopInstance` träfe seinen eigenen geschriebenen Zustand nie wieder. Im selben Schreibvorgang fällt auch das Altfeld `native.excludePublic` (vor 0.9.0). **`stopInstance` darf nie zurück ins Manifest:** der Host killt den Prozess damit 1 s nach der Stopp-Nachricht — mitten in einem Lauf — und dieser Adapter hat gar keinen Nachrichten-Handler, der antworten könnte. Ein Update entfernt den Eintrag NICHT aus dem Instanz-Objekt, daher die Selbstkorrektur. **`onUnload` bleibt bewusst leer:** kein Verbindungs-Marker, kein Timer, kein Gerät — es gibt nichts, worauf vor dem `callback()` gewartet werden müsste; die drei Flotten-Summen (`…Total`/`…Online`/`…AllOnline`) haben hier ebenfalls keinen Gegenstand.
+1. **Schedule-Mode statt Daemon** — ein Lauf je Tag braucht keinen Prozess dazwischen.
+2. **date-holidays ist die einzige Engine, offline** — die Daten-Lizenz ist CC-BY-SA-3.0, auch wenn die SPDX-Angabe des Pakets es untertreibt.
+3. **Runtime und Karte bauen die Tagesliste mit denselben Funktionen aus `holiday-shared.ts`** — die Vorschau zeigt, was publiziert wird, und kann nicht auseinanderlaufen.
+4. **Mehrtägige Feiertage zählen an jedem Tag, an dessen Mittag (Ortszeit) sie noch laufen; der Vorabend zählt nicht** — date-holidays führt sie als EINEN Eintrag mit Dauer.
+5. **`next` überspringt die restlichen Tage des heute laufenden Feiertags** — ein Feiertag, der heute läuft, steht in `today`.
+6. **Brückentag = einzelner Arbeitstag zwischen zwei freien Tagen, mindestens einer davon ein Feiertag des Saatjahres** — Wochenende je Land (date-holidays-Daten vor CLDR), Auslöser nur ganztägige public/bank.
+7. **Ein Exclude trifft seine Ersatztage mit; ein Ersatztag wird nur eindeutig oder über den Namen zugeordnet** — eine falsche Zuordnung risse fremde Tage mit.
+8. **Kollision auf einem Datum: Typ-Priorität, dann echter Feiertag vor Ersatztag, dann kleinere ID** — alle drei total, der Name hängt nie an der Lieferreihenfolge.
+9. **Leere Typ-Auswahl heißt überall „keine Feiertage"** — nie still „alle".
+10. **Landeserkennung kennt beide Admin-Namenslisten und nennt den Grund, wenn sie scheitert** — der Einrichtungsassistent bis Admin 8.0.14 speichert eigene Namen.
+11. **Obsolete Einstellungsschlüssel räumt der Flotten-Helfer `migrateNativeKeys` (zuerst), `repairInstanceObject` nur noch `mode` + `supportedMessages` (auf `null`)** — jede Instanz-Schreibung ist ein Neustart, danach `stop()` + return.
+12. **`supportedMessages.stopInstance` nie ins Manifest** — der Host tötet sonst den laufenden Durchgang; `onUnload` bleibt leer, es gibt nichts abzuwarten.
+13. **Objekt-Refresh schreibt nur name + desc, und nur bei Abweichung** — js-controller wendet das Manifest bei jedem Start an und friert nur `common.name` ein.
+14. **Die Karte schreibt mehrere Felder in EINER Ganzschreibung (`handleChangeMany`)** — `ConfigGeneric.onChange` kopiert `props.data` je Aufruf.
+15. **Ein beim Öffnen verwaister Wert wird gezeigt, nie automatisch geschrieben** — sonst bewaffnet das bloße Öffnen den Speichern-Knopf.
+16. **Die Tage folgen der Host-Uhr; eine abweichende Host-Zeitzone steht nur im Debug-Log** — Rechnen in der Landeszeit wäre bei einem UTC-Container falscher.
+17. **Nicht ladbare Mischschreibungs-Gebiete (12, date-holidays-Defekt) werden gewarnt und in der Karte markiert** — die Bibliothek fällt dort still auf das Elterngebiet zurück.
 
 ## State Tree
 
-4 Day-Channels × 2 Fields + next × 4 Fields = 12 States total. Day-Channels (today, yesterday, tomorrow, dayAfterTomorrow): name, isHoliday. Next: name, isHoliday, date, daysUntil. (Der Flag-State hieß bis v0.10.0 `boolean` — in v0.11.0 zu `isHoliday` umbenannt, alte `*.boolean` per `cleanupDeprecatedStates` migriert.)
+4 Tages-Kanäle × (name, isHoliday) + next × (name, isHoliday, date, daysUntil `unit: d`) = 12 States, 17 Objekte.
 
-## Tests (437 vitest + 70 package + 4 jsdom `test:admin` + Objekt-Inventar)
+## Tests
 
-`npm run test:inventory` (mocha, Wegwerf-js-controller) erzeugt `test/objects.inventory.json` — alle 17 Objekte im Dump-Format des Objektstruktur-Bots, zwei Läufe byte-gleich. Der Adapter ist katalog-getrieben (kein Gerät, keine Cloud), `feedFixtures` wartet deshalb nur darauf, dass der Katalog vollständig ist: er läuft im SCHEDULE-Modus, `startAdapterAndWait` kommt schon bei `alive` zurück und der Prozess beendet sich danach selbst.
+Zahlen nie hier festhalten — `npx vitest run` (Wurzel), `npm run test:package`, `npm --prefix src-admin run test`
+sagen sie; der Stand am 2026-09-25 steht in der dev-history.
 
-Wächter im vitest-Satz: `single-source.test.ts` (keine zweite Definition der geteilten Logik), `instance-objects-reach.test.ts` (alle 17 Manifest-Objekte per LITERALER ID aufgefrischt, kein `preserve`, Builder je Objektart und Beschreibungs-Schlüssel gegen das Manifest), `country-count.test.ts` (die „206 Länder" in README/docs/io-package gegen die gebündelte date-holidays — das Release-Gate hebt die Bibliothek erzwungen), `published states == manifest states` in `state-publisher.test.ts` (die publizierten IDs gegen das Manifest; die Feldlisten sind Handlisten), `date-holidays-version-parity.test.ts` (src-admin-Pin == root-installierte Version), `date-holidays-floor.test.ts` (deklarierter Boden == installierte Version), `bridge-days-real-data.test.ts` (der Brückentag-Algorithmus gegen ECHTE Daten, 5 Länder × 4 Jahre — der frühere Paritätstest wäre nach der Zusammenführung eine Tautologie), `holiday-shared.test.ts` (Kollisionsregel inkl. der beiden echten Fälle AL/TW), `config.test.ts` (die Konfigurations-Matrix, ohne Adapter-Stub). **Die Standard-Baumeister der Karte (`new Holidays(country, state, region)`) laufen jetzt in echten Tests** — bis 0.15.1 injizierten alle Tests einen Ersatz, ein vertauschtes Argument wäre grün durchgelaufen. Der jsonConfig-E5611-Guard entfiel mit der statischen jsonConfig.
-
-**`format:check` (Release-Gate D01b) klammert `admin/custom/**` aus** — das ist der erzeugte
-Module-Federation-Bau (`npm run build:admin`), der git-getrackt sein MUSS, damit eine
-GitHub-Installation kein leeres `custom/` bekommt. Ein Handformat wäre beim nächsten Bau wieder weg,
-also Ausschlussmuster im Skript statt Formatierung — und bewusst **keine `.prettierignore`**: neben
-`prettier.config.mjs` meldet der Repochecker sie als veraltete Konfigurationsdatei (W0084 + W5048)
-und blockt den Vorlauf. Seit 2026-09-08 ist der **ganze Baum** prettier-sauber: die Flotten-Fassung von
-`format:check` prüft `.` mit festen Ausschlüssen (B02 setzt sie beim nächsten Vorlauf); das frühere Skript
-prüfte nur `src/ admin/ scripts/`, und neun Handdateien daneben waren nie formatiert.
-
-Die pure Logik (Kaskade/Vorschau/Exclude/Engine/Kollisionsregel) ist vitest-getestet; die React-Karte läuft seit 0.17.0 in `npm run test:admin` gegen die ECHTE `ConfigGeneric` in jsdom (vier Fälle: Landwechsel = ein Schreibvorgang mit leerem state/region, Bundeslandwechsel leert die Region, verwaister Wert beim Öffnen wird nicht geschrieben aber gezeigt, Verwerfen schreibt nicht — alle vier rot auf der 0.16.0-Karte; ohne @testing-library, Tastatursteuerung des MUI-Autocomplete per nativen KeyboardEvents: ArrowDown öffnet, der zweite ArrowDown hebt hervor, Enter wählt) und zusätzlich über den turnkey Admin-8-`render-check` im echten Wegwerf-Admin (Mount).
+- **Wurzel-Suite** (`vitest.config.mts`): Engine, geteilte Logik gegen echte Daten (`holiday-days`,
+  `bridge-days-real-data`, `card-parity` = Vorschau gegen Runtime Tag für Tag), Landesnamen beider Admin-Listen
+  (`country-resolution`), Orchestrierung über einen Stub mit Datenbank-Semantik (`main.test.ts`: JSON-Merge,
+  Kopien, setStateChanged, Schreibzähler), Wächter (`single-source`, `instance-objects-reach`, `country-count`,
+  `date-holidays-floor`, `date-holidays-version-parity`).
+- **Karten-Suite** (`src-admin/vitest.config.ts`, jsdom, gegen die echte `ConfigGeneric`): `HolidayConfig.test.tsx`
+  plus die drei Wurzel-Suiten der Karten-Logik — der Nadel-Harness schickt eine Nadel in `src-admin/src/*.ts` an
+  diese Suite. `npm run test:admin` = `check:admin` + Test-Typprüfung + Lint + Suite; braucht `build:admin` davor.
+- **Objekt-Inventar** (`test/inventory.js`, Flotten-Vorlage): wartet auf `next.daysUntil > 0`, den Wert, den nur ein
+  vollständiger Lauf mit Land schreibt (die Objekte legt js-controller vor `ready` an).
+- **Mutationen:** `Ressourcen/iobroker-entwicklung/mutation-testing/mutations_publicholidays.py` ist seit 0.18.0
+  HANDGEPFLEGT (der Plan ist veraltet, nie `build_mutations.py`).
+- **`format:check`** klammert `admin/custom/**` aus (erzeugter Bau), keine `.prettierignore` (W0084/W5048).

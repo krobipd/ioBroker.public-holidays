@@ -6,7 +6,7 @@
 
 **Support:** [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b?logo=ko-fi)](https://ko-fi.com/krobipd) [![PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/krobipd)
 
-Detects public holidays for 207 countries. Runs completely offline — no cloud, no API calls. Updates daily at midnight.
+Detects public holidays for 207 countries. Calculates offline — no cloud, no API calls. Updates daily at midnight.
 
 Holiday data provided by [date-holidays](https://github.com/commenthol/date-holidays) (ISC + CC-BY-SA-3.0).
 
@@ -77,18 +77,21 @@ When no holiday applies (e.g. today is not a holiday), the channel states are em
 
 ## Bridge Day Algorithm
 
-A bridge day is a working day (Monday–Friday) between a holiday and a weekend:
+A bridge day is a single working day between two days off, at least one of them a holiday. With a
+Saturday + Sunday weekend:
 
 - Holiday on **Thursday** → Friday is a bridge day
 - Holiday on **Tuesday** → Monday is a bridge day
-- Holidays on **Tuesday and Thursday** → the Wednesday between them is a bridge day
+- A weekday framed by two holidays → that day (Wednesday between Tuesday and Thursday, Tuesday between Monday and Wednesday)
 - Holiday on **Wednesday** alone → no bridge day (two days missing)
 
-Bridge days appear in the state tree with the localized name matching the system language.
+The weekend is the country's own (Friday + Saturday in Israel, Saudi Arabia, Egypt, Bangladesh …). Only whole-day public and bank holidays start a bridge day. Bridge days appear in the state tree with the localized name matching the system language.
+
+Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Eid …) count on every one of their days.
 
 ## Troubleshooting
 
-**No states after first start** — Open adapter settings and select a country.
+**No holidays reported** — Check the log: it names the cause (no country, a system country without holiday data, or no holiday type enabled). Select a country in the adapter settings.
 
 **Wrong holidays / missing regional holidays** — Check that the correct state/province is selected. Set log level to debug to see all detected holidays.
 
@@ -100,6 +103,17 @@ Bridge days appear in the state tree with the localized name matching the system
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- Fixed: Holidays that last several days now count on every one of their days — the New Year holidays in Russia, Chuseok, Tết and Eid were reported on their first day only. The next holiday skips the rest of the one running today.
+- Fixed: Bridge days follow the country's own weekend (Friday and Saturday in Israel, Saudi Arabia, Egypt, Bangladesh …) and come from whole-day public and bank holidays only, no longer from observances. A single working day between two holidays is a bridge day now too, e.g. 2 May in Poland.
+- Fixed: Excluding a holiday now excludes its substitute day as well, e.g. Boxing Day moved to the Monday.
+- Fixed: The ioBroker system country is recognised for the names of the first-run wizard (Korea, Vietnam, Serbia, Ivory Coast …), and a system country the adapter cannot use is named in the log.
+- Fixed: The settings card shows holiday names in the system language like the data points, lists countries in your admin language, previews the detected system country and keeps exclusions of switched-off holiday types.
+- Changed: The bridge-day name in Russian and Ukrainian is now "День-мост" / "День-міст"; next.daysUntil uses the unit "d".
+- Fixed: Error reporting via Sentry is active by default — the README and the documentation said otherwise.
+- New: Holiday data for Uzbekistan.
+
 ### 0.17.0 (2026-09-15) — stable
 
 - Fixed: Changing the country or the state in the settings now clears the narrower selection too — a leftover state code could silently publish another region's holidays.
