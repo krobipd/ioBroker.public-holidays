@@ -14,7 +14,7 @@
   "ph_hc_types_none": "No hay ningún tipo de festivo seleccionado: el adaptador no informará de ningún festivo",
   "ph_hc_bridge_title": "Días puente",
   "ph_hc_bridge_label": "Detectar días puente",
-  "ph_hc_bridge_desc": "Un día puente es un día laborable entre un festivo y el fin de semana (ej. viernes después de un festivo en jueves)",
+  "ph_hc_bridge_desc": "Un día puente es un único día laborable entre un festivo y el fin de semana u otro festivo (p. ej. el viernes después de un festivo en jueves)",
   "ph_hc_exclude_title": "Excluir festivos",
   "ph_excludeLabel": "Días festivos excluidos",
   "ph_excludeSelectCountry": "Seleccione primero un país",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Festivos detectados",
   "ph_hc_preview_count": "%s festivos detectados para %s",
   "ph_hc_preview_none": "Seleccione un país para ver los festivos detectados",
-  "ph_hc_scope_stale": "Guardado, pero ya no disponible para esta ubicación: %s — elija una nueva entrada."
+  "ph_hc_scope_stale": "Guardado, pero ya no disponible para esta ubicación: %s — elija una nueva entrada.",
+  "ph_hc_preview_count_bridges": "%s festivos y %s días puente detectados para %s",
+  "ph_hc_autodetect_nodata": "Ningún país seleccionado — el país del sistema ioBroker «%s» no tiene datos de festivos. Selecciona un país.",
+  "ph_hc_autodetect_ambiguous": "Ningún país seleccionado — el país del sistema ioBroker «%s» abarca varios países. Selecciona uno.",
+  "ph_hc_scope_unloadable": "La biblioteca de festivos no puede cargar esta zona (defecto conocido) — el adaptador usa los festivos de la zona superior.",
+  "ph_excludeInactive": "Excluido, pero su tipo de festivo está desactivado (se conserva, haz clic para quitarlo):"
 }

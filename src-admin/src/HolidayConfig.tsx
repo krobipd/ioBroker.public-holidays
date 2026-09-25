@@ -30,10 +30,16 @@ export default class HolidayConfig extends ConfigGeneric<ConfigGenericProps, Con
   renderItem(): React.JSX.Element {
     const sys = this.props.oContext?.systemConfig as ioBroker.SystemConfigCommon | undefined;
     const systemCountry = typeof sys?.country === "string" ? sys.country : "";
+    // The runtime names holidays in the SYSTEM language and prints dates in the system format —
+    // the preview has to read the same, whatever language the admin page itself is shown in.
+    const systemLanguage = (typeof sys?.language === "string" ? sys.language : "") || "en";
+    const dateFormat = typeof sys?.dateFormat === "string" ? sys.dateFormat : "";
     return (
       <HolidayPanel
         data={this.props.data as Record<string, unknown>}
         systemCountry={systemCountry}
+        systemLanguage={systemLanguage}
+        dateFormat={dateFormat}
         onChange={this.handleChange}
         onChangeMany={this.handleChangeMany}
       />

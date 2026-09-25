@@ -14,7 +14,7 @@
   "ph_hc_types_none": "Geen feestdagtype geselecteerd — de adapter meldt geen feestdagen",
   "ph_hc_bridge_title": "Brugdagen",
   "ph_hc_bridge_label": "Brugdagen detecteren",
-  "ph_hc_bridge_desc": "Een brugdag is een werkdag tussen een feestdag en het weekend (bijv. vrijdag na een feestdag op donderdag)",
+  "ph_hc_bridge_desc": "Een brugdag is een enkele werkdag tussen een feestdag en het weekend of een andere feestdag (bijv. vrijdag na een feestdag op donderdag)",
   "ph_hc_exclude_title": "Feestdagen uitsluiten",
   "ph_excludeLabel": "Uitgesloten feestdagen",
   "ph_excludeSelectCountry": "Selecteer eerst een land",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Gedetecteerde feestdagen",
   "ph_hc_preview_count": "%s feestdagen gedetecteerd voor %s",
   "ph_hc_preview_none": "Selecteer een land om gedetecteerde feestdagen te zien",
-  "ph_hc_scope_stale": "Opgeslagen, maar niet meer beschikbaar voor deze locatie: %s — kies een nieuwe vermelding."
+  "ph_hc_scope_stale": "Opgeslagen, maar niet meer beschikbaar voor deze locatie: %s — kies een nieuwe vermelding.",
+  "ph_hc_preview_count_bridges": "%s feestdagen en %s brugdagen gevonden voor %s",
+  "ph_hc_autodetect_nodata": "Geen land gekozen — voor het ioBroker-systeemland ‘%s’ zijn geen feestdaggegevens. Kies een land.",
+  "ph_hc_autodetect_ambiguous": "Geen land gekozen — het ioBroker-systeemland ‘%s’ omvat meerdere landen. Kies er één.",
+  "ph_hc_scope_unloadable": "De feestdagenbibliotheek kan dit gebied niet laden (bekend defect) — de adapter gebruikt de feestdagen van het bovenliggende gebied.",
+  "ph_excludeInactive": "Uitgesloten, maar het type feestdag is uitgeschakeld (blijft bewaard, klik om te verwijderen):"
 }

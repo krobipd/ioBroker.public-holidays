@@ -25,6 +25,10 @@ vi.mock("@iobroker/adapter-core", () => {
     stop = vi.fn();
     /** How often the instance's OWN object was written — every write costs a restart. */
     instanceObjectWrites = 0;
+    /** Writes of the adapter's own objects (the 17 refreshes). */
+    objectWrites = 0;
+    /** State writes that reached the store (an unchanged setStateChanged does not). */
+    stateWrites = 0;
     /** Simulates a broker hiccup on the next instance-object read. */
     failNextForeignObjectRead = false;
 
@@ -47,30 +51,44 @@ vi.mock("@iobroker/adapter-core", () => {
       return id.startsWith("system.") || id.startsWith(`${this.namespace}.`) ? id : `${this.namespace}.${id}`;
     }
 
+    // Reads hand out a COPY, like the real store: a caller that mutates what it read must not
+    // change the stored object behind the store's back (package check read-stub-copy).
     getForeignObjectAsync(id: string): Promise<ObjEntry | null> {
       if (this.failNextForeignObjectRead) {
         this.failNextForeignObjectRead = false;
         return Promise.reject(new Error("objects db unreachable"));
       }
-      return Promise.resolve(this.objects.get(id) ?? null);
+      const obj = this.objects.get(id);
+      return Promise.resolve(obj ? structuredClone(obj) : null);
+    }
+
+    /**
+     * A merge as the objects DB performs it: the patch travels as JSON, so `null` arrives and is
+     * stored (the "cleared" state of a key) while `undefined` vanishes — a repair that wrote
+     * `undefined` would leave the key standing and repair again on every start.
+     */
+    private merge(id: string, obj: Partial<ObjEntry>): void {
+      const patch = JSON.parse(JSON.stringify(obj)) as Partial<ObjEntry>;
+      const existing = this.objects.get(id) ?? {};
+      this.objects.set(id, {
+        ...existing,
+        ...patch,
+        common: { ...(existing.common ?? {}), ...(patch.common ?? {}) },
+        native: { ...(existing.native ?? {}), ...(patch.native ?? {}) },
+      });
     }
 
     extendForeignObjectAsync(id: string, obj: Partial<ObjEntry>): Promise<void> {
       if (id === `system.adapter.${this.namespace}`) {
         this.instanceObjectWrites++;
       }
-      const existing = this.objects.get(id) ?? {};
-      this.objects.set(id, {
-        ...existing,
-        ...obj,
-        common: { ...(existing.common ?? {}), ...(obj.common ?? {}) },
-        native: { ...(existing.native ?? {}), ...(obj.native ?? {}) },
-      });
+      this.merge(id, obj);
       return Promise.resolve();
     }
 
     getObjectAsync(id: string): Promise<ObjEntry | null> {
-      return Promise.resolve(this.objects.get(this.fullId(id)) ?? null);
+      const obj = this.objects.get(this.fullId(id));
+      return Promise.resolve(obj ? structuredClone(obj) : null);
     }
 
     delObjectAsync(id: string): Promise<void> {
@@ -78,20 +96,28 @@ vi.mock("@iobroker/adapter-core", () => {
       return Promise.resolve();
     }
 
-    extendObjectAsync(id: string, obj: Partial<ObjEntry>, _options?: unknown): Promise<void> {
-      const full = this.fullId(id);
-      const existing = this.objects.get(full) ?? {};
-      this.objects.set(full, {
-        ...existing,
-        ...obj,
-        common: { ...(existing.common ?? {}), ...(obj.common ?? {}) },
-        native: { ...(existing.native ?? {}), ...(obj.native ?? {}) },
-      });
+    extendObject(id: string, obj: Partial<ObjEntry>): Promise<void> {
+      this.objectWrites++;
+      this.merge(this.fullId(id), obj);
       return Promise.resolve();
     }
 
+    // setStateChanged as js-controller implements it: an unchanged value and ack write nothing.
     setStateChangedAsync(id: string, val: unknown, ack: boolean): Promise<void> {
+      const full = this.fullId(id);
+      const current = this.states.get(full);
+      if (!current || current.val !== val || current.ack !== ack) {
+        this.states.set(full, { val, ack });
+        this.stateWrites++;
+      }
+      return Promise.resolve();
+    }
+
+    // A plain setState always writes — present so a switch to it shows in the write count instead
+    // of failing on a missing method.
+    setStateAsync(id: string, val: unknown, ack: boolean): Promise<void> {
       this.states.set(this.fullId(id), { val, ack });
+      this.stateWrites++;
       return Promise.resolve();
     }
   }
@@ -123,12 +149,16 @@ interface StubSurface {
   log: { level: string };
   stop: ReturnType<typeof vi.fn>;
   instanceObjectWrites: number;
+  objectWrites: number;
+  stateWrites: number;
   failNextForeignObjectRead: boolean;
-  extendObjectAsync: (id: string, obj: Partial<ObjEntry>, options?: unknown) => Promise<void>;
+  extendObject: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
   extendForeignObjectAsync: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
   getForeignObjectAsync: (id: string) => Promise<ObjEntry | null>;
   supportsFeature?: (feature: string) => boolean;
-  getPluginInstance?: (name: string) => { getSentryObject: () => { captureException: (e: unknown) => void } } | null;
+  getPluginInstance?: (name: string) => {
+    getSentryObject: () => { captureException: (e: unknown) => void; flush?: (ms: number) => Promise<boolean> };
+  } | null;
 }
 
 /** Typed access to the private members the orchestration tests drive. */
@@ -191,7 +221,7 @@ describe("onReady — happy path", () => {
     // is not — on every single run, because this adapter runs daily.
     const good = setup({ country: "DE", excludeHolidays: ["01-01"] });
     await good.internal.onReady();
-    expect(logsOf(good.stub, "warn").some(m => m.includes("no longer match"))).toBe(false);
+    expect(logsOf(good.stub, "warn").some(m => m.includes("no longer occur"))).toBe(false);
 
     // A renamed/removed id → the warning is exactly what the user needs.
     const stale = setup({ country: "DE", excludeHolidays: ["gone_forever_xyz"] });
@@ -343,34 +373,72 @@ describe("onReady — instance-object repair", () => {
     expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
   });
 
-  it("clears the pre-0.9.0 excludePublic leftover in the same write", async () => {
+  it("drops the obsolete settings keys (excludePublic, the previous owner's holidays) and stands down", async () => {
     const { internal, stub } = setup({ country: "DE" });
     stub.objects.set("system.adapter.public-holidays.0", {
       type: "instance",
-      common: { mode: "schedule", supportedMessages: { stopInstance: true } },
-      native: { excludePublic: ["11-11", "09-24"] },
+      common: { mode: "schedule" },
+      native: { country: "DE", excludePublic: ["11-11", "09-24"], holidays: [] },
     });
 
     await internal.onReady();
 
     const inst = stub.objects.get("system.adapter.public-holidays.0")!;
-    expect(inst.native!.excludePublic ?? null).toBeNull();
-    expect(inst.common!.supportedMessages ?? null).toBeNull();
-    // Both corrections in ONE write: each write of the own instance object costs a restart.
+    // Stored as null — the cleared state the helper recognises; `undefined` would vanish on the
+    // way into the database and the key would be migrated again on every start.
+    expect(inst.native).toHaveProperty("excludePublic", null);
+    expect(inst.native).toHaveProperty("holidays", null);
+    expect(inst.native).toHaveProperty("country", "DE");
     expect(stub.instanceObjectWrites).toBe(1);
+    // The write restarts the instance — nothing is computed in the process on its way out.
+    expect(stub.states.size).toBe(0);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
-  it("does not write for excludePublic once it is cleared", async () => {
+  it("does not write for the obsolete keys once they are cleared", async () => {
     const { internal, stub } = setup({ country: "DE" });
     stub.objects.set("system.adapter.public-holidays.0", {
       type: "instance",
       common: { mode: "schedule" },
-      native: { excludePublic: null },
+      native: { excludePublic: null, holidays: null },
     });
 
     await internal.onReady();
 
     expect(stub.instanceObjectWrites).toBe(0);
+    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+  });
+
+  it("an install with obsolete native AND common settings converges: one write per start, then none", async () => {
+    // Each start is a fresh process on the same database — three onReady runs model the restarts.
+    const first = setup({ country: "DE" });
+    first.stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "daemon", supportedMessages: { stopInstance: true } },
+      native: { excludePublic: ["11-11"], holidays: [] },
+    });
+    const db = first.stub.objects;
+
+    await first.internal.onReady(); // the settings migration writes and stands down
+    expect(first.stub.instanceObjectWrites).toBe(1);
+
+    const second = setup({ country: "DE" });
+    second.stub.objects = db;
+    await second.internal.onReady(); // the instance repair writes and stands down
+    expect(second.stub.instanceObjectWrites).toBe(1);
+    expect(second.stub.states.size).toBe(0);
+
+    const third = setup({ country: "DE" });
+    third.stub.objects = db;
+    await third.internal.onReady(); // nothing left to repair — the run computes
+    expect(third.stub.instanceObjectWrites).toBe(0);
+    expect(third.stub.states.size).toBe(12);
+
+    const inst = db.get("system.adapter.public-holidays.0")!;
+    expect(inst.common).toHaveProperty("supportedMessages", null);
+    expect(inst.common).toHaveProperty("mode", "schedule");
+    expect(inst.native).toHaveProperty("excludePublic", null);
+    expect(inst.native).toHaveProperty("holidays", null);
   });
 
   it("repairs both in ONE write so the instance restarts once, not twice", async () => {
@@ -438,7 +506,7 @@ describe("onReady — country detection chain", () => {
 
     await internal.onReady();
 
-    expect(logsOf(stub, "info").some(m => m.includes("Using system country: AT"))).toBe(true);
+    expect(logsOf(stub, "debug").some(m => m.includes("Using system country: AT"))).toBe(true);
     // Oct 26 (Nationalfeiertag) is public in AT but not DE — asserting today=holiday
     // proves the resolved AT data actually flowed through compute, not just detection.
     expect(stub.states.get("public-holidays.0.today.isHoliday")?.val).toBe(true);
@@ -452,7 +520,7 @@ describe("onReady — country detection chain", () => {
 
     await internal.onReady();
 
-    expect(logsOf(stub, "info").some(m => m.includes("Using system country"))).toBe(false);
+    expect(logsOf(stub, "debug").some(m => m.includes("Using system country"))).toBe(false);
   });
 
   it("warns, publishes an empty result and stops when no country is configured and none can be detected", async () => {
@@ -475,9 +543,47 @@ describe("onReady — country detection chain", () => {
 
     await internal.onReady();
 
-    expect(logsOf(stub, "warn").some(m => m.includes("No country configured"))).toBe(true);
+    // The country IS set in the system settings — "No country configured" would send the user
+    // looking in the wrong place.
+    expect(logsOf(stub, "warn")).toContain(
+      "System country 'Atlantis' is not recognized — choose a country in the adapter settings",
+    );
     expect(stub.states.size).toBe(12);
     expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
+  });
+
+  it("resolves a name of the admin wizard's own list (Admin <= 8.0.14): Vietnam", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-02T12:00:00")); // VN National Day
+    const { internal, stub } = setup({});
+    stub.objects.set("system.config", { common: { country: "Vietnam", language: "en" } });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "debug")).toContain("Using system country: VN");
+    expect(stub.states.get("public-holidays.0.today.isHoliday")?.val).toBe(true);
+  });
+
+  it("names the real cause for a system country that covers several countries", async () => {
+    const { internal, stub } = setup({});
+    stub.objects.set("system.config", { common: { country: "Serbia and Montenegro", language: "en" } });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn")).toContain(
+      "System country 'Serbia and Montenegro' covers several countries — choose the country in the adapter settings",
+    );
+  });
+
+  it("names the real cause for a system country without holiday data", async () => {
+    const { internal, stub } = setup({});
+    stub.objects.set("system.config", { common: { country: "Qatar", language: "en" } });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn")).toContain(
+      "System country 'Qatar' has no holiday data — choose a country in the adapter settings",
+    );
   });
 
   it("overwrites the previous run's holiday with the empty result once the country is gone (audit E2)", async () => {
@@ -531,7 +637,7 @@ describe("onReady — country detection chain", () => {
 describe("onReady — error handling", () => {
   it("catches errors, logs onReady failed and STILL stops", async () => {
     const { internal, stub } = setup({ country: "DE" });
-    stub.extendObjectAsync = () => {
+    stub.extendObject = () => {
       return Promise.reject(new Error("broker write refused"));
     };
 
@@ -546,23 +652,49 @@ describe("onReady — error handling", () => {
   it("hands a caught error to the Sentry plugin when it is loaded", async () => {
     const { internal, stub } = setup({ country: "DE" });
     const failure = new Error("broker write refused");
-    stub.extendObjectAsync = () => Promise.reject(failure);
-    const captureException = vi.fn();
+    stub.extendObject = () => Promise.reject(failure);
+    const order: string[] = [];
+    const captureException = vi.fn(() => void order.push("capture"));
+    const flush = vi.fn((_ms: number) => {
+      order.push("flush");
+      return Promise.resolve(true);
+    });
+    stub.stop.mockImplementation(() => void order.push("stop"));
     stub.supportsFeature = vi.fn((feature: string) => feature === "PLUGINS");
     stub.getPluginInstance = vi.fn((name: string) =>
-      name === "sentry" ? { getSentryObject: () => ({ captureException }) } : null,
+      name === "sentry" ? { getSentryObject: () => ({ captureException, flush }) } : null,
     );
 
     await internal.onReady();
 
     expect(captureException).toHaveBeenCalledTimes(1);
     expect(captureException).toHaveBeenCalledWith(failure);
+    // The process exits about 500 ms after stop() — the event has to be out before (flush).
+    expect(flush).toHaveBeenCalledWith(2000);
+    expect(order).toEqual(["capture", "flush", "stop"]);
+  });
+
+  it("a Sentry hand-over that throws neither escapes nor keeps the instance from stopping", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.extendObject = () => Promise.reject(new Error("broker write refused"));
+    stub.supportsFeature = vi.fn(() => true);
+    stub.getPluginInstance = vi.fn(() => ({
+      getSentryObject: () => ({
+        captureException: () => {
+          throw new Error("sentry down");
+        },
+      }),
+    }));
+
+    await expect(internal.onReady()).resolves.toBeUndefined();
+
+    expect(logsOf(stub, "debug")).toContain("Could not hand the error to Sentry: sentry down");
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
   it("logs and stops as before when no Sentry plugin is loaded", async () => {
     const { internal, stub } = setup({ country: "DE" });
-    stub.extendObjectAsync = () => Promise.reject(new Error("broker write refused"));
+    stub.extendObject = () => Promise.reject(new Error("broker write refused"));
     stub.supportsFeature = vi.fn(() => true);
     stub.getPluginInstance = vi.fn(() => null);
 
@@ -610,7 +742,7 @@ describe("onReady — diagnostics warnings", () => {
 
     await internal.onReady();
 
-    expect(logsOf(stub, "warn").some(m => m.includes("no longer match any holiday"))).toBe(true);
+    expect(logsOf(stub, "warn").some(m => m.includes("no longer occur in the holiday data"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 

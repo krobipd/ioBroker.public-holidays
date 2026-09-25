@@ -35,12 +35,18 @@ const englishKeys = Object.keys(
   JSON.parse(readFileSync(join(adapterDir, "admin", "i18n", "en.json"), "utf8")) as Record<string, string>,
 );
 
-/** What `ensureObjects` actually writes, read off its source: id → builder call. */
-function refreshedObjects(): Map<string, { builder: string; key: string; descKey?: string }> {
-  const calls = new Map<string, { builder: string; key: string; descKey?: string }>();
-  const re = /extendObjectAsync\(\s*"([^"]+)"\s*,\s*(channelObj|stateObj)\(\s*"([^"]+)"\s*(?:,\s*"([^"]+)"\s*)?\)/g;
+/**
+ * What `ensureObjects` actually writes, read off its source: id → builder call. Each object goes
+ * through `refresh(adapter, "<id>", <builder>, o => adapter.extendObject("<id>", o))` — the id is
+ * read from BOTH places and must agree, so a copy-paste slip (checked one object, wrote another)
+ * cannot hide.
+ */
+function refreshedObjects(): Map<string, { builder: string; key: string; descKey?: string; writes: string }> {
+  const calls = new Map<string, { builder: string; key: string; descKey?: string; writes: string }>();
+  const re =
+    /refresh\(\s*adapter,\s*"([^"]+)"\s*,\s*(channelObj|stateObj)\(\s*"([^"]+)"\s*(?:,\s*"([^"]+)"\s*)?\)\s*,\s*o\s*=>\s*adapter\.extendObject\(\s*"([^"]+)"/g;
   for (const m of source.matchAll(re)) {
-    calls.set(m[1], { builder: m[2], key: m[3], descKey: m[4] });
+    calls.set(m[1], { builder: m[2], key: m[3], descKey: m[4], writes: m[5] });
   }
   return calls;
 }
@@ -73,10 +79,18 @@ describe("instanceObjects reach existing installations", () => {
     for (const obj of objects) {
       const id = obj._id as string;
 
-      it(`${id}: is refreshed by the builder of its object type`, () => {
+      it(`${id}: is refreshed by the builder of its object type, under its own id`, () => {
         const call = refreshed.get(id);
         expect(call, `${id} is not refreshed at runtime`).toBeDefined();
         expect(call?.builder).toBe(obj.type === "channel" ? "channelObj" : "stateObj");
+        expect(call?.writes).toBe(id);
+      });
+
+      it(`${id}: its name comes from a key that exists`, () => {
+        // An i18n key adapter-core cannot resolve silently becomes `{ en: "<key>" }` — and with no
+        // \`preserve\` that placeholder would overwrite the translated name on every installation.
+        const call = refreshed.get(id);
+        expect(englishKeys, `admin/i18n/en.json has no key "${call?.key}"`).toContain(call?.key);
       });
 
       it(`${id}: carries an explanation exactly where the runtime writes one`, () => {

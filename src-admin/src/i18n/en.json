@@ -14,7 +14,7 @@
   "ph_hc_types_none": "No holiday type is selected — the adapter will not report any holidays",
   "ph_hc_bridge_title": "Bridge days",
   "ph_hc_bridge_label": "Detect bridge days",
-  "ph_hc_bridge_desc": "A bridge day is a working day between a holiday and a weekend (e.g. Friday after a Thursday holiday)",
+  "ph_hc_bridge_desc": "A bridge day is a single working day between a holiday and the weekend or another holiday (e.g. Friday after a Thursday holiday)",
   "ph_hc_exclude_title": "Exclude holidays",
   "ph_excludeLabel": "Excluded holidays",
   "ph_excludeSelectCountry": "Select a country first",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Detected holidays",
   "ph_hc_preview_count": "%s holidays detected for %s",
   "ph_hc_preview_none": "Select a country to see detected holidays",
-  "ph_hc_scope_stale": "Stored but no longer available for this location: %s — please pick a new entry."
+  "ph_hc_scope_stale": "Stored but no longer available for this location: %s — please pick a new entry.",
+  "ph_hc_preview_count_bridges": "%s holidays and %s bridge days detected for %s",
+  "ph_hc_autodetect_nodata": "No country selected — the ioBroker system country “%s” has no holiday data. Please select a country.",
+  "ph_hc_autodetect_ambiguous": "No country selected — the ioBroker system country “%s” covers several countries. Please select one.",
+  "ph_hc_scope_unloadable": "The holiday library cannot load this area (a known defect) — the adapter uses the holidays of the broader area.",
+  "ph_excludeInactive": "Excluded, but its holiday type is switched off (kept, click to remove):"
 }

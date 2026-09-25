@@ -12,9 +12,9 @@
   "ph_hc_type_optional": "Feriados opcionais",
   "ph_hc_type_observance": "Dias comemorativos",
   "ph_hc_types_none": "Nenhum tipo de feriado selecionado — o adaptador não comunicará feriados",
-  "ph_hc_bridge_title": "Dias ponte",
-  "ph_hc_bridge_label": "Detectar dias ponte",
-  "ph_hc_bridge_desc": "Um dia ponte é um dia útil entre um feriado e o fim de semana (ex. sexta-feira após um feriado na quinta-feira)",
+  "ph_hc_bridge_title": "Dias de ponte",
+  "ph_hc_bridge_label": "Detectar dias de ponte",
+  "ph_hc_bridge_desc": "Um dia de ponte é um único dia útil entre um feriado e o fim de semana ou outro feriado (ex. sexta-feira após um feriado na quinta-feira)",
   "ph_hc_exclude_title": "Excluir feriados",
   "ph_excludeLabel": "Feriados excluídos",
   "ph_excludeSelectCountry": "Selecione primeiro um país",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Feriados detetados",
   "ph_hc_preview_count": "%s feriados detetados para %s",
   "ph_hc_preview_none": "Selecione um país para ver os feriados detetados",
-  "ph_hc_scope_stale": "Guardado, mas já não disponível para este local: %s — escolha uma nova entrada."
+  "ph_hc_scope_stale": "Guardado, mas já não disponível para este local: %s — escolha uma nova entrada.",
+  "ph_hc_preview_count_bridges": "%s feriados e %s dias de ponte detetados para %s",
+  "ph_hc_autodetect_nodata": "Nenhum país selecionado — o país do sistema ioBroker “%s” não tem dados de feriados. Selecione um país.",
+  "ph_hc_autodetect_ambiguous": "Nenhum país selecionado — o país do sistema ioBroker “%s” abrange vários países. Selecione um.",
+  "ph_hc_scope_unloadable": "A biblioteca de feriados não consegue carregar esta área (defeito conhecido) — o adaptador usa os feriados da área mais ampla.",
+  "ph_excludeInactive": "Excluído, mas o tipo de feriado está desativado (mantido, clique para remover):"
 }

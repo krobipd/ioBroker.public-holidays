@@ -1,11 +1,21 @@
 // ISO-3166 country NAME -> alpha-2 code.
-// ioBroker.admin stores the country NAME (not the code) in system.config.common.country
-// (MainSettingsDialog.tsx: <MenuItem value={elem.name}>). This map resolves that stored
-// name back to the alpha-2 code that date-holidays expects for auto-detection.
+// ioBroker.admin stores the country NAME (not the code) in system.config.common.country, and it
+// has TWO lists to take that name from:
+// - the system settings dialog (MainSettingsDialog.tsx: <MenuItem value={elem.name}>) — the ISO
+//   names of src-admin/src/assets/json/countries.json ("Viet Nam", "Korea, Republic of"), mapped
+//   by COUNTRY_NAME_TO_CODE;
+// - the first-run wizard up to Admin 8.0.14 (the stable 8.0.11 and all of 7.x) — its own list
+//   `COUNTRIES` ("Vietnam", "Korea", "Zaire"), mapped by WIZARD_COUNTRY_ALIASES. It stores the
+//   English key and translates only the label (measured in the 8.0.11 bundle: `getOptionLabel`
+//   translates, `onChange` stores the option). 8.0.15 made both lists the same without migrating
+//   stored values, so installations set up earlier keep the wizard name for good.
 //
-// Source: ioBroker.admin src-admin/src/assets/json/countries.json (ISO-3166, stable).
+// Source of COUNTRY_NAME_TO_CODE: ioBroker.admin src-admin/src/assets/json/countries.json (ISO-3166).
 // Regenerate when the admin country list changes:
 //   gh api repos/ioBroker/ioBroker.admin/contents/src-admin/src/assets/json/countries.json --jq .content | base64 -d   ->   { name: code }
+//
+// This file stays IMPORT-FREE: the admin card imports it to resolve the same system country the
+// runtime does.
 export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   Afghanistan: "AF",
   "Åland Islands": "AX",
@@ -251,3 +261,80 @@ export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   Zambia: "ZM",
   Zimbabwe: "ZW",
 };
+
+/**
+ * The 26 names of the admin wizard's list (Admin <= 8.0.14) that countries.json spells differently.
+ * Each was chosen by hand: the wizard carries exactly one "Korea" and no North Korea, so "Korea" is
+ * the Republic of Korea.
+ */
+export const WIZARD_COUNTRY_ALIASES: Record<string, string> = {
+  "Cocos Islands": "CC",
+  "East Timor": "TL",
+  "Heard and Mc Donald Islands": "HM",
+  Iran: "IR",
+  "Ivory Coast": "CI",
+  Korea: "KR",
+  Kosovo: "XK",
+  Macau: "MO",
+  Macedonia: "MK",
+  Micronesia: "FM",
+  Moldova: "MD",
+  Montenegro: "ME",
+  Palestine: "PS",
+  Serbia: "RS",
+  "South Georgia South Sandwich Islands": "GS",
+  "St. Helena": "SH",
+  "St. Pierre and Miquelon": "PM",
+  "Svalbard and Jan Mayen Islands": "SJ",
+  Taiwan: "TW",
+  Tanzania: "TZ",
+  "Vatican City State": "VA",
+  Vietnam: "VN",
+  "Virgin Islands (British)": "VG",
+  "Virgin Islands (U.S.)": "VI",
+  "Wallis and Futuna Islands": "WF",
+  Zaire: "CD",
+};
+
+/** Admin codes that stand for several countries the holiday data keeps apart. */
+export const AMBIGUOUS_COUNTRY_CODES: Record<string, readonly string[]> = {
+  CS: ["RS", "ME"],
+  AN: ["CW", "SX", "BQ"],
+};
+
+/** The outcome of resolving a stored country value. */
+export type CountryResolution =
+  { code: string; reason?: undefined } | { code: ""; reason: "empty" | "unknown" | "no-data" | "ambiguous" };
+
+let nameToCode: Map<string, string> | null = null;
+
+/**
+ * Resolve a stored country value — an admin country name from either list, or an alpha-2 code —
+ * to the code date-holidays expects, or say why that is not possible.
+ *
+ * @param value the stored value ("Austria", "Vietnam", "AT", " de ")
+ * @param supported the codes date-holidays has data for
+ * @returns the code, or "" with the reason
+ */
+export function resolveCountryName(value: string, supported: ReadonlySet<string>): CountryResolution {
+  const v = value.trim();
+  if (!v) {
+    return { code: "", reason: "empty" };
+  }
+  if (!nameToCode) {
+    nameToCode = new Map(
+      [...Object.entries(COUNTRY_NAME_TO_CODE), ...Object.entries(WIZARD_COUNTRY_ALIASES)].map(([name, code]) => [
+        name.toLowerCase(),
+        code,
+      ]),
+    );
+  }
+  const mapped = nameToCode.get(v.toLowerCase()) ?? (/^[a-z]{2}$/i.test(v) ? v.toUpperCase() : undefined);
+  if (mapped === undefined) {
+    return { code: "", reason: "unknown" };
+  }
+  if (supported.has(mapped)) {
+    return { code: mapped };
+  }
+  return { code: "", reason: AMBIGUOUS_COUNTRY_CODES[mapped] ? "ambiguous" : "no-data" };
+}

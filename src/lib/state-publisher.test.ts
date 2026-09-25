@@ -12,7 +12,8 @@ import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./state-p
 import type { ComputedHolidays } from "./types";
 
 function makeMockAdapter(): {
-  extendObjectAsync: Mock;
+  extendObject: Mock;
+  getObjectAsync: Mock;
   setStateChangedAsync: Mock;
   states: Record<string, { val: unknown; ack: boolean }>;
   objects: Record<string, unknown>;
@@ -20,10 +21,12 @@ function makeMockAdapter(): {
   const states: Record<string, { val: unknown; ack: boolean }> = {};
   const objects: Record<string, unknown> = {};
   return {
-    extendObjectAsync: vi.fn((id: string, obj: unknown) => {
-      objects[id] = obj;
+    extendObject: vi.fn((id: string, obj: unknown) => {
+      objects[id] = structuredClone(obj);
       return Promise.resolve();
     }),
+    // A copy, like the real store (package check read-stub-copy).
+    getObjectAsync: vi.fn((id: string) => Promise.resolve(objects[id] ? structuredClone(objects[id]) : null)),
     setStateChangedAsync: vi.fn((id: string, val: unknown, ack: boolean) => {
       states[id] = { val, ack };
       return Promise.resolve();
@@ -85,7 +88,7 @@ describe("ensureObjects", () => {
 
   it("total object count is 5 channels + 12 states = 17", async () => {
     await ensureObjects(adapter as any);
-    expect(adapter.extendObjectAsync).toHaveBeenCalledTimes(17);
+    expect(adapter.extendObject).toHaveBeenCalledTimes(17);
   });
 
   it("refreshes name and explanation only — the object shape lives in the manifest alone", async () => {
@@ -100,18 +103,53 @@ describe("ensureObjects", () => {
     }
   });
 
-  it("channel objects have translation object name", async () => {
+  it("a channel is named from its own i18n key", async () => {
+    // The mock translates a key to { en: key, de: key_de } — so this reads WHICH key was used.
     await ensureObjects(adapter as any);
-    const ch = adapter.objects.today as any;
-    expect(ch.common.name).toHaveProperty("en");
-    expect(ch.common.name).toHaveProperty("de");
+    const ch = adapter.objects.dayAfterTomorrow as any;
+    expect(ch.common.name).toEqual({ en: "dayAfterTomorrow", de: "dayAfterTomorrow_de" });
   });
 
-  it("state objects have 11-language name", async () => {
+  it("a state is named from its field's i18n key and explained from its own desc key", async () => {
     await ensureObjects(adapter as any);
-    const st = adapter.objects["today.name"] as any;
-    expect(st.common.name).toHaveProperty("en");
-    expect(st.common.name).toHaveProperty("de");
+    const st = adapter.objects["next.daysUntil"] as any;
+    expect(st.common.name).toEqual({ en: "daysUntil", de: "daysUntil_de" });
+    expect(st.common.desc).toEqual({ en: "descNextDaysUntil", de: "descNextDaysUntil_de" });
+  });
+
+  it("writes nothing on a second run when every object is already current", async () => {
+    // js-controller writes an extendObject without comparing: an unconditional refresh wrote 17
+    // unchanged objects (and sent 17 object-change events) on every daily run.
+    await ensureObjects(adapter as any);
+    adapter.extendObject.mockClear();
+    await ensureObjects(adapter as any);
+    expect(adapter.extendObject).not.toHaveBeenCalled();
+  });
+
+  it("rewrites exactly the object whose name or explanation differs", async () => {
+    await ensureObjects(adapter as any);
+    (adapter.objects["today.name"] as any).common.name = "Holiday name"; // a pre-translation string
+    (adapter.objects.next as any).common.desc = { en: "old text" };
+    adapter.extendObject.mockClear();
+    await ensureObjects(adapter as any);
+    expect(adapter.extendObject.mock.calls.map(c => c[0] as string).sort()).toEqual(["next", "today.name"]);
+  });
+
+  it("the same texts in another key order count as current", async () => {
+    await ensureObjects(adapter as any);
+    const st = adapter.objects["next.date"] as any;
+    st.common.name = { de: st.common.name.de, en: st.common.name.en };
+    adapter.extendObject.mockClear();
+    await ensureObjects(adapter as any);
+    expect(adapter.extendObject).not.toHaveBeenCalled();
+  });
+
+  it("refreshes when the object cannot be read — the refresh is the safe side", async () => {
+    await ensureObjects(adapter as any);
+    adapter.getObjectAsync.mockImplementation(() => Promise.reject(new Error("objects db unreachable")));
+    adapter.extendObject.mockClear();
+    await ensureObjects(adapter as any);
+    expect(adapter.extendObject).toHaveBeenCalledTimes(17);
   });
 
   it("never preserves a name — the adapter owns these names, so a rename must reach existing installs", async () => {
@@ -119,7 +157,7 @@ describe("ensureObjects", () => {
     // there. These names are the adapter's own (translated from admin/i18n), so preserving them
     // would mean a renamed channel/state only ever reaches FRESH installs.
     await ensureObjects(adapter as any);
-    const withPreserve = adapter.extendObjectAsync.mock.calls.filter(
+    const withPreserve = adapter.extendObject.mock.calls.filter(
       call => (call[2] as { preserve?: unknown } | undefined)?.preserve !== undefined,
     );
     expect(withPreserve).toEqual([]);
@@ -130,7 +168,7 @@ describe("ensureObjects", () => {
     // preserve on common.name — the runtime call is the only path a rename can take to an
     // existing install. Literal ids (not template-built) so the consistency gate can see them.
     await ensureObjects(adapter as any);
-    const called = adapter.extendObjectAsync.mock.calls.map(call => call[0] as string);
+    const called = adapter.extendObject.mock.calls.map(call => call[0] as string);
     expect(called.sort()).toEqual(
       [
         "today",
@@ -164,7 +202,9 @@ describe("cleanupDeprecatedStates", () => {
     };
     const deleted: string[] = [];
     const adapter = {
-      getObjectAsync: vi.fn((id: string) => Promise.resolve(existingObjects[id] ?? null)),
+      getObjectAsync: vi.fn((id: string) =>
+        Promise.resolve(existingObjects[id] ? structuredClone(existingObjects[id]) : null),
+      ),
       delObjectAsync: vi.fn((id: string) => {
         deleted.push(id);
         return Promise.resolve();
@@ -193,7 +233,9 @@ describe("cleanupDeprecatedStates", () => {
     );
     const deleted: string[] = [];
     const adapter = {
-      getObjectAsync: vi.fn((id: string) => Promise.resolve(existingObjects[id] ?? null)),
+      getObjectAsync: vi.fn((id: string) =>
+        Promise.resolve(existingObjects[id] ? structuredClone(existingObjects[id]) : null),
+      ),
       delObjectAsync: vi.fn((id: string) => {
         deleted.push(id);
         return Promise.resolve();
@@ -204,6 +246,28 @@ describe("cleanupDeprecatedStates", () => {
     for (const id of oldBooleanStates) {
       expect(deleted, `${id} must be removed on upgrade`).toContain(id);
     }
+  });
+
+  it("removes the tree of the previous owner's 0.0.x releases, children before their channel", async () => {
+    // npm 0.0.1/0.0.2 (Jey-Cee) created info, info.lastSettings and aftertomorrow.* — an upgrade
+    // from there left them standing, `aftertomorrow.boolean` possibly frozen at true.
+    const legacy = ["info", "info.lastSettings", "aftertomorrow", "aftertomorrow.name", "aftertomorrow.boolean"];
+    const existingObjects: Record<string, unknown> = Object.fromEntries(legacy.map(id => [id, { type: "state" }]));
+    const deleted: string[] = [];
+    const adapter = {
+      getObjectAsync: vi.fn((id: string) =>
+        Promise.resolve(existingObjects[id] ? structuredClone(existingObjects[id]) : null),
+      ),
+      delObjectAsync: vi.fn((id: string) => {
+        deleted.push(id);
+        return Promise.resolve();
+      }),
+      log: { debug: vi.fn() },
+    };
+    await cleanupDeprecatedStates(adapter as any);
+    expect([...deleted].sort()).toEqual([...legacy].sort());
+    expect(deleted.indexOf("aftertomorrow.boolean")).toBeLessThan(deleted.indexOf("aftertomorrow"));
+    expect(deleted.indexOf("info.lastSettings")).toBeLessThan(deleted.indexOf("info"));
   });
 
   it("does nothing when no deprecated states exist", async () => {

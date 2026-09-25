@@ -1,6 +1,16 @@
 import Holidays from "date-holidays";
 import type { AdapterConfig, ComputedHolidays, DayInfo, NextHoliday } from "./types";
-import { beats, bridgeDayName, detectBridgeKeys, toHolidayId } from "./holiday-shared";
+import {
+  addBridgeDays,
+  bridgeDayName,
+  buildDayMap,
+  detectBridgeKeys,
+  excludeKey,
+  type HolidayDay,
+  type SourceHoliday,
+  toHolidayId,
+  weekendDays,
+} from "./holiday-shared";
 import { oneLine } from "./error-utils";
 
 // The type list, the exclude id, the collision rule and the bridge-day algorithm live in
@@ -8,20 +18,14 @@ import { oneLine } from "./error-utils";
 // keep in sync. Re-exported here because this module is the engine's public face.
 export { BRIDGE_DAY_NAMES, toHolidayId } from "./holiday-shared";
 
-/** A holiday exactly as date-holidays hands it over. */
-export interface RawHoliday {
-  date: string;
-  name: string;
-  type: string;
-  rule?: string;
-  /** date-holidays sets this on a holiday that was moved off a weekend. */
-  substitute?: boolean;
-}
-
-/** A holiday that survived the filters, with the id it was matched by. */
-interface ScopedHoliday extends RawHoliday {
-  id: string;
-}
+/**
+ * A holiday exactly as date-holidays hands it over. `start`/`end` are read for ONE thing only — how
+ * many days a holiday lasts (holiday-shared `expandHolidayDays`). The calendar key of the first day
+ * still comes from the `date` string, never from an instant, which keeps every key time-zone-safe
+ * (the reason these two fields were left out until 0.17.0 — and with them every day after the first
+ * of a multi-day holiday).
+ */
+export type RawHoliday = SourceHoliday;
 
 const EMPTY_DAY: DayInfo = { name: "", isHoliday: false };
 
@@ -94,9 +98,10 @@ export function logAvailableHolidays(
   languages: string[],
   log: (msg: string) => void,
   instance?: Holidays,
+  referenceDate: Date = new Date(),
 ): void {
   const hd = instance ?? createHolidaysInstance(config, languages);
-  const year = new Date().getFullYear();
+  const year = referenceDate.getFullYear();
   const holidays = hd.getHolidays(year) as RawHoliday[];
   const matching = holidays
     .filter(h => config.holidayTypes.includes(h.type))
@@ -130,7 +135,37 @@ export function createHolidaysInstance(config: AdapterConfig, languages?: string
 }
 
 export interface ScopeIssue {
-  kind: "country" | "state" | "region";
+  /**
+   * `unloadable`: the state/region exists in date-holidays' data, but its key is written in mixed
+   * case and date-holidays upper-cases every key it is handed (`splitName`), so it silently loads the
+   * broader scope instead — 12 scopes in 3.37.0 (ten islands of the Cook Islands, NZ Timaru and
+   * Buller), measured: all twelve yield exactly the parent's holidays. Nothing the adapter passes
+   * reaches them (the object form of the constructor fails the same way).
+   */
+  kind: "country" | "state" | "region" | "unloadable";
+}
+
+/**
+ * The key of a map whose spelling matches `wanted` regardless of case — date-holidays upper-cases
+ * what it is given, so a hand-written `by` selects BY; only the lookup here was case-sensitive.
+ *
+ * @param map a code → name map from date-holidays
+ * @param wanted the configured code
+ * @returns the key as the data spells it, or undefined
+ */
+function findKey(map: Record<string, string> | undefined, wanted: string): string | undefined {
+  const upper = wanted.toUpperCase();
+  return Object.keys(map ?? {}).find(k => k.toUpperCase() === upper);
+}
+
+/**
+ * Whether date-holidays can load a scope key at all (see {@link ScopeIssue} `unloadable`).
+ *
+ * @param key the state or region key as the data spells it
+ * @returns false for a mixed-case key
+ */
+export function isLoadableScopeKey(key: string): boolean {
+  return key === key.toUpperCase();
 }
 
 /**
@@ -148,23 +183,64 @@ export interface ScopeIssue {
  * @param instance the already-built date-holidays instance to reuse
  * @returns the single issue found, or null when the scope is sound
  */
-export function detectScopeIssue(config: AdapterConfig, languages: string[], instance?: Holidays): ScopeIssue | null {
+export function detectScopeIssue(
+  config: AdapterConfig,
+  languages: string[],
+  instance?: Holidays,
+  referenceDate: Date = new Date(),
+): ScopeIssue | null {
   const hd = instance ?? createHolidaysInstance(config, languages);
-  if (hd.getHolidays(new Date().getFullYear()).length === 0) {
+  if (hd.getHolidays(referenceDate.getFullYear()).length === 0) {
     return { kind: "country" };
   }
-  if (config.state && !hd.getStates(config.country)?.[config.state]) {
+  const state = config.state ? findKey(hd.getStates(config.country), config.state) : undefined;
+  if (config.state && state === undefined) {
     return { kind: "state" };
   }
-  if (config.region && !hd.getRegions(config.country, config.state)?.[config.region]) {
+  const region =
+    config.region && state !== undefined ? findKey(hd.getRegions(config.country, state), config.region) : undefined;
+  if (config.region && region === undefined) {
     return { kind: "region" };
+  }
+  if ((state !== undefined && !isLoadableScopeKey(state)) || (region !== undefined && !isLoadableScopeKey(region))) {
+    return { kind: "unloadable" };
   }
   return null;
 }
 
 interface FilteredHolidays {
-  holidays: Map<string, ScopedHoliday>;
+  holidays: Map<string, HolidayDay>;
   unmatchedExcludes: string[];
+}
+
+/**
+ * Is an exclude still backed by the data? It is when its id occurs, or — for the id of a
+ * substitute day, which only exists in the years a holiday is moved — when a holiday with the same
+ * date part does (GB Boxing Day's substitute appears in 2026 and 2027, then not before 2032).
+ *
+ * @param id the excluded id
+ * @param ids every id the data offers
+ * @param keys the date parts of the non-substitute ids
+ * @returns true when the exclude still refers to something
+ */
+function isKnownExclude(id: string, ids: Set<string>, keys: Set<string>): boolean {
+  return ids.has(id) || (id.startsWith("substitutes_") && keys.has(excludeKey(id)));
+}
+
+/**
+ * The date parts of the non-substitute ids of a set.
+ *
+ * @param ids holiday ids
+ * @returns their date parts
+ */
+function baseKeys(ids: Iterable<string>): Set<string> {
+  const keys = new Set<string>();
+  for (const id of ids) {
+    if (!id.startsWith("substitutes_")) {
+      keys.add(excludeKey(id));
+    }
+  }
+  return keys;
 }
 
 function getFilteredHolidays(
@@ -175,56 +251,33 @@ function getFilteredHolidays(
 ): FilteredHolidays {
   const year = referenceDate.getFullYear();
   const years = [year - 1, year, year + 1];
-  const result = new Map<string, ScopedHoliday>();
-  // Every id the configured scope offers, regardless of type or exclude — collected while we walk
-  // the data anyway, so the stale-exclude check below can usually answer from it (see there).
-  const scopeIds = new Set<string>();
-
-  for (const y of years) {
-    const holidays = hd.getHolidays(y) as RawHoliday[];
-    for (const h of holidays) {
-      const id = toHolidayId(h.name, h.rule);
-      scopeIds.add(id);
-      if (!config.holidayTypes.includes(h.type)) {
-        continue;
-      }
-      if (config.excludeHolidays.includes(id)) {
-        continue;
-      }
-      const dateKey = h.date.substring(0, 10);
-      const existing = result.get(dateKey);
-      const candidate: ScopedHoliday = { ...h, id };
-      if (!existing || beats(candidate, existing)) {
-        result.set(dateKey, candidate);
-      }
-    }
-  }
-
+  const raws = years.flatMap(y => (hd.getHolidays(y) || []) as RawHoliday[]);
+  // The list itself is built by the SAME function the card's preview calls (holiday-shared).
+  const result = buildDayMap(raws, { types: config.holidayTypes, excludes: config.excludeHolidays });
   if (config.includeBridgeDays) {
-    for (const y of years) {
-      addBridgeDays(result, y, bridgeName);
-    }
+    addBridgeDays(result, years, weekendDays(config.country), bridgeName);
   }
+
+  // Every id the configured scope offers, regardless of type or exclude, so the stale-exclude check
+  // below can usually answer from it.
+  const scopeIds = new Set(raws.map(h => toHolidayId(h.name, h.rule)));
 
   // An exclude counts as "unmatched" only when its id exists NOWHERE in the country — across the
   // country baseline and every state/region (the same aggregation the exclude dropdown is
   // generated from). A leftover that is still valid in a sibling state (e.g. kept after narrowing
-  // state/region) is a harmless no-op and must not warn; only a genuine date-holidays
-  // rename/removal should.
+  // state/region) is a harmless no-op and must not warn.
   //
   // That aggregation costs 24 (DE) to 54 (US) date-holidays instances and 110-140 ms, so it only
   // runs when it can still change the answer: the country-wide id set is a SUPERSET of the scope's
-  // own ids, so every exclude already found in `scopeIds` is valid and needs no further proof. In
-  // the normal case — all excludes still match — the expensive walk is skipped entirely
+  // own ids, so every exclude already found in `scopeIds` is valid and needs no further proof
   // (audit finding F7).
   let unmatchedExcludes: string[] = [];
-  // No `excludeHolidays.length` guard around this: an empty list yields an empty
-  // `notInScope`, and the aggregation below is gated on that alone — the outer guard
-  // was a measured equivalent mutant (Q8, removed 2026-09-08).
-  const notInScope = config.excludeHolidays.filter(id => !scopeIds.has(id));
+  const scopeKeys = baseKeys(scopeIds);
+  const notInScope = config.excludeHolidays.filter(id => !isKnownExclude(id, scopeIds, scopeKeys));
   if (notInScope.length) {
     const countryWideIds = collectCountryWideIds(config.country, years);
-    unmatchedExcludes = notInScope.filter(id => !countryWideIds.has(id));
+    const countryWideKeys = baseKeys(countryWideIds);
+    unmatchedExcludes = notInScope.filter(id => !isKnownExclude(id, countryWideIds, countryWideKeys));
   }
   return { holidays: result, unmatchedExcludes };
 }
@@ -261,7 +314,7 @@ function collectCountryWideIds(country: string, years: number[]): Set<string> {
   return ids;
 }
 
-function getDayInfo(holidays: Map<string, ScopedHoliday>, date: Date): DayInfo {
+function getDayInfo(holidays: Map<string, HolidayDay>, date: Date): DayInfo {
   const key = toDateKey(date);
   const h = holidays.get(key);
   if (!h) {
@@ -273,13 +326,17 @@ function getDayInfo(holidays: Map<string, ScopedHoliday>, date: Date): DayInfo {
   };
 }
 
-function getNextHoliday(holidays: Map<string, ScopedHoliday>, referenceDate: Date): NextHoliday {
+// The next holiday still AHEAD: a holiday running today stays in `today` — so the remaining days of
+// the occurrence running today are skipped too (RU on 3 January: today "New Year Holiday", next
+// Christmas on 7 January, not "New Year Holiday, in 1 day" four days in a row).
+function getNextHoliday(holidays: Map<string, HolidayDay>, referenceDate: Date): NextHoliday {
   const refKey = toDateKey(referenceDate);
-  let nearest: ScopedHoliday | null = null;
+  const runningToday = holidays.get(refKey)?.occurrence;
+  let nearest: HolidayDay | null = null;
   let nearestKey = "";
 
   for (const [dateKey, h] of holidays) {
-    if (dateKey <= refKey) {
+    if (dateKey <= refKey || h.occurrence === runningToday) {
       continue;
     }
     if (!nearest || dateKey < nearestKey) {
@@ -309,28 +366,20 @@ function getNextHoliday(holidays: Map<string, ScopedHoliday>, referenceDate: Dat
 
 /**
  * The bridge days among a map of holidays, as Dates. Thin wrapper over the shared
- * {@link detectBridgeKeys}, which the admin preview calls with the same keys.
+ * {@link detectBridgeKeys}, which the admin preview reaches through the same day list.
  *
- * @param holidays the holidays known so far, keyed by calendar date
+ * @param holidays the holidays known so far, keyed by calendar date (every entry a trigger)
  * @param year only holidays in this year seed a bridge day
+ * @param weekend the country's weekend days (Saturday + Sunday when omitted)
  * @returns the bridge days
  */
-export function detectBridgeDays(holidays: Map<string, ScopedHoliday | RawHoliday>, year: number): Date[] {
-  return detectBridgeKeys(new Set(holidays.keys()), year).map(key => new Date(`${key}T00:00:00`));
-}
-
-function addBridgeDays(holidays: Map<string, ScopedHoliday>, year: number, name: string): void {
-  for (const key of detectBridgeKeys(new Set(holidays.keys()), year)) {
-    if (!holidays.has(key)) {
-      holidays.set(key, {
-        date: key,
-        name,
-        type: "bridge",
-        rule: "",
-        id: `bridge_${key}`,
-      });
-    }
-  }
+export function detectBridgeDays(
+  holidays: Map<string, unknown>,
+  year: number,
+  weekend: readonly number[] = weekendDays(""),
+): Date[] {
+  const keys = new Set(holidays.keys());
+  return detectBridgeKeys(keys, keys, year, weekend).map(key => new Date(`${key}T00:00:00`));
 }
 
 export function toDateKey(date: Date): string {

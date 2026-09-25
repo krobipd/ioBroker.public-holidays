@@ -428,8 +428,8 @@ describe("bridge days", () => {
       ["nl", "Brugdag"],
       ["pl", "Dzień pomostowy"],
       ["pt", "Dia de ponte"],
-      ["ru", "Нерабочий день"],
-      ["uk", "Неробочий день"],
+      ["ru", "День-мост"],
+      ["uk", "День-міст"],
       ["zh", "桥接日"],
     ])("language %s → %s", (lang, expected) => {
       const config = makeConfig({ includeBridgeDays: true });

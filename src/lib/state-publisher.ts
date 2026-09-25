@@ -6,7 +6,13 @@ const DAY_CHANNELS = ["today", "yesterday", "tomorrow", "dayAfterTomorrow"] as c
 const DAY_FIELDS = ["name", "isHoliday"] as const;
 const NEXT_FIELDS = ["name", "isHoliday", "date", "daysUntil"] as const;
 
-const DEPRECATED_STATES = [
+/**
+ * Objects earlier versions created, children before their channel (a channel goes last, when it is
+ * empty). The previous owner's 0.0.x releases on npm (Jey-Cee) created `info`, `info.lastSettings`
+ * and `aftertomorrow.*` — an upgrade from there left them standing, with `aftertomorrow.boolean`
+ * possibly frozen at `true`.
+ */
+const DEPRECATED_OBJECTS = [
   "today.region",
   "today.type",
   "today.id",
@@ -29,6 +35,12 @@ const DEPRECATED_STATES = [
   "tomorrow.boolean",
   "dayAfterTomorrow.boolean",
   "next.boolean",
+  // The 0.0.x tree of the previous owner.
+  "aftertomorrow.name",
+  "aftertomorrow.boolean",
+  "aftertomorrow",
+  "info.lastSettings",
+  "info",
 ];
 
 /**
@@ -43,7 +55,7 @@ const DEPRECATED_STATES = [
  * @param adapter the adapter instance
  */
 export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter): Promise<void> {
-  for (const id of DEPRECATED_STATES) {
+  for (const id of DEPRECATED_OBJECTS) {
     try {
       const obj = await adapter.getObjectAsync(id);
       if (obj) {
@@ -102,12 +114,64 @@ function stateObj(field: string, descKey?: I18nKey): ioBroker.PartialStateObject
 }
 
 /**
+ * A value with its object keys sorted — key order carries no meaning in an ioBroker object, and
+ * extendObject keeps the order an existing object already has.
+ *
+ * @param v any JSON value
+ * @returns its canonical JSON text
+ */
+function canonical(v: unknown): string {
+  return JSON.stringify(v ?? null, (_k, x: unknown) =>
+    x && typeof x === "object" && !Array.isArray(x)
+      ? Object.fromEntries(
+          Object.keys(x)
+            .sort()
+            .map(k => [k, (x as Record<string, unknown>)[k]]),
+        )
+      : x,
+  );
+}
+
+/**
+ * Write one refresh only when the object differs from it — js-controller writes an extendObject
+ * without comparing, so an unconditional refresh wrote 17 unchanged objects and sent 17 object
+ * change events on every daily run. A failed read writes: the refresh is the safe side.
+ *
+ * @param adapter the adapter instance
+ * @param id the object id
+ * @param patch the name/desc refresh
+ * @param write the literal extendObject call for this id
+ */
+async function refresh(
+  adapter: ioBroker.Adapter,
+  id: string,
+  patch: ioBroker.PartialChannelObject | ioBroker.PartialStateObject,
+  write: (obj: ioBroker.PartialObject) => Promise<unknown>,
+): Promise<void> {
+  let current: ioBroker.Object | null | undefined;
+  try {
+    current = await adapter.getObjectAsync(id);
+  } catch {
+    current = undefined;
+  }
+  if (
+    current &&
+    current.type === patch.type &&
+    canonical(current.common?.name) === canonical(patch.common?.name) &&
+    canonical(current.common?.desc) === canonical(patch.common?.desc)
+  ) {
+    return;
+  }
+  await write(patch);
+}
+
+/**
  * Create/refresh all 17 objects (5 channels + 12 states) on every run.
  *
  * The ids are spelled out instead of looped for a reason: the manifest carries the same 17 as
- * `instanceObjects`, and the consistency gate `audit_instanceobjects_reach` checks that each of
- * them is refreshed at runtime by looking for a literal `extendObject("<id>"` in `src/` — a
- * template-built id would satisfy the tree but not the check that guards it.
+ * `instanceObjects`, and the package check `instance-objects-refresh` checks that each of them is
+ * refreshed at runtime by looking for a literal `extendObject("<id>"` in `src/` — a template-built
+ * id would satisfy the tree but not the check that guards it.
  *
  * `extendObject` (never `setObject`): the objects carry user-owned side data — history/logging
  * settings live in `common.custom` — and a full write would drop it.
@@ -120,27 +184,47 @@ function stateObj(field: string, descKey?: I18nKey): ioBroker.PartialStateObject
  * @param adapter the adapter instance
  */
 export async function ensureObjects(adapter: ioBroker.Adapter): Promise<void> {
-  await adapter.extendObjectAsync("today", channelObj("today"));
-  await adapter.extendObjectAsync("today.name", stateObj("name", "descDayName"));
-  await adapter.extendObjectAsync("today.isHoliday", stateObj("isHoliday", "descDayIsHoliday"));
+  await refresh(adapter, "today", channelObj("today"), o => adapter.extendObject("today", o));
+  await refresh(adapter, "today.name", stateObj("name", "descDayName"), o => adapter.extendObject("today.name", o));
+  await refresh(adapter, "today.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+    adapter.extendObject("today.isHoliday", o),
+  );
 
-  await adapter.extendObjectAsync("yesterday", channelObj("yesterday"));
-  await adapter.extendObjectAsync("yesterday.name", stateObj("name", "descDayName"));
-  await adapter.extendObjectAsync("yesterday.isHoliday", stateObj("isHoliday", "descDayIsHoliday"));
+  await refresh(adapter, "yesterday", channelObj("yesterday"), o => adapter.extendObject("yesterday", o));
+  await refresh(adapter, "yesterday.name", stateObj("name", "descDayName"), o =>
+    adapter.extendObject("yesterday.name", o),
+  );
+  await refresh(adapter, "yesterday.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+    adapter.extendObject("yesterday.isHoliday", o),
+  );
 
-  await adapter.extendObjectAsync("tomorrow", channelObj("tomorrow"));
-  await adapter.extendObjectAsync("tomorrow.name", stateObj("name", "descDayName"));
-  await adapter.extendObjectAsync("tomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"));
+  await refresh(adapter, "tomorrow", channelObj("tomorrow"), o => adapter.extendObject("tomorrow", o));
+  await refresh(adapter, "tomorrow.name", stateObj("name", "descDayName"), o =>
+    adapter.extendObject("tomorrow.name", o),
+  );
+  await refresh(adapter, "tomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+    adapter.extendObject("tomorrow.isHoliday", o),
+  );
 
-  await adapter.extendObjectAsync("dayAfterTomorrow", channelObj("dayAfterTomorrow"));
-  await adapter.extendObjectAsync("dayAfterTomorrow.name", stateObj("name", "descDayName"));
-  await adapter.extendObjectAsync("dayAfterTomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"));
+  await refresh(adapter, "dayAfterTomorrow", channelObj("dayAfterTomorrow"), o =>
+    adapter.extendObject("dayAfterTomorrow", o),
+  );
+  await refresh(adapter, "dayAfterTomorrow.name", stateObj("name", "descDayName"), o =>
+    adapter.extendObject("dayAfterTomorrow.name", o),
+  );
+  await refresh(adapter, "dayAfterTomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+    adapter.extendObject("dayAfterTomorrow.isHoliday", o),
+  );
 
-  await adapter.extendObjectAsync("next", channelObj("next", "descNext"));
-  await adapter.extendObjectAsync("next.name", stateObj("name", "descNextName"));
-  await adapter.extendObjectAsync("next.isHoliday", stateObj("isHoliday", "descNextIsHoliday"));
-  await adapter.extendObjectAsync("next.date", stateObj("date", "descNextDate"));
-  await adapter.extendObjectAsync("next.daysUntil", stateObj("daysUntil", "descNextDaysUntil"));
+  await refresh(adapter, "next", channelObj("next", "descNext"), o => adapter.extendObject("next", o));
+  await refresh(adapter, "next.name", stateObj("name", "descNextName"), o => adapter.extendObject("next.name", o));
+  await refresh(adapter, "next.isHoliday", stateObj("isHoliday", "descNextIsHoliday"), o =>
+    adapter.extendObject("next.isHoliday", o),
+  );
+  await refresh(adapter, "next.date", stateObj("date", "descNextDate"), o => adapter.extendObject("next.date", o));
+  await refresh(adapter, "next.daysUntil", stateObj("daysUntil", "descNextDaysUntil"), o =>
+    adapter.extendObject("next.daysUntil", o),
+  );
 }
 
 // Map state-field name → value getter.

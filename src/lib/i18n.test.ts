@@ -222,7 +222,7 @@ describe("getSystemConfig", () => {
         if (reject) {
           return Promise.reject(new Error("boom"));
         }
-        return Promise.resolve(common === undefined ? null : { common });
+        return Promise.resolve(common === undefined ? null : { common: structuredClone(common) });
       }),
     } as unknown as ioBroker.Adapter;
   }

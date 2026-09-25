@@ -14,7 +14,7 @@
   "ph_hc_types_none": "Aucun type de jour férié sélectionné — l'adaptateur ne signalera aucun jour férié",
   "ph_hc_bridge_title": "Jours de pont",
   "ph_hc_bridge_label": "Détecter les jours de pont",
-  "ph_hc_bridge_desc": "Un jour de pont est un jour ouvrable entre un jour férié et le week-end (ex. vendredi après un jour férié le jeudi)",
+  "ph_hc_bridge_desc": "Un jour de pont est un jour ouvré isolé entre un jour férié et le week-end ou un autre jour férié (p. ex. le vendredi après un jour férié le jeudi)",
   "ph_hc_exclude_title": "Exclure des jours fériés",
   "ph_excludeLabel": "Jours fériés exclus",
   "ph_excludeSelectCountry": "Sélectionnez d'abord un pays",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Jours fériés détectés",
   "ph_hc_preview_count": "%s jours fériés détectés pour %s",
   "ph_hc_preview_none": "Sélectionnez un pays pour voir les jours fériés détectés",
-  "ph_hc_scope_stale": "Enregistré, mais plus disponible pour cet emplacement : %s — veuillez choisir une nouvelle entrée."
+  "ph_hc_scope_stale": "Enregistré, mais plus disponible pour cet emplacement : %s — veuillez choisir une nouvelle entrée.",
+  "ph_hc_preview_count_bridges": "%s jours fériés et %s jours de pont détectés pour %s",
+  "ph_hc_autodetect_nodata": "Aucun pays sélectionné — le pays système d’ioBroker « %s » n’a pas de données de jours fériés. Veuillez choisir un pays.",
+  "ph_hc_autodetect_ambiguous": "Aucun pays sélectionné — le pays système d’ioBroker « %s » recouvre plusieurs pays. Veuillez en choisir un.",
+  "ph_hc_scope_unloadable": "La bibliothèque des jours fériés ne peut pas charger cette zone (défaut connu) — l’adaptateur utilise les jours fériés de la zone englobante.",
+  "ph_excludeInactive": "Exclu, mais son type de jour férié est désactivé (conservé, cliquez pour supprimer) :"
 }

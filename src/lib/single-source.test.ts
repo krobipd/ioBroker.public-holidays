@@ -51,17 +51,32 @@ function posix(p: string): string {
   return p.split(sep).join("/");
 }
 
-/** Markers that must occur in holiday-shared.ts and nowhere else. */
-const SINGLE_SOURCE: Array<{ what: string; marker: RegExp }> = [
-  // Matched on the BODY, not the name: a copy pasted back under another name would otherwise
-  // walk straight past the guard (measured — the first version of this marker did exactly that).
+const COUNTRY_CODES = join(adapterDir, "src", "lib", "country-codes.ts");
+
+/**
+ * Markers that must occur in ONE file and nowhere else (holiday-shared.ts unless named). Matched on
+ * the BODY, not the name: a copy pasted back under another name would otherwise walk straight past
+ * the guard (measured twice — the first toHolidayId marker, and in the 0.17.0 audit an arrow-function
+ * copy of `beats`, `typeRank` and the Thursday rule that the name markers let through).
+ */
+const SINGLE_SOURCE: Array<{ what: string; marker: RegExp; home?: string }> = [
   { what: "the exclude id (toHolidayId)", marker: /normalize\("NFD"\)/ },
   { what: "the exclude id's rule cleaning", marker: /\[\^a-zA-Z0-9_-\]/ },
   { what: "the holiday type list", marker: /flag:\s*"typePublic"/ },
-  { what: "the collision rule (beats)", marker: /function\s+beats\s*\(/ },
-  { what: "the type ranking (typeRank)", marker: /function\s+typeRank\s*\(/ },
-  { what: "the bridge-day algorithm", marker: /dow\s*===\s*4/ },
+  { what: "the collision rule's type step (beats)", marker: /rank\s*!==\s*0/ },
+  { what: "the collision rule's substitute step (beats)", marker: /IsSubstitute\s*!==\s*\w+IsSubstitute/ },
+  { what: "the type ranking (typeRank)", marker: /\.indexOf\(type\)/ },
+  { what: "the bridge-day rule", marker: /isOff\(shiftKey\(\w+,\s*-1\)\)/ },
+  { what: "the bridge-day trigger types", marker: /\["public",\s*"bank"\]/ },
+  { what: "the weekend table", marker: /BD:\s*\[5,\s*6\]/ },
+  { what: "the multi-day expansion (noon rule)", marker: /\+\s*NOON_MS\s*</ },
+  { what: "the exclude key of a substitute", marker: /_\(\?:if\|not_on\|and\)_/ },
+  { what: "the substitute attribution", marker: /h\.name\.startsWith\(/ },
+  { what: "the holiday occurrence of a day", marker: /`\$\{id\}@\$\{keys\[0\]\}`/ },
+  { what: "the holiday-name language rule", marker: /available\.includes\(lang\)/ },
   { what: "the bridge-day names", marker: /BRIDGE_DAY_NAMES\s*[:=]\s*(Record|\{)/ },
+  { what: "the admin wizard's country names", marker: /"Ivory Coast":\s*"CI"/, home: COUNTRY_CODES },
+  { what: "the country resolution", marker: /reason:\s*"ambiguous"|"ambiguous"\s*:\s*"no-data"/, home: COUNTRY_CODES },
 ];
 
 describe("one definition, not two (src/ and src-admin/ share holiday-shared.ts)", () => {
@@ -72,12 +87,17 @@ describe("one definition, not two (src/ and src-admin/ share holiday-shared.ts)"
     expect(files.some(f => posix(f).includes("/src-admin/src/"))).toBe(true);
   });
 
-  for (const { what, marker } of SINGLE_SOURCE) {
-    it(`${what} is defined only in holiday-shared.ts`, () => {
+  for (const { what, marker, home } of SINGLE_SOURCE) {
+    const expected = home ?? SHARED;
+    it(`${what} is defined only in ${expected.split(sep).pop()}`, () => {
       const defining = files.filter(f => marker.test(readFileSync(f, "utf8"))).map(posix);
-      expect(defining).toEqual([posix(SHARED)]);
+      expect(defining).toEqual([posix(expected)]);
     });
   }
+
+  it("country-codes.ts stays import-free (the admin card bundles it too)", () => {
+    expect(readFileSync(COUNTRY_CODES, "utf8")).not.toMatch(/^\s*import\s/m);
+  });
 
   it("holiday-shared.ts stays import-free (it is bundled into two independent builds)", () => {
     const shared = readFileSync(SHARED, "utf8");
@@ -85,7 +105,7 @@ describe("one definition, not two (src/ and src-admin/ share holiday-shared.ts)"
   });
 
   it("the admin card imports the shared module rather than copying from it", () => {
-    for (const rel of ["exclude-options.ts", "scope-options.ts"]) {
+    for (const rel of ["exclude-options.ts", "scope-options.ts", "HolidayPanel.tsx"]) {
       const text = readFileSync(join(adapterDir, "src-admin", "src", rel), "utf8");
       expect(text, `${rel} does not import holiday-shared`).toContain("../../src/lib/holiday-shared.js");
     }

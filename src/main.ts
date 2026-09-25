@@ -10,8 +10,17 @@ import {
   emptyResult,
   logAvailableHolidays,
 } from "./lib/holiday-engine";
-import { formatDateForDisplay, getSystemConfig, resolveCountryCode, resolveLanguages } from "./lib/i18n";
+import { formatDateForDisplay, getSystemConfig, resolveCountry, resolveLanguages } from "./lib/i18n";
+import { migrateNativeKeys, type NativeKeyMigration } from "./lib/native-key-migration";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
+
+/**
+ * Settings keys earlier versions declared and this one no longer reads — nulled on the first start
+ * after an update by the fleet helper (js-controller never deletes a native key):
+ * - `excludePublic`: the exclude field of the pre-0.9.0 config.
+ * - `holidays`: the previous owner's 0.0.x releases on npm (Jey-Cee) declared it.
+ */
+const MIGRATIONS: NativeKeyMigration[] = [{ drop: "excludePublic" }, { drop: "holidays" }];
 
 // Exported so the orchestration unit tests can drive onReady directly.
 export class PublicHolidaysAdapter extends utils.Adapter {
@@ -40,8 +49,9 @@ export class PublicHolidaysAdapter extends utils.Adapter {
    *   EXISTENCE of the key (not on `stopInstance`) is what makes the correction converge: an
    *   already-cleared key reads back as `null`/absent and is left alone, so there is no restart
    *   loop, and a half-corrected install from an earlier version is still repaired.
-   * - `native.excludePublic` → the exclude field of the pre-0.9.0 config. The runtime ignores it,
-   *   but it stays in the instance object forever unless it is cleared here.
+   *
+   * Obsolete `native` keys are NOT handled here: the fleet helper `migrateNativeKeys` (MIGRATIONS
+   * above) owns them, and a second cleanup of the same key would take turns with it.
    *
    * @returns true when something was written and the restart is coming — the caller has to
    *   stand down instead of computing in a process that is going away.
@@ -51,7 +61,6 @@ export class PublicHolidaysAdapter extends utils.Adapter {
     try {
       const instanceObj = await this.getForeignObjectAsync(id);
       const common: Record<string, unknown> = {};
-      const native: Record<string, unknown> = {};
 
       if (instanceObj?.common?.mode === "daemon") {
         this.log.info("Migrating from daemon to schedule mode");
@@ -64,23 +73,10 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         common.supportedMessages = null;
       }
 
-      const legacyExclude = (instanceObj?.native as Record<string, unknown> | undefined)?.excludePublic;
-      if (legacyExclude !== undefined && legacyExclude !== null) {
-        this.log.debug("Clearing the leftover excludePublic setting from a pre-0.9.0 version");
-        native.excludePublic = null;
-      }
-
-      const patch: Record<string, unknown> = {};
-      if (Object.keys(common).length > 0) {
-        patch.common = common;
-      }
-      if (Object.keys(native).length > 0) {
-        patch.native = native;
-      }
-      if (Object.keys(patch).length === 0) {
+      if (Object.keys(common).length === 0) {
         return false;
       }
-      await this.extendForeignObjectAsync(id, patch);
+      await this.extendForeignObjectAsync(id, { common });
       return true;
     } catch (err: unknown) {
       // Objects DB unreachable — not worth failing the run over; the next run retries.
@@ -92,7 +88,12 @@ export class PublicHolidaysAdapter extends utils.Adapter {
   private async onReady(): Promise<void> {
     try {
       // Every instance-object change restarts the instance, so there is no point computing
-      // and publishing in a process that is on its way out.
+      // and publishing in a process that is on its way out. The settings migration comes first
+      // (fleet form); an installation that needs both writes restarts twice, once per write.
+      if (await migrateNativeKeys(this, MIGRATIONS, errText)) {
+        void this.stop?.();
+        return;
+      }
       if (await this.repairInstanceObject()) {
         void this.stop?.();
         return;
@@ -105,16 +106,26 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       const raw = this.config as Record<string, unknown>;
 
       let detectedCountry = "";
+      let systemCountryProblem = "";
       if (!configuredCountry(raw) && sysConfig.country) {
-        detectedCountry = resolveCountryCode(sysConfig.country);
+        const detected = resolveCountry(sysConfig.country);
+        detectedCountry = detected.code;
         if (detectedCountry) {
-          this.log.info(`Using system country: ${detectedCountry}`);
+          this.log.debug(`Using system country: ${detectedCountry}`);
+        } else {
+          const name = oneLine(sysConfig.country);
+          systemCountryProblem =
+            detected.reason === "ambiguous"
+              ? `System country '${name}' covers several countries — choose the country in the adapter settings`
+              : detected.reason === "no-data"
+                ? `System country '${name}' has no holiday data — choose a country in the adapter settings`
+                : `System country '${name}' is not recognized — choose a country in the adapter settings`;
         }
       }
 
       const config = parseConfig(raw, detectedCountry);
       if (!config) {
-        this.log.warn("No country configured — open adapter settings");
+        this.log.warn(systemCountryProblem || "No country configured — open adapter settings");
         // Publish a truthful empty result instead of leaving the previous run's values standing
         // (the same reasoning as the empty type selection below): a `today.isHoliday` that stays
         // `true` forever because the country was cleared is a wrong datapoint with no expiry.
@@ -148,15 +159,17 @@ export class PublicHolidaysAdapter extends utils.Adapter {
           `State '${oneLine(config.state)}' is unknown for ${oneLine(config.country)} — using country-level holidays`,
         );
       } else if (issue?.kind === "region") {
-        this.log.warn(
-          `Region '${oneLine(config.region)}' is unknown for ${oneLine(config.country)}/${oneLine(config.state)} — using broader holidays`,
-        );
+        const scope = config.state ? `${oneLine(config.country)}/${oneLine(config.state)}` : oneLine(config.country);
+        this.log.warn(`Region '${oneLine(config.region)}' is unknown for ${scope} — using broader holidays`);
+      } else if (issue?.kind === "unloadable") {
+        const key = oneLine(config.region || config.state);
+        this.log.warn(`date-holidays cannot load '${key}' (library defect) — using the broader scope's holidays`);
       }
 
       const computed = computeHolidays(config, languages, { instance: hd, systemLanguage: sysConfig.language });
       if (computed.unmatchedExcludes.length > 0) {
         this.log.warn(
-          `These excluded holidays no longer match any holiday (possibly renamed by a date-holidays update): ${oneLine(
+          `These excluded holidays no longer occur in the holiday data (a one-off date that has passed, or changed by a date-holidays update): ${oneLine(
             computed.unmatchedExcludes.join(", "),
           )}`,
         );
@@ -168,25 +181,23 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
       }
 
+      await cleanupDeprecatedStates(this);
+      await ensureObjects(this);
+      await publishStates(this, computed);
+
       // The log line shows the date the way the user's ioBroker displays dates
       // (system.config dateFormat, e.g. "26.10.2026"); the next.date STATE stays ISO.
+      const days = computed.next.daysUntil;
       const nextText = computed.next.isHoliday
-        ? `${oneLine(computed.next.name)} on ${formatDateForDisplay(computed.next.date, sysConfig.dateFormat)} (in ${computed.next.daysUntil} days)`
+        ? `${oneLine(computed.next.name)} on ${formatDateForDisplay(computed.next.date, sysConfig.dateFormat)} (in ${days} ${days === 1 ? "day" : "days"})`
         : "no upcoming holiday";
       const summary = `Today: ${
         computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"
       }, next holiday: ${nextText}`;
       // Logged at info on every run — the start run and each daily schedule run — so the next
-      // holiday is always visible in the log (krobi 2026-08-10). This supersedes the earlier
-      // "no-holiday day stays at debug" choice (audit L3): on an adapter that runs once a day the
-      // single line is wanted, not a noisy heartbeat.
+      // holiday is always visible in the log (krobi 2026-08-10). Written AFTER the states, so the
+      // line never reports values that did not reach the database.
       this.log.info(summary);
-
-      await cleanupDeprecatedStates(this);
-      await ensureObjects(this);
-      await publishStates(this, computed);
-
-      this.log.debug("All holidays computed and published");
     } catch (err: unknown) {
       this.log.error(`onReady failed: ${errText(err)}`);
       // The Sentry plugin only hooks uncaught exceptions — a caught error has to be handed over
@@ -194,10 +205,27 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       // repair, deprecated-state cleanup) stay quiet on purpose: expected broker hiccups with a
       // local fallback, not adapter defects.
       if (this.supportsFeature?.("PLUGINS")) {
-        this.getPluginInstance("sentry")?.getSentryObject()?.captureException(err);
+        await this.reportToSentry(err);
       }
     }
     void this.stop?.();
+  }
+
+  /**
+   * Hand a caught error to Sentry and wait for it to leave: a schedule adapter stops right after,
+   * and the process exits about half a second later — an event still queued then is lost (measured
+   * 2026-06-07: only an explicit flush brought the test event through).
+   *
+   * @param err the caught error
+   */
+  private async reportToSentry(err: unknown): Promise<void> {
+    try {
+      const sentry = this.getPluginInstance("sentry")?.getSentryObject();
+      sentry?.captureException(err);
+      await sentry?.flush?.(2000);
+    } catch (reportErr: unknown) {
+      this.log.debug(`Could not hand the error to Sentry: ${errText(reportErr)}`);
+    }
   }
 
   /**

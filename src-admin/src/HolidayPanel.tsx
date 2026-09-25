@@ -14,12 +14,21 @@ import {
 } from "@mui/material";
 import { I18n } from "@iobroker/gui-components";
 
+import Holidays from "date-holidays";
 import { buildPreviewHolidays, getCountryOptions, getRegionOptions, getStateOptions } from "./scope-options";
-import { buildExcludeOptions, computeOrphanIds, enabledTypeKeys, HOLIDAY_TYPES } from "./exclude-options";
+import {
+  buildExcludeOptions,
+  computeInactiveIds,
+  computeOrphanIds,
+  enabledTypeKeys,
+  HOLIDAY_TYPES,
+} from "./exclude-options";
 // The bridge-day name comes from the runtime's own table, not from the card's i18n: the preview
 // chip and the published `name` state must read identically, and a second translation table for
 // the same sentence is exactly what drifts (audit finding F16).
-import { bridgeDayName } from "../../src/lib/holiday-shared.js";
+import { bridgeDayName, formatDayMonth } from "../../src/lib/holiday-shared.js";
+// The same resolution of the stored system country the runtime applies (both admin lists).
+import { resolveCountryName } from "../../src/lib/country-codes.js";
 
 /**
  * Props for the guided holiday-config card. It owns the flat `native.*` fields directly — the thin
@@ -31,8 +40,12 @@ import { bridgeDayName } from "../../src/lib/holiday-shared.js";
 export interface HolidayPanelProps {
   /** The jsonConfig `native` record (flat fields). */
   data: Record<string, unknown>;
-  /** `system.config.common.country` — the ISO clear-name shown as the auto-detect hint. */
+  /** `system.config.common.country` — a country NAME from one of the two admin lists. */
   systemCountry: string;
+  /** `system.config.common.language` — the language the runtime publishes holiday names in. */
+  systemLanguage: string;
+  /** `system.config.common.dateFormat` — how the runtime prints dates ("" = default). */
+  dateFormat: string;
   /** Persist one native attribute (wires the admin Save button). Must be referentially stable. */
   onChange: (attr: string, value: unknown) => void;
   /**
@@ -53,10 +66,19 @@ function readStringArray(data: Record<string, unknown>, attr: string): string[] 
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 }
 
-// "2026-05-14" → "14.05." for the preview chips (mirrors the exclude-option label style).
-function formatDay(dateKey: string): string {
-  const [, month, day] = dateKey.split("-");
-  return month && day ? `${day}.${month}.` : dateKey;
+/** The codes the card's date-holidays has data for — the set country resolution checks against. */
+const SUPPORTED_COUNTRIES = new Set(Object.keys(new Holidays().getCountries()));
+
+/**
+ * The option whose value matches regardless of case — date-holidays upper-cases what it is given,
+ * so a hand-written `by` IS Bavaria, and the card must not call it stale.
+ *
+ * @param options the options of one tier
+ * @param value the stored value
+ */
+function findOption<T extends { value: string }>(options: T[], value: string): T | undefined {
+  const upper = value.toUpperCase();
+  return options.find(o => o.value.toUpperCase() === upper);
 }
 
 /**
@@ -90,21 +112,33 @@ function Stage({ title, children }: { title: string; children: React.ReactNode }
  * @param props card data, detected system country and the change callback
  */
 export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
-  const { data, systemCountry, onChange, onChangeMany } = props;
+  const { data, systemCountry, systemLanguage, dateFormat, onChange, onChangeMany } = props;
   const lang = I18n.getLanguage();
   const t = (key: string, ...args: (string | number)[]): string => I18n.t(key, ...args);
   const year = new Date().getFullYear();
 
-  const country = readString(data, "country");
-  const state = readString(data, "state");
+  const storedCountry = readString(data, "country");
+  const storedState = readString(data, "state");
   const region = readString(data, "region");
   const excludeHolidays = readStringArray(data, "excludeHolidays");
   const includeBridgeDays = data.includeBridgeDays === true;
   const enabled = enabledTypeKeys(flag => data[flag]);
 
+  // A stored value the runtime resolves ("Germany", "de", " DE") is shown as what it resolves to —
+  // and only written back when the user changes it (nothing arms the Save button on its own).
+  const resolvedStored = storedCountry ? resolveCountryName(storedCountry, SUPPORTED_COUNTRIES) : null;
+  const country = resolvedStored?.code || storedCountry;
+  // No country chosen: the runtime uses the ioBroker system country — so does the card.
+  const detected = !storedCountry && systemCountry ? resolveCountryName(systemCountry, SUPPORTED_COUNTRIES) : null;
+  const scopeCountry = country || detected?.code || "";
+
   const countryOptions = React.useMemo(() => getCountryOptions(lang), [lang]);
-  const stateOptions = React.useMemo(() => getStateOptions(country, lang), [country, lang]);
-  const regionOptions = React.useMemo(() => getRegionOptions(country, state, lang), [country, state, lang]);
+  const stateOptions = React.useMemo(() => getStateOptions(scopeCountry, lang), [scopeCountry, lang]);
+  const stateOption = storedState ? findOption(stateOptions, storedState) : undefined;
+  const state = stateOption?.value ?? storedState;
+  const regionOptions = React.useMemo(() => getRegionOptions(scopeCountry, state, lang), [scopeCountry, state, lang]);
+  const regionOption = region ? findOption(regionOptions, region) : undefined;
+  const unloadable = stateOption?.unloadable || regionOption?.unloadable;
 
   // A stored state/region that no longer belongs to the chosen scope is NOT cleared here: the
   // narrower scope is cleared in the very write that changes the wider one (see the country and
@@ -113,26 +147,54 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
   // without anybody touching anything (audit finding F13); instead it is surfaced the way stale
   // excludes have always been surfaced — visibly, for the user to resolve. No `…Options.length`
   // guard: a stale state must stay visible even when the new country has no states at all.
-  const staleScope = [
-    state && !stateOptions.some(o => o.value === state) ? state : "",
-    region && !regionOptions.some(o => o.value === region) ? region : "",
-  ].filter(Boolean);
+  const staleState = storedState && !stateOption ? storedState : "";
+  const staleRegion = region && !regionOption ? region : "";
+  const staleScope = [staleState, staleRegion].filter(Boolean);
 
   const enabledKey = enabled.join(",");
   const excludeOptions = React.useMemo(
-    () => buildExcludeOptions({ country, state, region, types: enabled }, lang, year),
+    () =>
+      buildExcludeOptions(
+        { country: scopeCountry, state, region, types: enabled },
+        systemLanguage,
+        year,
+        undefined,
+        dateFormat,
+      ),
     // enabledKey stands in for the `enabled` array identity
-    [country, state, region, enabledKey, lang, year],
+    [scopeCountry, state, region, enabledKey, systemLanguage, year, dateFormat],
   );
-  const orphanIds = computeOrphanIds(excludeHolidays, excludeOptions);
+  // Validation against ALL types: an exclude of a type that is only switched off is kept and shown
+  // apart, never offered for deletion as an orphan.
+  const allTypeOptions = React.useMemo(
+    () =>
+      buildExcludeOptions(
+        { country: scopeCountry, state, region, types: HOLIDAY_TYPES.map(ht => ht.key) },
+        systemLanguage,
+        year,
+        undefined,
+        dateFormat,
+      ),
+    [scopeCountry, state, region, systemLanguage, year, dateFormat],
+  );
+  const orphanIds = computeOrphanIds(excludeHolidays, allTypeOptions);
+  const inactiveIds = computeInactiveIds(excludeHolidays, excludeOptions, allTypeOptions);
   const selectedExclude = excludeOptions.filter(o => excludeHolidays.includes(o.id));
 
   const excludeKey = excludeHolidays.join(",");
   const preview = React.useMemo(
     () =>
-      buildPreviewHolidays({ country, state, region, types: enabled, excludeHolidays }, includeBridgeDays, lang, year),
-    [country, state, region, enabledKey, excludeKey, includeBridgeDays, lang, year],
+      buildPreviewHolidays(
+        { country: scopeCountry, state, region, types: enabled, excludeHolidays },
+        includeBridgeDays,
+        systemLanguage,
+        year,
+      ),
+    [scopeCountry, state, region, enabledKey, excludeKey, includeBridgeDays, systemLanguage, year],
   );
+  const bridgeCount = preview.filter(h => h.type === "bridge").length;
+  const holidayCount = preview.length - bridgeCount;
+  const countryLabel = (code: string): string => countryOptions.find(o => o.value === code)?.label ?? code;
 
   return (
     <Box sx={{ maxWidth: 720 }}>
@@ -164,7 +226,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               fullWidth
               size="small"
               options={stateOptions}
-              value={stateOptions.find(o => o.value === state) ?? null}
+              value={stateOption ?? null}
               getOptionLabel={o => o.label}
               isOptionEqualToValue={(o, v) => o.value === v.value}
               onChange={(_e, v) => onChangeMany({ state: v?.value ?? "", region: "" })}
@@ -182,7 +244,7 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               fullWidth
               size="small"
               options={regionOptions}
-              value={regionOptions.find(o => o.value === region) ?? null}
+              value={regionOption ?? null}
               getOptionLabel={o => o.label}
               isOptionEqualToValue={(o, v) => o.value === v.value}
               onChange={(_e, v) => onChange("region", v?.value ?? "")}
@@ -196,19 +258,58 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
             />
           ) : null}
           {staleScope.length ? (
+            <Box>
+              <Typography
+                variant="body2"
+                color="warning.main"
+              >
+                {t("ph_hc_scope_stale", staleScope.join(", "))}
+              </Typography>
+              {/* A stale value may sit where no picker is shown (the country has no states), so it
+                  gets its own delete — one write that clears the stale tier and everything below. */}
+              {staleState ? (
+                <Chip
+                  label={staleState}
+                  size="small"
+                  onDelete={() => onChangeMany({ state: "", region: "" })}
+                  sx={{ mr: 0.5, mt: 0.5 }}
+                />
+              ) : null}
+              {staleRegion ? (
+                <Chip
+                  label={staleRegion}
+                  size="small"
+                  onDelete={() => onChange("region", "")}
+                  sx={{ mr: 0.5, mt: 0.5 }}
+                />
+              ) : null}
+            </Box>
+          ) : null}
+          {unloadable ? (
             <Typography
               variant="body2"
               color="warning.main"
             >
-              {t("ph_hc_scope_stale", staleScope.join(", "))}
+              {t("ph_hc_scope_unloadable")}
             </Typography>
           ) : null}
-          {!country && systemCountry ? (
+          {detected?.code ? (
             <Typography
               variant="body2"
               color="text.secondary"
             >
-              {t("ph_hc_autodetect", systemCountry)}
+              {t("ph_hc_autodetect", countryLabel(detected.code))}
+            </Typography>
+          ) : null}
+          {detected && !detected.code ? (
+            <Typography
+              variant="body2"
+              color="warning.main"
+            >
+              {t(
+                detected.reason === "ambiguous" ? "ph_hc_autodetect_ambiguous" : "ph_hc_autodetect_nodata",
+                systemCountry,
+              )}
             </Typography>
           ) : null}
         </Stack>
@@ -279,7 +380,8 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
           value={selectedExclude}
           getOptionLabel={o => o.label}
           isOptionEqualToValue={(o, v) => o.id === v.id}
-          onChange={(_e, v) => onChange("excludeHolidays", [...v.map(o => o.id), ...orphanIds])}
+          // Orphans and excludes of switched-off types are not in `v` — they are carried along, not dropped.
+          onChange={(_e, v) => onChange("excludeHolidays", [...v.map(o => o.id), ...orphanIds, ...inactiveIds])}
           renderInput={p => (
             <TextField
               {...p}
@@ -287,10 +389,30 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
               label={t("ph_excludeLabel")}
               // An empty list has two causes: no country yet, or no holiday type enabled. Only the
               // first one is fixed by picking a country — the second is explained above.
-              placeholder={excludeOptions.length || country ? "" : t("ph_excludeSelectCountry")}
+              placeholder={excludeOptions.length || scopeCountry ? "" : t("ph_excludeSelectCountry")}
             />
           )}
         />
+        {inactiveIds.length ? (
+          <Box sx={{ mt: 1 }}>
+            <Box sx={{ fontSize: 12, opacity: 0.7, mb: 0.5 }}>{t("ph_excludeInactive")}</Box>
+            {inactiveIds.map(id => (
+              <Chip
+                key={id}
+                label={allTypeOptions.find(o => o.id === id)?.label ?? id}
+                size="small"
+                variant="outlined"
+                onDelete={() =>
+                  onChange(
+                    "excludeHolidays",
+                    excludeHolidays.filter(v => v !== id),
+                  )
+                }
+                sx={{ mr: 0.5, mb: 0.5 }}
+              />
+            ))}
+          </Box>
+        ) : null}
         {orphanIds.length ? (
           <Box sx={{ mt: 1 }}>
             <Box sx={{ fontSize: 12, opacity: 0.7, mb: 0.5 }}>{t("ph_excludeOrphans")}</Box>
@@ -316,21 +438,29 @@ export function HolidayPanel(props: HolidayPanelProps): React.JSX.Element {
 
       {/* Tier 5 — live preview of what the runtime would detect */}
       <Stage title={t("ph_hc_preview_title")}>
-        {country ? (
+        {scopeCountry ? (
           <>
             <Typography
               variant="body2"
               sx={{ mb: 0.5 }}
             >
-              {t("ph_hc_preview_count", preview.length, year)}
+              {bridgeCount
+                ? t("ph_hc_preview_count_bridges", holidayCount, bridgeCount, year)
+                : t("ph_hc_preview_count", holidayCount, year)}
             </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 168, overflowY: "auto" }}>
+            <Box
+              role="list"
+              aria-label={t("ph_hc_preview_title")}
+              tabIndex={0}
+              sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 168, overflowY: "auto" }}
+            >
               {preview.map(h => (
                 <Chip
                   key={h.date}
+                  role="listitem"
                   size="small"
                   variant={h.type === "bridge" ? "outlined" : "filled"}
-                  label={`${formatDay(h.date)} ${h.type === "bridge" ? bridgeDayName(lang) : h.name}`}
+                  label={`${formatDayMonth(h.date, dateFormat)} ${h.type === "bridge" ? bridgeDayName(systemLanguage) : h.name}`}
                 />
               ))}
             </Box>

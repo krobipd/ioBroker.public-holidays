@@ -1,12 +1,14 @@
 import { I18n } from "@iobroker/adapter-core";
 import Holidays from "date-holidays";
 import type translations from "../../admin/i18n/en.json";
-import { COUNTRY_NAME_TO_CODE } from "./country-codes";
+import { type CountryResolution, resolveCountryName } from "./country-codes";
 import { errText } from "./error-utils";
+import { pickHolidayLanguages } from "./holiday-shared";
+
+// Pure helpers the admin card shares live in holiday-shared.ts; re-exported here for the runtime.
+export { formatDateForDisplay, SUPPORTED_LANGS } from "./holiday-shared";
 
 export type I18nKey = keyof typeof translations;
-
-export const SUPPORTED_LANGS = ["de", "en", "es", "fr", "it", "nl", "pl", "pt", "ru", "uk", "zh"];
 
 export function tName(key: I18nKey): ioBroker.StringOrTranslated {
   return I18n.getTranslatedObject(key);
@@ -14,43 +16,38 @@ export function tName(key: I18nKey): ioBroker.StringOrTranslated {
 
 // Takes the already-built date-holidays instance (its getLanguages() is country-scoped) so the
 // caller need not construct a throwaway second instance just to detect languages (audit L4).
+// The same rule the admin card applies (holiday-shared pickHolidayLanguages), fed with what the
+// scope's data carries.
 export function resolveLanguages(systemLang: string, holidays: Holidays): string[] {
-  const lang = systemLang.toLowerCase().split("-")[0];
-  if (!SUPPORTED_LANGS.includes(lang)) {
-    return ["en"];
-  }
-
-  if (holidays.getLanguages().includes(lang)) {
-    return lang === "en" ? ["en"] : [lang, "en"];
-  }
-  return ["en"];
+  return pickHolidayLanguages(systemLang, holidays.getLanguages());
 }
 
-// ioBroker.admin stores the country NAME (e.g. "Austria") in system.config.common.country,
-// not the ISO code. date-holidays needs the alpha-2 code and silently returns [] for a name.
-// Resolve name -> supported code; return "" if it cannot be mapped (caller falls back to
-// "no country configured"). Already-a-code values are accepted too.
+// ioBroker.admin stores the country NAME (e.g. "Austria", or "Vietnam" from the first-run wizard)
+// in system.config.common.country, not the ISO code. date-holidays needs the alpha-2 code and
+// silently returns [] for a name. Already-a-code values are accepted too.
 let supportedCodes: Set<string> | null = null;
-let nameToCode: Map<string, string> | null = null;
 
-export function resolveCountryCode(value: string): string {
-  const v = value.trim();
-  if (!v) {
-    return "";
-  }
+/**
+ * Resolve a stored country value to a date-holidays code, with the reason when that fails.
+ *
+ * @param value the stored value
+ * @returns the resolution (see country-codes resolveCountryName)
+ */
+export function resolveCountry(value: string): CountryResolution {
   if (!supportedCodes) {
     supportedCodes = new Set(Object.keys(new Holidays().getCountries()));
   }
-  if (!nameToCode) {
-    nameToCode = new Map(Object.entries(COUNTRY_NAME_TO_CODE).map(([name, code]) => [name.toLowerCase(), code]));
-  }
+  return resolveCountryName(value, supportedCodes);
+}
 
-  const upper = v.toUpperCase();
-  if (v.length === 2 && supportedCodes.has(upper)) {
-    return upper;
-  }
-  const mapped = nameToCode.get(v.toLowerCase());
-  return mapped && supportedCodes.has(mapped) ? mapped : "";
+/**
+ * Resolve a stored country value to a date-holidays code.
+ *
+ * @param value the stored value
+ * @returns the code, or "" when it cannot be resolved
+ */
+export function resolveCountryCode(value: string): string {
+  return resolveCountry(value).code;
 }
 
 export interface SystemConfig {
@@ -86,23 +83,4 @@ export async function getSystemConfig(adapter: ioBroker.Adapter): Promise<System
     );
     return { country: "", language: "en", dateFormat: "" };
   }
-}
-
-/**
- * Render a calendar key (YYYY-MM-DD) in the system's configured date display format
- * ("DD.MM.YYYY" → "26.10.2026") for human-facing log lines. The machine-facing
- * `next.date` state keeps the ISO form — scripts and comparisons rely on it.
- * An empty/unrecognized format (or a malformed key) returns the key unchanged.
- *
- * @param dateKey the ISO calendar date (YYYY-MM-DD)
- * @param dateFormat the system date format using DD / MM / YYYY (or YY) tokens
- * @returns the formatted date, or the untouched key when formatting is not possible
- */
-export function formatDateForDisplay(dateKey: string, dateFormat: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
-  if (!m || !dateFormat.includes("DD") || !dateFormat.includes("MM") || !/Y{2,4}/.test(dateFormat)) {
-    return dateKey;
-  }
-  const [, year, month, day] = m;
-  return dateFormat.replace("YYYY", year).replace("YY", year.slice(-2)).replace("MM", month).replace("DD", day);
 }
