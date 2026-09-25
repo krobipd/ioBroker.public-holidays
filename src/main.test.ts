@@ -757,6 +757,16 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     expect(logsOf(stub, "info").find(m => m.startsWith("Today:"))).toMatch(/\(in 1 day\)$/);
   });
 
+  it("says in debug output when the host clock is not in one of the country's zones", async () => {
+    const { internal, stub } = setup({ country: "JP" });
+    stub.log.level = "debug";
+    await internal.onReady();
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    expect(logsOf(stub, "debug").some(m => m.startsWith(`Host time zone ${zone} is not one of JP's`))).toBe(
+      zone !== "Asia/Tokyo",
+    );
+  });
+
   it("a region without a state: no stray slash in the warning", async () => {
     const { internal, stub } = setup({ country: "DE", region: "ZZ" });
     await internal.onReady();

@@ -151,6 +151,18 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       hd.setLanguages(languages);
       this.log.debug(`System language: ${oneLine(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
 
+      // The days follow the HOST clock (the daily run fires at the host's midnight). A container
+      // left on UTC while the country is elsewhere shifts every day by hours — worth a line when
+      // someone looks at debug output, not a daily warning (a country other than the host's own is
+      // a legitimate choice).
+      const hostZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const countryZones = hd.getTimezones?.() ?? [];
+      if (countryZones.length > 0 && !countryZones.includes(hostZone)) {
+        this.log.debug(
+          `Host time zone ${oneLine(hostZone)} is not one of ${oneLine(config.country)}'s (${countryZones.join(", ")}) — days follow the host clock`,
+        );
+      }
+
       const issue = detectScopeIssue(config, languages, hd);
       if (issue?.kind === "country") {
         this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
