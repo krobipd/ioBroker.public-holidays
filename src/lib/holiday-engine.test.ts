@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computeHolidays,
+  createHolidaysInstance,
   detectBridgeDays,
   detectScopeIssue,
   logAvailableHolidays,
@@ -8,6 +9,7 @@ import {
   toDateKey,
   type RawHoliday,
 } from "./holiday-engine";
+import { pickHolidayLanguages } from "./holiday-shared";
 import type { AdapterConfig } from "./types";
 
 function makeConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
@@ -555,9 +557,12 @@ describe("localization", () => {
     expect(result.today.name.length).toBeGreaterThan(0);
   });
 
-  it("English fallback for unsupported language", () => {
-    const result = computeHolidays(makeConfig(), ["en"], { referenceDate: makeDate("2026-01-01") });
-    expect(result.today.name.length).toBeGreaterThan(0);
+  it("a system language the country's data lacks falls back to English (DE data, Swedish system)", () => {
+    const hd = createHolidaysInstance(makeConfig());
+    const languages = pickHolidayLanguages("sv", hd.getLanguages());
+    expect(languages).toEqual(["en"]);
+    const result = computeHolidays(makeConfig(), languages, { referenceDate: makeDate("2026-01-01") });
+    expect(result.today.name).toBe("New Year's Day");
   });
 });
 
@@ -817,5 +822,103 @@ describe("detectScopeIssue", () => {
 
   it("returns null for a fully valid scope", () => {
     expect(detectScopeIssue(makeConfig({ country: "DE", state: "BY" }), ["en"])).toBeNull();
+  });
+});
+
+// ─── Multi-day holidays (0.18.0) ────────────────────────────────────
+
+describe("multi-day holidays count on every day", () => {
+  it("RU 3 January: today is the New Year holiday, tomorrow too, next is Christmas on 7 January", () => {
+    const result = computeHolidays(makeConfig({ country: "RU" }), ["en"], { referenceDate: makeDate("2026-01-03") });
+    expect(result.today).toEqual({ name: "New Year Holiday", isHoliday: true });
+    expect(result.tomorrow.isHoliday).toBe(true);
+    // The rest of the holiday running today stays in today/tomorrow — `next` is the next holiday.
+    expect(result.next).toMatchObject({ name: "Christmas Day", date: "2026-01-07", daysUntil: 4 });
+  });
+
+  it("the day before a multi-day holiday: next is its first day", () => {
+    const result = computeHolidays(makeConfig({ country: "KR" }), ["en"], { referenceDate: makeDate("2026-09-23") });
+    expect(result.next).toMatchObject({ name: "Korean Thanksgiving", date: "2026-09-24", daysUntil: 1 });
+    expect(result.dayAfterTomorrow).toEqual({ name: "Korean Thanksgiving", isHoliday: true });
+  });
+
+  it("VN Tết: every day of the holidays, not only the first", () => {
+    for (const day of ["2026-02-16", "2026-02-18", "2026-02-20"]) {
+      const result = computeHolidays(makeConfig({ country: "VN" }), ["en"], { referenceDate: makeDate(day) });
+      expect(result.today.isHoliday, day).toBe(true);
+    }
+  });
+
+  it("yesterday on 1 January reaches back into the previous year (TH New Year's Eve)", () => {
+    const result = computeHolidays(makeConfig({ country: "TH" }), ["en"], { referenceDate: makeDate("2027-01-01") });
+    expect(result.yesterday).toEqual({ name: "New Year's Eve", isHoliday: true });
+  });
+});
+
+// ─── The cron hour and the time zone (0.18.0, audit T3) ─────────────
+
+describe("the run at midnight", () => {
+  // The daily run starts at 00:00 local time; a test at noon cannot tell a local date from a UTC one.
+  it("30 seconds after midnight on a holiday: today is that holiday", () => {
+    const result = computeHolidays(makeConfig(), ["en"], { referenceDate: new Date(2026, 9, 3, 0, 0, 30) });
+    expect(result.today.isHoliday).toBe(true);
+    expect(result.yesterday.isHoliday).toBe(false);
+  });
+
+  it("30 seconds before midnight on the eve: the holiday is tomorrow, and next in 1 day", () => {
+    const result = computeHolidays(makeConfig(), ["en"], { referenceDate: new Date(2026, 9, 2, 23, 59, 30) });
+    expect(result.today.isHoliday).toBe(false);
+    expect(result.tomorrow.isHoliday).toBe(true);
+    expect(result.next).toMatchObject({ date: "2026-10-03", daysUntil: 1 });
+  });
+
+  it("daysUntil counts calendar days across a DST switch in a zone that has one (Europe/Vienna)", () => {
+    // The CI runs in UTC, where a day is always 24 h — pin a DST zone for this one case.
+    const previous = process.env.TZ;
+    process.env.TZ = "Europe/Vienna";
+    try {
+      const result = computeHolidays(makeConfig(), ["de"], { referenceDate: new Date(2026, 2, 28, 0, 0, 30) });
+      expect(result.next).toMatchObject({ date: "2026-04-03", daysUntil: 6 });
+    } finally {
+      if (previous === undefined) {
+        delete process.env.TZ;
+      } else {
+        process.env.TZ = previous;
+      }
+    }
+  });
+});
+
+// ─── Scope diagnostics (0.18.0) ─────────────────────────────────────
+
+describe("detectScopeIssue — case and the library's mixed-case keys", () => {
+  it("a hand-written lower-case state is the state (date-holidays upper-cases it anyway)", () => {
+    expect(detectScopeIssue(makeConfig({ country: "DE", state: "by" }), ["en"])).toBeNull();
+  });
+
+  it("NZ Timaru cannot be loaded by date-holidays — said, not hidden", () => {
+    expect(detectScopeIssue(makeConfig({ country: "NZ", state: "CAN", region: "Timaru" }), ["en"])).toEqual({
+      kind: "unloadable",
+    });
+  });
+
+  it("the twelve mixed-case scopes still load only their parent — a fixed library shows here", () => {
+    const base = createHolidaysInstance(makeConfig({ country: "CK" }));
+    const scopes: Array<[string, string, string]> = [
+      ...Object.keys(base.getStates("CK") ?? {}).map(s => ["CK", s, ""] as [string, string, string]),
+      ["NZ", "CAN", "Timaru"],
+      ["NZ", "WTC", "Buller"],
+    ];
+    expect(scopes).toHaveLength(12);
+    const days = (c: string, st: string, rg: string): string =>
+      JSON.stringify(
+        createHolidaysInstance(makeConfig({ country: c, state: st, region: rg }))
+          .getHolidays(2026)
+          .map(h => h.date + h.name),
+      );
+    for (const [c, st, rg] of scopes) {
+      const parent = rg ? days(c, st, "") : days(c, "", "");
+      expect(days(c, st, rg), `${c}/${st}/${rg} now loads — drop the "unloadable" warning`).toBe(parent);
+    }
   });
 });

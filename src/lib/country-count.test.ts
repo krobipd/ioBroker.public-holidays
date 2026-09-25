@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import Holidays from "date-holidays";
 
-// The country count is written into the user-facing texts as a plain number, while the release
-// gate (`scripts/check-date-holidays.mjs`) lifts date-holidays to npm-latest on every release —
+// The country count is written into the user-facing texts as a plain number, while every release
+// lifts date-holidays to npm-latest (the release run's npm update, `npm run update:date-holidays`) —
 // a new country in the data would leave every one of these texts silently wrong. Precise patterns
 // per place, not a bare `\b206\b`: a version or date fragment must not satisfy this.
 describe("the advertised country count matches the bundled date-holidays data", () => {

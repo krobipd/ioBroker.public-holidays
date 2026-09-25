@@ -10,9 +10,9 @@ import { describe, expect, it } from "vitest";
 // six data releases ahead, reporting a day as a public holiday that newer data classifies as an
 // observance.
 //
-// scripts/check-date-holidays.mjs raises the floor to the installed version on every release; this
-// guard is the force that makes the drift visible in between. Fix when it fails:
-//   node scripts/check-date-holidays.mjs
+// The release run's npm update raises the floor with the installed version; this guard is the force
+// that makes the drift visible in between. Fix when it fails:
+//   npm run update:date-holidays
 
 function readJson(rel: string): { version?: string; dependencies?: Record<string, string> } {
   return JSON.parse(readFileSync(join(__dirname, rel), "utf8")) as {

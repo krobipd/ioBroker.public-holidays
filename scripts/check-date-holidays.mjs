@@ -1,15 +1,16 @@
 #!/usr/bin/env node
-// Release gate: keep the bundled `date-holidays` current AND keep the admin card's bundled copy
-// in lockstep with the runtime's. Wired into the release flow via .releaseconfig.json:before_commit.
+// Developer tool (`npm run update:date-holidays`): bring the bundled `date-holidays` to npm-latest AND
+// keep the admin card's bundled copy in lockstep with the runtime's. Not a release hook: the release
+// hook runs AFTER the pre-run proved the tree, so nothing there may change it (fleet rule, round 44).
+// The release run's npm update (phase C) lifts date-holidays like every dependency; when the card's
+// pin does not follow, date-holidays-version-parity.test.ts turns the pre-run red — this is the fix.
 //
 // date-holidays ships holiday DATA (new countries, changed dates, corrected classifications) in
 // every kind of release, so a release that ships an older copy ships wrong holidays.
 //
-// Currency (ENFORCED, krobi 2026-09-04: "immer die aktuelle Release-Version eingepackt"): if the
-// installed copy is behind npm's latest, this gate INSTALLS the latest one — including a new
-// major. It does not warn and move on: a warning is exactly how six data releases went by
-// unnoticed. The safety net is step 4 below: after a bump this gate runs `npm test` against the
-// new library, so an API break fails the release instead of shipping stale data.
+// Currency (krobi 2026-09-04: "immer die aktuelle Release-Version eingepackt"): if the installed
+// copy is behind npm's latest, this tool INSTALLS the latest one — including a new major. Step 4
+// below runs `npm test` against the new library right after, so an API break shows at once.
 //
 // Parity (the reason this gate touches src-admin): the admin card (src-admin) bundles its OWN
 // date-holidays at build time and computes the country/state/region cascade + live preview from
@@ -19,10 +20,9 @@
 // and installs it, so the shipped card always sees the same holiday data. The independent guard
 // src/lib/date-holidays-version-parity.test.ts fails CI if this ever drifts.
 //
-// Rebuild (step 4): the release pre-run builds the card (gate D05) BEFORE this gate runs, so after
-// a bump the tracked card bundle in admin/custom/ would still carry the old data. Only when this
-// gate actually changed a version does it re-run the tests and rebuild the card; an up-to-date run
-// changes nothing and costs nothing.
+// Rebuild (step 4): after a bump the tracked card bundle in admin/custom/ still carries the old data.
+// Only when this tool actually changed a version does it re-run the tests and rebuild the card; an
+// up-to-date run changes nothing and costs nothing.
 import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { readFileSync, writeFileSync } from "node:fs";

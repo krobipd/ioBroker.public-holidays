@@ -146,13 +146,14 @@ interface StubSurface {
   objects: Map<string, ObjEntry>;
   states: Map<string, { val: unknown; ack: boolean }>;
   logs: { level: string; msg: string }[];
-  log: { level: string };
+  log: { level: string; info: (m: string) => void };
   stop: ReturnType<typeof vi.fn>;
   instanceObjectWrites: number;
   objectWrites: number;
   stateWrites: number;
   failNextForeignObjectRead: boolean;
   extendObject: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
+  setStateChangedAsync: (id: string, val: unknown, ack: boolean) => Promise<void>;
   extendForeignObjectAsync: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
   getForeignObjectAsync: (id: string) => Promise<ObjEntry | null>;
   supportsFeature?: (feature: string) => boolean;
@@ -703,6 +704,71 @@ describe("onReady — error handling", () => {
     expect(stub.getPluginInstance).toHaveBeenCalledWith("sentry");
     expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("onReady — what a run writes and says (0.18.0)", () => {
+  it("names the bridge day in the SYSTEM language, whatever the data language (de system, US scope)", () => {
+    // US data carries no German — holiday names are English, the adapter's own bridge-day name is not.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-27T00:00:30"));
+    const { internal, stub } = setup({ country: "US", includeBridgeDays: true });
+    stub.objects.set("system.config", { common: { language: "de" } });
+    return internal.onReady().then(() => {
+      expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "Brückentag", ack: true });
+      expect(stub.states.get("public-holidays.0.yesterday.name")?.val).toBe("Thanksgiving Day");
+    });
+  });
+
+  it("a second run with nothing changed writes no object and no state", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-01T00:00:30"));
+    const { internal, stub } = setup({ country: "DE" });
+    await internal.onReady();
+    expect(stub.objectWrites).toBe(17);
+    expect(stub.stateWrites).toBe(12);
+
+    stub.objectWrites = 0;
+    stub.stateWrites = 0;
+    await internal.onReady();
+    expect(stub.objectWrites).toBe(0);
+    expect(stub.stateWrites).toBe(0);
+  });
+
+  it("the summary line comes after the states are written, with a singular day", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-02T00:00:30"));
+    const { internal, stub } = setup({ country: "DE" });
+    const order: string[] = [];
+    const setState = stub.setStateChangedAsync.bind(stub);
+    stub.setStateChangedAsync = (id: string, val: unknown, ack: boolean): Promise<void> => {
+      order.push("state");
+      return setState(id, val, ack);
+    };
+    const info = stub.log.info;
+    stub.log.info = (m: string): void => {
+      order.push(m.startsWith("Today:") ? "summary" : "info");
+      info(m);
+    };
+
+    await internal.onReady();
+
+    expect(order.lastIndexOf("state")).toBeLessThan(order.indexOf("summary"));
+    expect(logsOf(stub, "info").find(m => m.startsWith("Today:"))).toMatch(/\(in 1 day\)$/);
+  });
+
+  it("a region without a state: no stray slash in the warning", async () => {
+    const { internal, stub } = setup({ country: "DE", region: "ZZ" });
+    await internal.onReady();
+    expect(logsOf(stub, "warn")).toContain("Region 'ZZ' is unknown for DE — using broader holidays");
+  });
+
+  it("a scope date-holidays cannot load says so (NZ Timaru)", async () => {
+    const { internal, stub } = setup({ country: "NZ", state: "CAN", region: "Timaru" });
+    await internal.onReady();
+    expect(logsOf(stub, "warn")).toContain(
+      "date-holidays cannot load 'Timaru' (library defect) — using the broader scope's holidays",
+    );
   });
 });
 

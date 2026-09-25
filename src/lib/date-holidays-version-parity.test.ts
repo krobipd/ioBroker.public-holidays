@@ -6,10 +6,10 @@ import { describe, expect, it } from "vitest";
 // (src/) uses the root-installed one. After the guided-config rewrite the card computes the
 // country/state/region cascade AND the live preview from its bundled copy — so if the two
 // versions drift, the card can offer a country/state/region the runtime does not compute.
-// The root dep is a caret range force-bumped to npm-latest on every release by
-// scripts/check-date-holidays.mjs, while src-admin is exact-pinned and ignored by dependabot —
-// they only stay aligned if something forces it. This guard is that force: it fails when the
-// src-admin pin no longer equals the version the runtime actually resolves.
+// The root dep is a caret range lifted to npm-latest on every release (the release run's npm
+// update), while src-admin is exact-pinned and ignored by dependabot — they only stay aligned if
+// something forces it. This guard is that force: it fails when the src-admin pin no longer equals
+// the version the runtime actually resolves. Fix when it fails: `npm run update:date-holidays`.
 
 function readJson(rel: string): { version?: string; dependencies?: Record<string, string> } {
   return JSON.parse(readFileSync(join(__dirname, rel), "utf8"));

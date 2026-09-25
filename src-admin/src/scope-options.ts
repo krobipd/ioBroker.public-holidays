@@ -2,7 +2,7 @@
 // under src/ can import and exercise it directly. The country/state/region taxonomy is served
 // client-side from the card's own bundled date-holidays, replacing the 145 KB static jsonConfig
 // the generator used to emit. Its bundled version is held equal to the runtime's by
-// scripts/check-date-holidays.mjs (guard: date-holidays-version-parity.test.ts).
+// `npm run update:date-holidays` (guard: date-holidays-version-parity.test.ts).
 //
 // The collision rule and the bridge-day algorithm come from src/lib/holiday-shared.ts — the SAME
 // module the runtime uses, so the preview cannot drift from what gets published. The explicit

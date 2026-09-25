@@ -24,8 +24,6 @@ updates:
       - dependency-name: 'typescript'
         update-types:
           - 'version-update:semver-major'
-      # date-holidays is held at npm-latest by the release currency gate (scripts/check-date-holidays.mjs) — no dependabot PRs needed.
-      - dependency-name: 'date-holidays'
 
   # src-admin (Module-Federation admin component): hand-pinned compatibility matrix
   # (React / MUI / @module-federation/vite — the versions the component was built against);

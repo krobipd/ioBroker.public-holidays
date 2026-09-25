@@ -43,7 +43,10 @@ I18n.extendTranslations(en, "en");
  * Stands in for admin's JsonConfigComponent: owns the record, hands it to the card as `data` and
  * adopts whatever the card writes back through the whole-record `onChange(data)`.
  */
-class Parent extends React.Component<{ initial: Data; onWrite: (data: Data) => void }, { data: Data }> {
+class Parent extends React.Component<
+  { initial: Data; onWrite: (data: Data) => void; systemConfig?: Record<string, unknown> },
+  { data: Data }
+> {
   state = { data: { ...this.props.initial } };
 
   /**
@@ -65,7 +68,7 @@ class Parent extends React.Component<{ initial: Data; onWrite: (data: Data) => v
         isFloatComma: true,
         dateFormat: "",
         forceUpdate: () => {},
-        systemConfig: { country: "Germany", language: "en" },
+        systemConfig: this.props.systemConfig ?? { country: "Germany", language: "en" },
         theme: {},
         _themeName: "light",
         onCommandRunning: () => {},
@@ -103,7 +106,7 @@ async function settle(ms: number): Promise<void> {
   });
 }
 
-async function mount(initial: Data): Promise<Mounted> {
+async function mount(initial: Data, systemConfig?: Record<string, unknown>): Promise<Mounted> {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -113,6 +116,7 @@ async function mount(initial: Data): Promise<Mounted> {
     root!.render(
       React.createElement(Parent, {
         initial,
+        systemConfig,
         onWrite: (data: Data) => void writes.push(data),
         ref: (p: Parent | null) => (parent = p),
       } as React.ComponentProps<typeof Parent> & { ref: (p: Parent | null) => void }),
@@ -247,5 +251,82 @@ describe("HolidayConfig writes through the real ConfigGeneric", () => {
 
     expect(writes).toHaveLength(0);
     expect(parent.state.data).toMatchObject({ country: "DE", state: "BY", region: "A" });
+  });
+});
+
+describe("HolidayConfig shows what the runtime will publish (0.18.0)", () => {
+  it("no country chosen: previews the detected system country instead of asking for one", async () => {
+    const { container: el, writes } = await mount({ country: "", typePublic: true, excludeHolidays: [] });
+    await settle(100);
+    expect(el.textContent).not.toContain(en.ph_hc_preview_none);
+    expect(el.textContent).toContain("New Year's Day");
+    expect(writes).toHaveLength(0);
+  });
+
+  it("names holidays in the SYSTEM language, like the runtime — not in the admin language", async () => {
+    const { container: el } = await mount(
+      { country: "DE", typePublic: true, excludeHolidays: [] },
+      { country: "Germany", language: "de" },
+    );
+    await settle(100);
+    expect(el.textContent).toContain("Neujahr");
+    expect(el.textContent).not.toContain("New Year's Day");
+  });
+
+  it("a system country without holiday data is named as the cause", async () => {
+    const { container: el } = await mount(
+      { country: "", typePublic: true, excludeHolidays: [] },
+      { country: "Qatar", language: "en" },
+    );
+    await settle(100);
+    expect(el.textContent).toContain(en.ph_hc_autodetect_nodata.replace("%s", "Qatar"));
+  });
+
+  it("the preview counts the year it shows", async () => {
+    const { container: el } = await mount({ country: "DE", typePublic: true, excludeHolidays: [] });
+    await settle(100);
+    expect(el.textContent).toContain(String(new Date().getFullYear()));
+  });
+
+  it("editing the exclude list keeps orphans and excludes of switched-off types (audit M31)", async () => {
+    const { container: el, writes } = await mount({
+      country: "DE",
+      state: "BY",
+      typePublic: true,
+      typeObservance: false,
+      excludeHolidays: ["gone_forever", "08-15"],
+    });
+    await settle(100);
+    // 08-15 (Assumption Day) is an observance in BY: kept apart, never offered for deletion as orphan.
+    expect(el.textContent).toContain(en.ph_excludeInactive);
+    pickNextOption(picker(el, en.ph_excludeLabel)!);
+    await settle(100);
+
+    expect(writes).toHaveLength(1);
+    const excludes = writes[0].excludeHolidays as string[];
+    expect(excludes).toEqual(expect.arrayContaining(["gone_forever", "08-15"]));
+    expect(excludes.length).toBe(3);
+  });
+
+  it("a stale state with no picker for it is cleared in ONE write", async () => {
+    const { container: el, writes } = await mount({
+      country: "JP",
+      state: "BY",
+      region: "A",
+      typePublic: true,
+      excludeHolidays: [],
+    });
+    await settle(100);
+    const del = Array.from(el.querySelectorAll(".MuiChip-root"))
+      .find(c => c.textContent === "BY")
+      ?.querySelector(".MuiChip-deleteIcon");
+    expect(del).toBeTruthy();
+    act(() => {
+      del!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await settle(100);
+
+    expect(writes).toHaveLength(1);
+    expect(writes[0]).toMatchObject({ country: "JP", state: "", region: "" });
   });
 });

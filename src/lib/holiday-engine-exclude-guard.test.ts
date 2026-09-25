@@ -44,6 +44,24 @@ describe("exclude guard — country-wide aggregation only runs when there are ex
     expect(ctor.count).toBe(1);
   });
 
+  it("a valid exclude of the own scope → no aggregation either (audit F7: the scope already proves it)", () => {
+    const result = computeHolidays(cfg({ excludeHolidays: ["01-01"] }), ["en"], {
+      referenceDate: new Date("2026-01-01"),
+    });
+    expect(result.unmatchedExcludes).toEqual([]);
+    expect(ctor.count).toBe(1);
+  });
+
+  it("a stored substitute exclude in a year without the substitute → still valid, no aggregation", () => {
+    // GB Boxing Day moves in 2026/2027 only; the substitute id is absent from 2029-2031.
+    const id = "substitutes_12-26_if_saturday_then_next_monday_if_sunday_then_next_tuesday";
+    const result = computeHolidays(cfg({ country: "GB", excludeHolidays: [id] }), ["en"], {
+      referenceDate: new Date("2030-06-01"),
+    });
+    expect(result.unmatchedExcludes).toEqual([]);
+    expect(ctor.count).toBe(1);
+  });
+
   it("with excludes → runs the aggregation (many Holidays instances) and still warns correctly", () => {
     const result = computeHolidays(cfg({ excludeHolidays: ["totally_fake_id"] }), ["en"], {
       referenceDate: new Date("2026-01-01"),
