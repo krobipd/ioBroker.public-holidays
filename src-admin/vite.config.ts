@@ -7,6 +7,9 @@ import { readFileSync } from "node:fs";
 const config = {
   plugins: [
     federation({
+      // Nobody consumes this remote typed; the plugin's own tsc would drop a .d.ts next to every
+      // src/lib module the card imports and write src-admin/.mf/diagnostics/ (TYPE-001).
+      dts: false,
       manifest: true,
       name: "PublicHolidaysComponentSet",
       filename: "customComponents.js",

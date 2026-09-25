@@ -44,14 +44,14 @@
       "desc": {
         "en": "Also true for bridge days while bridge days are switched on.",
         "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-        "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+        "ru": "Также истинно для дней-мостов, пока они включены.",
         "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
         "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
         "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
         "it": "Vero anche per i ponti finché i ponti sono attivati.",
         "es": "También verdadero en los días puente mientras los días puente estén activados.",
         "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-        "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+        "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
         "zh-cn": "启用桥接日时，桥接日同样为真。"
       }
     },
@@ -187,7 +187,7 @@
       "role": "value.interval",
       "read": true,
       "write": false,
-      "unit": "days",
+      "unit": "d",
       "def": 0,
       "desc": {
         "en": "0 means no upcoming holiday was found — a real one is always at least one day ahead.",
@@ -326,14 +326,14 @@
       "desc": {
         "en": "Also true for bridge days while bridge days are switched on.",
         "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-        "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+        "ru": "Также истинно для дней-мостов, пока они включены.",
         "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
         "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
         "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
         "it": "Vero anche per i ponti finché i ponti sono attivati.",
         "es": "También verdadero en los días puente mientras los días puente estén activados.",
         "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-        "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+        "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
         "zh-cn": "启用桥接日时，桥接日同样为真。"
       }
     },
@@ -422,14 +422,14 @@
       "desc": {
         "en": "Also true for bridge days while bridge days are switched on.",
         "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-        "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+        "ru": "Также истинно для дней-мостов, пока они включены.",
         "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
         "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
         "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
         "it": "Vero anche per i ponti finché i ponti sono attivati.",
         "es": "También verdadero en los días puente mientras los días puente estén activados.",
         "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-        "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+        "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
         "zh-cn": "启用桥接日时，桥接日同样为真。"
       }
     },
@@ -518,14 +518,14 @@
       "desc": {
         "en": "Also true for bridge days while bridge days are switched on.",
         "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-        "ru": "Также истинно для нерабочих дней-мостов, пока они включены.",
+        "ru": "Также истинно для дней-мостов, пока они включены.",
         "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
         "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
         "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
         "it": "Vero anche per i ponti finché i ponti sono attivati.",
         "es": "También verdadero en los días puente mientras los días puente estén activados.",
         "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-        "uk": "Також істинно для неробочих днів-мостів, поки їх увімкнено.",
+        "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
         "zh-cn": "启用桥接日时，桥接日同样为真。"
       }
     },

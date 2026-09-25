@@ -14,7 +14,7 @@
   "ph_hc_types_none": "Nie wybrano żadnego typu świąt — adapter nie zgłosi żadnych świąt",
   "ph_hc_bridge_title": "Dni pomostowe",
   "ph_hc_bridge_label": "Wykrywaj dni pomostowe",
-  "ph_hc_bridge_desc": "Dzień pomostowy to dzień roboczy między świętem a weekendem (np. piątek po święcie w czwartek)",
+  "ph_hc_bridge_desc": "Dzień pomostowy to pojedynczy dzień roboczy między świętem a weekendem lub innym świętem (np. piątek po święcie w czwartek)",
   "ph_hc_exclude_title": "Wyklucz święta",
   "ph_excludeLabel": "Wykluczone święta",
   "ph_excludeSelectCountry": "Najpierw wybierz kraj",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Wykryte święta",
   "ph_hc_preview_count": "Wykryto %s świąt dla %s",
   "ph_hc_preview_none": "Wybierz kraj, aby zobaczyć wykryte święta",
-  "ph_hc_scope_stale": "Zapisane, ale niedostępne dla tej lokalizacji: %s — wybierz nową pozycję."
+  "ph_hc_scope_stale": "Zapisane, ale niedostępne dla tej lokalizacji: %s — wybierz nową pozycję.",
+  "ph_hc_preview_count_bridges": "Wykryto %s świąt i %s dni pomostowych w roku %s",
+  "ph_hc_autodetect_nodata": "Nie wybrano kraju — dla kraju systemowego ioBroker „%s” nie ma danych o świętach. Wybierz kraj.",
+  "ph_hc_autodetect_ambiguous": "Nie wybrano kraju — kraj systemowy ioBroker „%s” obejmuje kilka krajów. Wybierz jeden.",
+  "ph_hc_scope_unloadable": "Biblioteka świąt nie może wczytać tego obszaru (znany błąd) — adapter używa świąt obszaru nadrzędnego.",
+  "ph_excludeInactive": "Wykluczone, ale typ święta jest wyłączony (zachowane, kliknij, aby usunąć):"
 }

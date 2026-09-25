@@ -142,6 +142,7 @@ is harmless; the run has already written its data points at that point.
 
 ## Privacy
 
-The adapter works entirely offline: no data leaves your system. Optional error reporting via Sentry
-can be switched off in the ioBroker settings — see the Sentry plugin documentation linked in the
-main README.
+The holidays are calculated offline on your own system — the adapter makes no network request for
+them.
+
+Error reporting via Sentry is active by default; what it sends and how to switch it off is described in the [Sentry section of the main README](../../README.md#sentry--error-reporting).

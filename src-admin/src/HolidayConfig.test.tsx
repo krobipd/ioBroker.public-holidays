@@ -10,7 +10,7 @@
  * These tests drive the published ConfigGeneric (no mock of it) through the same parent contract
  * admin's JsonConfigComponent offers: the whole record comes back through `onChange(data)`.
  *
- * Runs via `npm run test:admin` (vitest.admin.config.mts) — it needs src-admin/node_modules.
+ * Runs via `npm run test:admin` (src-admin/vitest.config.ts) — it needs src-admin/node_modules.
  */
 import { afterEach, describe, expect, it } from "vitest";
 import React, { act } from "react";

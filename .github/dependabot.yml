@@ -1,11 +1,10 @@
 # Dependabot configuration
-# Cooldown delays updating normal npm dependencies by 7 days but allows security updates to be processed immediately.
-# Note: Cooldown is not supported for the github-actions ecosystem.
+# Cooldown delays version updates by 7 days (npm AND github-actions — GitHub supports `default-days` for Actions,
+# dependabot-options-reference 2026-08); security updates are processed immediately.
 # Reference: https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
 version: 2
 updates:
 
-  # Root npm — the adapter's own runtime/dev dependencies.
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -25,26 +24,15 @@ updates:
       - dependency-name: 'typescript'
         update-types:
           - 'version-update:semver-major'
-      - dependency-name: 'eslint'
-        update-types:
-          - 'version-update:semver-major'
       # date-holidays is held at npm-latest by the release currency gate (scripts/check-date-holidays.mjs) — no dependabot PRs needed.
       - dependency-name: 'date-holidays'
-      # TEMPORARY (2026-09-15): @iobroker/testing 6.2.2 rejects the WIP changelog block `news.NEXT`
-      # (js-controller master schema). A green update on a released tree would auto-merge and turn every
-      # following WIP commit red in `test:package`. Remove this entry as soon as a testing release carries
-      # the NEXT fix (PR ioBroker/testing #737).
-      - dependency-name: '@iobroker/testing'
-        update-types:
-          - 'version-update:semver-minor'
-          - 'version-update:semver-patch'
 
   # src-admin (Module-Federation admin component): hand-pinned compatibility matrix
-  # (React 19 / MUI 9 / @module-federation/vite 1.19.1 …). npm-latest breaks the MF build.
-  # This entry exists ONLY to satisfy repochecker W8905 (a non-root package.json must be
-  # covered by a dependabot npm directory). Ignoring all dependencies means it generates
-  # ZERO pull requests, so the pinned matrix is never moved. (open-pull-requests-limit: 0
-  # would trip W8907; a wildcard ignore keeps the entry warning-free.)
+  # (React / MUI / @module-federation/vite — the versions the component was built against);
+  # npm-latest breaks the MF build. This entry exists ONLY to satisfy repochecker W8905
+  # (a non-root package.json must be covered by a dependabot npm directory). Ignoring all
+  # dependencies means it generates ZERO pull requests, so the pinned matrix is never moved.
+  # (open-pull-requests-limit: 0 would trip W8907; a wildcard ignore keeps the entry warning-free.)
   - package-ecosystem: 'npm'
     directory: '/src-admin'
     schedule:
@@ -67,3 +55,5 @@ updates:
     open-pull-requests-limit: 15
     assignees:
       - 'krobipd'
+    cooldown:
+      default-days: 7

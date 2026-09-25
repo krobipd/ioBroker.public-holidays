@@ -14,7 +14,7 @@
   "ph_hc_types_none": "Kein Feiertagstyp gewählt — der Adapter meldet keine Feiertage",
   "ph_hc_bridge_title": "Brückentage",
   "ph_hc_bridge_label": "Brückentage erkennen",
-  "ph_hc_bridge_desc": "Ein Brückentag ist ein Arbeitstag zwischen einem Feiertag und dem Wochenende (z.B. Freitag nach einem Donnerstags-Feiertag)",
+  "ph_hc_bridge_desc": "Ein Brückentag ist ein einzelner Arbeitstag zwischen einem Feiertag und dem Wochenende oder einem weiteren Feiertag (z. B. Freitag nach einem Feiertag am Donnerstag)",
   "ph_hc_exclude_title": "Feiertage ausschließen",
   "ph_excludeLabel": "Ausgeschlossene Feiertage",
   "ph_excludeSelectCountry": "Zuerst ein Land wählen",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Erkannte Feiertage",
   "ph_hc_preview_count": "%s Feiertage für %s erkannt",
   "ph_hc_preview_none": "Land auswählen, um erkannte Feiertage zu sehen",
-  "ph_hc_scope_stale": "Gespeichert, aber für diesen Standort nicht mehr verfügbar: %s — bitte neu auswählen."
+  "ph_hc_scope_stale": "Gespeichert, aber für diesen Standort nicht mehr verfügbar: %s — bitte neu auswählen.",
+  "ph_hc_preview_count_bridges": "%s Feiertage und %s Brückentage für %s erkannt",
+  "ph_hc_autodetect_nodata": "Kein Land gewählt — für das ioBroker-Systemland „%s“ gibt es keine Feiertagsdaten. Bitte ein Land wählen.",
+  "ph_hc_autodetect_ambiguous": "Kein Land gewählt — das ioBroker-Systemland „%s“ umfasst mehrere Länder. Bitte eines wählen.",
+  "ph_hc_scope_unloadable": "Die Feiertagsbibliothek kann dieses Gebiet nicht laden (bekannter Fehler) — der Adapter verwendet die Feiertage des übergeordneten Gebiets.",
+  "ph_excludeInactive": "Ausgeschlossen, aber der Feiertagstyp ist ausgeschaltet (bleibt erhalten, zum Entfernen klicken):"
 }

@@ -14,7 +14,7 @@
   "ph_hc_types_none": "Nessun tipo di giorno festivo selezionato — l'adattatore non segnalerà alcun giorno festivo",
   "ph_hc_bridge_title": "Giorni ponte",
   "ph_hc_bridge_label": "Rilevare i giorni ponte",
-  "ph_hc_bridge_desc": "Un giorno ponte è un giorno lavorativo tra un giorno festivo e il fine settimana (es. venerdì dopo un giorno festivo il giovedì)",
+  "ph_hc_bridge_desc": "Un ponte è un singolo giorno lavorativo tra un giorno festivo e il fine settimana o un altro festivo (es. venerdì dopo un festivo di giovedì)",
   "ph_hc_exclude_title": "Escludere giorni festivi",
   "ph_excludeLabel": "Festività escluse",
   "ph_excludeSelectCountry": "Seleziona prima un paese",
@@ -22,5 +22,10 @@
   "ph_hc_preview_title": "Giorni festivi rilevati",
   "ph_hc_preview_count": "%s giorni festivi rilevati per %s",
   "ph_hc_preview_none": "Seleziona un paese per vedere i giorni festivi rilevati",
-  "ph_hc_scope_stale": "Salvato, ma non più disponibile per questa località: %s — selezionare una nuova voce."
+  "ph_hc_scope_stale": "Salvato, ma non più disponibile per questa località: %s — selezionare una nuova voce.",
+  "ph_hc_preview_count_bridges": "%s giorni festivi e %s ponti rilevati per il %s",
+  "ph_hc_autodetect_nodata": "Nessun paese selezionato — il paese di sistema di ioBroker «%s» non ha dati sulle festività. Seleziona un paese.",
+  "ph_hc_autodetect_ambiguous": "Nessun paese selezionato — il paese di sistema di ioBroker «%s» comprende più paesi. Selezionane uno.",
+  "ph_hc_scope_unloadable": "La libreria delle festività non riesce a caricare quest’area (difetto noto) — l’adattatore usa le festività dell’area più ampia.",
+  "ph_excludeInactive": "Escluso, ma il tipo di festività è disattivato (conservato, clicca per rimuovere):"
 }

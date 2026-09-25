@@ -152,6 +152,7 @@ folgenlos — der Durchgang hat seine Datenpunkte zu diesem Zeitpunkt bereits ge
 
 ## Datenschutz
 
-Der Adapter arbeitet vollständig offline, es verlassen keine Daten das System. Die optionale
-Fehlerberichterstattung über Sentry lässt sich in den ioBroker-Einstellungen abschalten — siehe die
-in der Haupt-README verlinkte Dokumentation des Sentry-Plugins.
+Die Feiertage werden offline auf dem eigenen System berechnet — dafür stellt der Adapter keine
+Netzwerkanfrage.
+
+Die Fehlermeldung über Sentry ist ab Werk aktiv; was sie sendet und wie man sie abschaltet, steht im [Abschnitt Sentry der Haupt-README](../../README.md#sentry--error-reporting).

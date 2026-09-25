@@ -27,7 +27,7 @@ export default [
       ".dev-server/",
       ".vscode/",
       "*.test.js",
-      "test/**",
+      "test/*.js",
       "*.config.mjs",
       "build",
       "admin",
