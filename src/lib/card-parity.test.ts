@@ -32,9 +32,10 @@ function config(country: string, state = "", types = ALL_TYPES, includeBridgeDay
 function runtimeYear(cfg: AdapterConfig, systemLanguage: string, year: number): Map<string, string> {
   const hd = createHolidaysInstance(cfg);
   const languages = pickHolidayLanguages(systemLanguage, hd.getLanguages());
+  hd.setLanguages(languages);
   const out = new Map<string, string>();
   for (let d = new Date(year, 0, 1, 0, 0, 30); d.getFullYear() === year; d.setDate(d.getDate() + 1)) {
-    const today = computeHolidays(cfg, languages, { referenceDate: new Date(d), systemLanguage }).today;
+    const today = computeHolidays(cfg, languages, { referenceDate: new Date(d), systemLanguage, instance: hd }).today;
     if (today.isHoliday) {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       out.set(key, today.name);
@@ -50,22 +51,28 @@ describe("the card's preview is what the runtime publishes, day by day", () => {
     ["RU", "", "ru", 2026],
     ["SA", "", "en", 2027],
   ] as const) {
-    it(`${country}${state ? `/${state}` : ""} ${year}, system language ${lang}, all types, bridge days`, () => {
-      const cfg = config(country, state);
-      const preview = buildPreviewHolidays(
-        { country, state, region: "", types: ALL_TYPES, excludeHolidays: [] },
-        true,
-        lang,
-        year,
-      );
-      const runtime = runtimeYear(cfg, lang, year);
-      expect(preview.map(p => p.date)).toEqual([...runtime.keys()].sort());
-      for (const p of preview) {
-        if (p.type !== "bridge") {
-          expect(p.name, p.date).toBe(runtime.get(p.date));
+    // 365 runtime runs per case: well within a second locally, but slow CI runners (Windows) and a
+    // coverage run can take several — the default 5 s would make the check flaky, not stricter.
+    it(
+      `${country}${state ? `/${state}` : ""} ${year}, system language ${lang}, all types, bridge days`,
+      { timeout: 30000 },
+      () => {
+        const cfg = config(country, state);
+        const preview = buildPreviewHolidays(
+          { country, state, region: "", types: ALL_TYPES, excludeHolidays: [] },
+          true,
+          lang,
+          year,
+        );
+        const runtime = runtimeYear(cfg, lang, year);
+        expect(preview.map(p => p.date)).toEqual([...runtime.keys()].sort());
+        for (const p of preview) {
+          if (p.type !== "bridge") {
+            expect(p.name, p.date).toBe(runtime.get(p.date));
+          }
         }
-      }
-    });
+      },
+    );
   }
 });
 
