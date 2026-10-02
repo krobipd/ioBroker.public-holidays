@@ -66,6 +66,9 @@ vi.mock("@iobroker/adapter-core", () => {
      * A merge as the objects DB performs it: the patch travels as JSON, so `null` arrives and is
      * stored (the "cleared" state of a key) while `undefined` vanishes — a repair that wrote
      * `undefined` would leave the key standing and repair again on every start.
+     *
+     * @param id the full object id
+     * @param obj the patch
      */
     private merge(id: string, obj: Partial<ObjEntry>): void {
       const patch = JSON.parse(JSON.stringify(obj)) as Partial<ObjEntry>;

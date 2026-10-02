@@ -38,7 +38,6 @@ coverage/
 /src-admin/.__mf__temp
 /src-admin/.mf
 /src-admin/node_modules
-/src-admin/package-lock.json
 
 # Claude Code local files (not published)
 .claude/settings.local.json
@@ -48,11 +47,9 @@ CLAUDE.local.md
 # Build output is not versioned: the CI builds before test and publish (common.nogit)
 build/
 
-# Vite emits a declaration next to every src/ module the admin card imports — measured 2026-09-06:
-# `vite build` inside src-admin/ does it, `tsc` does not. Generated output, never committed; type
-# resolution always prefers the .ts, so a stale one cannot shadow the source (also measured).
-/src/**/*.d.ts
-!/src/lib/adapter-config.d.ts
-
 # Session memory of the note-taking hook — never repository content
 .remember/
+
+# Value dumps of the object inventory run — generated, judged in the release run and the CI job
+test/states.inventory.json
+test/objects.inventory.de.json

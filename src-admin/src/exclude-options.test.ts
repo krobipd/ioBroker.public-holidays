@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type Holidays from "date-holidays";
-import {
-  buildExcludeOptions,
-  computeOrphanIds,
-  enabledTypeKeys,
-  type ScopeSelection,
-} from "../../src-admin/src/exclude-options";
+import { buildExcludeOptions, computeOrphanIds, enabledTypeKeys, type ScopeSelection } from "./exclude-options";
 
 // A stand-in for a date-holidays instance: returns canned holidays per year and records the
 // constructor args so scope routing (country / state / region) can be asserted without the real

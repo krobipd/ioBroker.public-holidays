@@ -27,7 +27,8 @@ export default class HolidayConfig extends ConfigGeneric<ConfigGenericProps, Con
     this.props.onChange(data);
   };
 
-  renderItem(): React.JSX.Element {
+  /** @returns the card, fed with the system country, language and date format the runtime uses */
+  public renderItem(): React.JSX.Element {
     const sys = this.props.oContext?.systemConfig as ioBroker.SystemConfigCommon | undefined;
     const systemCountry = typeof sys?.country === "string" ? sys.country : "";
     // The runtime names holidays in the SYSTEM language and prints dates in the system format —

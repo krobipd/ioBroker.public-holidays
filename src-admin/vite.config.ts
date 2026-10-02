@@ -1,3 +1,5 @@
+// Fleet master — the release run copies this file into every adapter's src-admin/ and keeps only the adapter's own
+// Module-Federation name (the jsonConfig of the adapter refers to it); change it in Entwicklung/.consistency-master.
 import react from "@vitejs/plugin-react";
 import commonjs from "vite-plugin-commonjs";
 import { federation } from "@module-federation/vite";
@@ -7,8 +9,9 @@ import { readFileSync } from "node:fs";
 const config = {
   plugins: [
     federation({
-      // Nobody consumes this remote typed; the plugin's own tsc would drop a .d.ts next to every
-      // src/lib module the card imports and write src-admin/.mf/diagnostics/ (TYPE-001).
+      // The component imports the adapter's own rules from ../src/lib; the plugin's type step would compile them
+      // under rootDir src-admin/src and fail (TS6059). The admin loads the remote at runtime — nothing consumes
+      // its types.
       dts: false,
       manifest: true,
       name: "PublicHolidaysComponentSet",

@@ -1,20 +1,10 @@
 import Holidays from "date-holidays";
 import { describe, expect, it } from "vitest";
-import {
-  buildExcludeOptions,
-  computeInactiveIds,
-  computeOrphanIds,
-  HOLIDAY_TYPES,
-} from "../../src-admin/src/exclude-options";
-import {
-  buildPreviewHolidays,
-  getCountryOptions,
-  getRegionOptions,
-  getStateOptions,
-} from "../../src-admin/src/scope-options";
-import { computeHolidays, createHolidaysInstance } from "./holiday-engine";
-import { pickHolidayLanguages } from "./holiday-shared";
-import type { AdapterConfig } from "./types";
+import { buildExcludeOptions, computeInactiveIds, computeOrphanIds, HOLIDAY_TYPES } from "./exclude-options";
+import { buildPreviewHolidays, getCountryOptions, getRegionOptions, getStateOptions } from "./scope-options";
+import { computeHolidays, createHolidaysInstance } from "../../src/lib/holiday-engine.js";
+import { pickHolidayLanguages } from "../../src/lib/holiday-shared.js";
+import type { AdapterConfig } from "../../src/lib/types.js";
 
 // The card's preview claims to show what the adapter will publish. Until 0.17.0 that held for
 // English and within the year only (audit K1/K2): the card asked date-holidays for the ADMIN
@@ -28,7 +18,13 @@ function config(country: string, state = "", types = ALL_TYPES, includeBridgeDay
   return { country, state, region: "", holidayTypes: types, excludeHolidays: [], includeBridgeDays };
 }
 
-/** What the runtime publishes as `today` on every day of `year`, as date → name|type-ish key. */
+/**
+ * What the runtime publishes as `today` on every day of `year`, as date → name|type-ish key.
+ *
+ * @param cfg the scope
+ * @param systemLanguage the ioBroker system language
+ * @param year the year to walk
+ */
 function runtimeYear(cfg: AdapterConfig, systemLanguage: string, year: number): Map<string, string> {
   const hd = createHolidaysInstance(cfg);
   const languages = pickHolidayLanguages(systemLanguage, hd.getLanguages());

@@ -29,6 +29,7 @@ export type RawHoliday = SourceHoliday;
 
 const EMPTY_DAY: DayInfo = { name: "", isHoliday: false };
 
+/** Options of {@link computeHolidays}. */
 export interface ComputeOptions {
   /** Reference "today" for deterministic tests; defaults to the current date. */
   referenceDate?: Date;
@@ -43,6 +44,15 @@ export interface ComputeOptions {
   systemLanguage?: string;
 }
 
+/**
+ * The published result for a scope: yesterday … the day after tomorrow, the next holiday ahead and
+ * the excludes the data no longer backs.
+ *
+ * @param config the resolved adapter config
+ * @param languages the resolved holiday languages
+ * @param options reference date, instance to reuse, system language
+ * @returns the result to publish
+ */
 export function computeHolidays(
   config: AdapterConfig,
   languages: string[],
@@ -92,6 +102,7 @@ export function emptyResult(): ComputedHolidays {
  * @param languages the resolved holiday languages
  * @param log the sink for the finished line
  * @param instance the already-built date-holidays instance to reuse
+ * @param referenceDate the date whose year is listed
  */
 export function logAvailableHolidays(
   config: AdapterConfig,
@@ -119,6 +130,13 @@ export function logAvailableHolidays(
 // whole run in one, so a bogus country surfaces as a logged error + stop(). The admin component
 // guards its own `new Holidays()` because it has no such outer handler — the asymmetry is
 // intentional (audit finding L4).
+/**
+ * The date-holidays instance for a scope.
+ *
+ * @param config the resolved adapter config
+ * @param languages the holiday languages, when already known
+ * @returns the instance
+ */
 export function createHolidaysInstance(config: AdapterConfig, languages?: string[]): Holidays {
   let hd: Holidays;
   if (config.state && config.region) {
@@ -134,6 +152,7 @@ export function createHolidaysInstance(config: AdapterConfig, languages?: string
   return hd;
 }
 
+/** What is wrong with a configured scope. */
 export interface ScopeIssue {
   /**
    * `unloadable`: the state/region exists in date-holidays' data, but its key is written in mixed
@@ -181,6 +200,7 @@ export function isLoadableScopeKey(key: string): boolean {
  * @param config the resolved adapter config
  * @param languages the resolved holiday languages
  * @param instance the already-built date-holidays instance to reuse
+ * @param referenceDate the date whose year is probed
  * @returns the single issue found, or null when the scope is sound
  */
 export function detectScopeIssue(
@@ -382,6 +402,12 @@ export function detectBridgeDays(
   return detectBridgeKeys(keys, keys, year, weekend).map(key => new Date(`${key}T00:00:00`));
 }
 
+/**
+ * The local calendar key of a date.
+ *
+ * @param date the date
+ * @returns YYYY-MM-DD in local time
+ */
 export function toDateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");

@@ -6,7 +6,7 @@ import {
   getRegionOptions,
   buildPreviewHolidays,
   type PreviewScope,
-} from "../../src-admin/src/scope-options";
+} from "./scope-options";
 
 // A stand-in for a date-holidays instance exposing only the taxonomy lookups the cascade uses.
 // getStates/getRegions return `undefined` for an unknown scope (verified against 3.33.0), which

@@ -16,7 +16,13 @@ import {
   weekendDays,
 } from "./holiday-shared";
 
-/** Every holiday of a scope over the years given, all types, as date-holidays hands them over. */
+/**
+ * Every holiday of a scope over the years given, all types, as date-holidays hands them over.
+ *
+ * @param years the years
+ * @param country the country code
+ * @param state the state code
+ */
 function raws(years: number[], country: string, state?: string): SourceHoliday[] {
   const hd = state ? new Holidays(country, state) : new Holidays(country);
   hd.setLanguages(["en"]);

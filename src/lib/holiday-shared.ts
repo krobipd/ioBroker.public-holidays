@@ -14,8 +14,11 @@
 
 /** One holiday type: the date-holidays key, its `native` checkbox and the admin default. */
 export interface HolidayType {
+  /** The date-holidays type. */
   key: string;
+  /** The `native` checkbox that enables it. */
   flag: string;
+  /** Whether the admin enables it out of the box. */
   defaultOn: boolean;
 }
 
@@ -88,9 +91,11 @@ export function toHolidayId(name: string, rule?: string): string {
 
 /** The three properties that decide which holiday survives when two land on the same date. */
 export interface HolidayRanking {
+  /** The date-holidays type. */
   type: string;
   /** date-holidays marks a holiday moved off a weekend with `substitute: true`. */
   substitute?: boolean;
+  /** The holiday id ({@link toHolidayId}). */
   id: string;
 }
 
@@ -211,8 +216,11 @@ export interface SourceHoliday {
   start?: Date;
   /** End instant, exclusive. */
   end?: Date;
+  /** The name in the languages set on the instance. */
   name: string;
+  /** The date-holidays type. */
   type: string;
+  /** The calculation rule the id is derived from. */
   rule?: string;
   /** date-holidays sets this on a holiday that was moved off a weekend. */
   substitute?: boolean;
@@ -435,6 +443,7 @@ export function substituteBases(raws: readonly SourceHoliday[]): Map<string, str
 export interface HolidayDay extends HolidayRanking {
   /** Calendar date YYYY-MM-DD. */
   date: string;
+  /** The name to publish. */
   name: string;
   /** The date-holidays type, or "bridge". */
   type: string;

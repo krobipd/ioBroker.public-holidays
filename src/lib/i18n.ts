@@ -10,6 +10,12 @@ export { formatDateForDisplay, SUPPORTED_LANGS } from "./holiday-shared";
 
 export type I18nKey = keyof typeof translations;
 
+/**
+ * The translations of an admin/i18n key, for an object name or explanation.
+ *
+ * @param key the i18n key
+ * @returns the translation object
+ */
 export function tName(key: I18nKey): ioBroker.StringOrTranslated {
   return I18n.getTranslatedObject(key);
 }
@@ -18,6 +24,13 @@ export function tName(key: I18nKey): ioBroker.StringOrTranslated {
 // caller need not construct a throwaway second instance just to detect languages (audit L4).
 // The same rule the admin card applies (holiday-shared pickHolidayLanguages), fed with what the
 // scope's data carries.
+/**
+ * The holiday languages for the system language and a scope.
+ *
+ * @param systemLang the ioBroker system language
+ * @param holidays the scope's date-holidays instance
+ * @returns the languages to set, most preferred first
+ */
 export function resolveLanguages(systemLang: string, holidays: Holidays): string[] {
   return pickHolidayLanguages(systemLang, holidays.getLanguages());
 }
@@ -50,8 +63,11 @@ export function resolveCountryCode(value: string): string {
   return resolveCountry(value).code;
 }
 
+/** The three `system.config` fields this adapter reads. */
 export interface SystemConfig {
+  /** The system country NAME, "" when unset. */
   country: string;
+  /** The system language, "en" when unset. */
   language: string;
   /** The system-wide date display format (e.g. "DD.MM.YYYY"); "" when unset. */
   dateFormat: string;

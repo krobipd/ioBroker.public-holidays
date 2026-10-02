@@ -20,14 +20,21 @@ import {
 
 export { HOLIDAY_TYPES, enabledTypeKeys, toHolidayId };
 
+/** One entry of the exclude list. */
 export interface ExcludeOption {
+  /** The holiday id that is stored. */
   id: string;
+  /** "Name (date)". */
   label: string;
 }
 
+/** The scope the exclude list is built for. */
 export interface ScopeSelection {
+  /** The country code. */
   country: string;
+  /** The state code, "" for none. */
   state: string;
+  /** The region code, "" for none. */
   region: string;
   /**
    * Enabled holiday types. An empty list means NO holidays at all — exactly what the runtime
@@ -49,14 +56,23 @@ const defaultMakeHolidays: MakeHolidays = (country, state, region) => {
   return new Holidays(country);
 };
 
-// Exclude options for a scope: holidays of exactly country/state/region, named in the language the
-// runtime publishes (the system language, holiday-shared pickHolidayLanguages), restricted to the
-// enabled types, deduped by id (earlier year wins), sorted by MM-DD so a next-year-only holiday
-// slots into the calendar instead of landing at the end. A substitute day is not offered on its
-// own: excluding its holiday takes it along (holiday-shared substituteBases). `makeHolidays` is
-// injectable so the logic is testable without the date-holidays constructor — the DEFAULT maker is
-// exercised too (exclude-options.test.ts), because it is the one the admin actually runs and a
-// swapped argument would otherwise ship green (audit finding F10).
+/**
+ * Exclude options for a scope: holidays of exactly country/state/region, named in the language the
+ * runtime publishes (the system language, holiday-shared pickHolidayLanguages), restricted to the
+ * enabled types, deduped by id (earlier year wins), sorted by MM-DD so a next-year-only holiday
+ * slots into the calendar instead of landing at the end. A substitute day is not offered on its
+ * own: excluding its holiday takes it along (holiday-shared substituteBases). `makeHolidays` is
+ * injectable so the logic is testable without the date-holidays constructor — the DEFAULT maker is
+ * exercised too (exclude-options.test.ts), because it is the one the admin actually runs and a
+ * swapped argument would otherwise ship green (audit finding F10).
+ *
+ * @param scope the scope and the enabled types
+ * @param systemLanguage the ioBroker system language
+ * @param referenceYear the year shown
+ * @param makeHolidays builds the scope's date-holidays instance
+ * @param dateFormat the system date format
+ * @returns the options, in calendar order
+ */
 export function buildExcludeOptions(
   scope: ScopeSelection,
   systemLanguage: string,
@@ -83,7 +99,7 @@ export function buildExcludeOptions(
   // exists in the coming year can still be picked; dedupe by id, first (earlier year) wins.
   const raws = [referenceYear, referenceYear + 1].flatMap(y => (hd.getHolidays(y) || []) as SourceHoliday[]);
   const substitutes = substituteBases(raws);
-  const seen = new Map<string, { name: string; date: string }>();
+  const seen = new Map<string, Pick<SourceHoliday, "name" | "date">>();
   for (const h of raws) {
     if (!scope.types.includes(h.type)) {
       continue;
@@ -103,15 +119,28 @@ export function buildExcludeOptions(
     });
 }
 
-// Stored ids not offered by the current scope (a leftover from a wider region or an older
-// version) — surfaced as removable chips so they are neither hidden nor silently dropped. Pass the
-// options of ALL types: an exclude of a type that is merely switched off is not an orphan (it acts
-// again the moment the type is back), and treating it as one invited the user to delete it.
+/**
+ * Stored ids not offered by the current scope (a leftover from a wider region or an older
+ * version) — surfaced as removable chips so they are neither hidden nor silently dropped. Pass the
+ * options of ALL types: an exclude of a type that is merely switched off is not an orphan (it acts
+ * again the moment the type is back), and treating it as one invited the user to delete it.
+ *
+ * @param value the stored exclude ids
+ * @param options the options of ALL types
+ * @returns the ids no option carries
+ */
 export function computeOrphanIds(value: string[], options: ExcludeOption[]): string[] {
   return value.filter(id => !options.some(o => o.id === id));
 }
 
-// Stored ids that belong to the scope but to a type that is switched off — kept, shown apart.
+/**
+ * Stored ids that belong to the scope but to a type that is switched off — kept, shown apart.
+ *
+ * @param value the stored exclude ids
+ * @param enabled the options of the enabled types
+ * @param all the options of all types
+ * @returns the ids of switched-off types
+ */
 export function computeInactiveIds(value: string[], enabled: ExcludeOption[], all: ExcludeOption[]): string[] {
   return value.filter(id => !enabled.some(o => o.id === id) && all.some(o => o.id === id));
 }

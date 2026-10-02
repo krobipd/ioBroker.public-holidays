@@ -24,9 +24,10 @@ import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/sta
  */
 const MIGRATIONS: NativeKeyMigration[] = [{ drop: "excludePublic" }, { drop: "holidays" }];
 
-// Exported so the orchestration unit tests can drive onReady directly.
+/** The adapter: one holiday run per start, then it stops (schedule mode). */
 export class PublicHolidaysAdapter extends utils.Adapter {
-  constructor(options: Partial<utils.AdapterOptions> = {}) {
+  /** @param options the adapter options js-controller passes in */
+  public constructor(options: Partial<utils.AdapterOptions> = {}) {
     super({ ...options, name: "public-holidays" });
     this.on("ready", this.onReady.bind(this));
     this.on("unload", this.onUnload.bind(this));

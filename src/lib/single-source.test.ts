@@ -21,6 +21,8 @@ const SHARED = join(adapterDir, "src", "lib", "holiday-shared.ts");
  * Every .ts/.tsx source file. Tests are excluded (a test may legitimately spell a rule out), and so
  * are `.d.ts` files: `vite build` in src-admin/ drops a generated declaration next to every src/
  * module the card imports, and a mirror of the shared file is not a second definition of it.
+ *
+ * @param dir the directory to walk
  */
 function sourceFiles(dir: string): string[] {
   const out: string[] = [];

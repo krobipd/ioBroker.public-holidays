@@ -17,8 +17,11 @@ import {
   weekendDays,
 } from "../../src/lib/holiday-shared.js";
 
+/** One entry of a country/state/region picker. */
 export interface ScopeOption {
+  /** The code that is stored. */
   value: string;
+  /** "Name (CODE)". */
   label: string;
   /**
    * The key is written in mixed case, which date-holidays cannot load (it upper-cases every key and
@@ -79,10 +82,25 @@ function regionNamer(lang: string): (code: string, fallback: string) => string {
   };
 }
 
+/**
+ * The country options in the admin language.
+ *
+ * @param lang the admin language
+ * @param makeHd builds a date-holidays instance
+ * @returns the options, sorted by name
+ */
 export function getCountryOptions(lang: string, makeHd: MakeHolidays = defaultMakeHolidays): ScopeOption[] {
   return toOptions(makeHd().getCountries(lang), lang, regionNamer(lang));
 }
 
+/**
+ * The state options of a country.
+ *
+ * @param country the country code
+ * @param lang the admin language
+ * @param makeHd builds a date-holidays instance
+ * @returns the options, sorted by name; [] without a country
+ */
 export function getStateOptions(
   country: string,
   lang: string,
@@ -94,6 +112,15 @@ export function getStateOptions(
   return toOptions(makeHd().getStates(country, lang), lang);
 }
 
+/**
+ * The region options of a state.
+ *
+ * @param country the country code
+ * @param state the state code
+ * @param lang the admin language
+ * @param makeHd builds a date-holidays instance
+ * @returns the options, sorted by name; [] without country and state
+ */
 export function getRegionOptions(
   country: string,
   state: string,
@@ -108,9 +135,13 @@ export function getRegionOptions(
 
 // --- live preview of the holidays the runtime would compute for the current scope ---
 
+/** The scope the preview is built for. */
 export interface PreviewScope {
+  /** The country code. */
   country: string;
+  /** The state code, "" for none. */
   state: string;
+  /** The region code, "" for none. */
   region: string;
   /**
    * Enabled holiday types. An empty list means NO holidays at all — the same thing the runtime
@@ -118,13 +149,17 @@ export interface PreviewScope {
    * year of holidays for a configuration that publishes nothing.
    */
   types: string[];
+  /** The excluded holiday ids. */
   excludeHolidays: string[];
 }
 
+/** One chip of the preview. */
 export interface PreviewHoliday {
   /** Calendar date YYYY-MM-DD. */
   date: string;
+  /** The holiday name ("" for a bridge day — the card names it). */
   name: string;
+  /** The date-holidays type, or "bridge". */
   type: string;
 }
 
@@ -139,14 +174,23 @@ const defaultMakeScoped: MakeScopedHolidays = (country, state, region) => {
   return new Holidays(country);
 };
 
-// The holidays the runtime would publish for `scope` in `referenceYear`, built by the SAME
-// functions the runtime uses (holiday-shared buildDayMap + addBridgeDays) over the SAME three-year
-// window, then cut to the year shown ("N holidays for 2026") — a bridge day across the year boundary
-// (31 December before a Friday New Year) is decided the same way on both sides. Names come in the
-// language the runtime publishes, the system language (holiday-shared pickHolidayLanguages).
-// `makeHolidays` is injectable so the logic is testable without the date-holidays constructor; the
-// DEFAULT maker is exercised too (scope-options.test.ts), because it is the one the admin actually
-// runs (audit finding F10).
+/**
+ * The holidays the runtime would publish for `scope` in `referenceYear`, built by the SAME
+ * functions the runtime uses (holiday-shared buildDayMap + addBridgeDays) over the SAME three-year
+ * window, then cut to the year shown ("N holidays for 2026") — a bridge day across the year boundary
+ * (31 December before a Friday New Year) is decided the same way on both sides. Names come in the
+ * language the runtime publishes, the system language (holiday-shared pickHolidayLanguages).
+ * `makeHolidays` is injectable so the logic is testable without the date-holidays constructor; the
+ * DEFAULT maker is exercised too (scope-options.test.ts), because it is the one the admin actually
+ * runs (audit finding F10).
+ *
+ * @param scope the scope, the enabled types and the excludes
+ * @param includeBridgeDays whether bridge days are reported
+ * @param systemLanguage the ioBroker system language
+ * @param referenceYear the year shown
+ * @param makeHolidays builds the scope's date-holidays instance
+ * @returns the days of the year, in date order
+ */
 export function buildPreviewHolidays(
   scope: PreviewScope,
   includeBridgeDays: boolean,
