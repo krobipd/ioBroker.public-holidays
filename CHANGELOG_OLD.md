@@ -1,6 +1,11 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.15.0 (2026-09-04)
+
+- Fixed: With no holiday type enabled the adapter reported nothing without a word while the card still previewed a full year. Card and log now say it.
+- Changed: Channel and data point names are refreshed on every run, so renames reach updated installations too — a manual rename of them is overwritten.
+
 ## 0.14.0 (2026-09-01)
 
 - New: the next-holiday log line now shows the date in your system's date format — for example 26.10.2026 instead of 2026-10-26. The date data point itself stays machine-readable for scripts.

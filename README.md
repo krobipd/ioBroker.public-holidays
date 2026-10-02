@@ -107,7 +107,7 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.19.0 (2026-10-02)
 
 - Changed: New instances start switched off until you have set them up; existing instances keep running. The adapter now requires Admin 8.0.14, the current stable.
 - Fixed: The settings card recognises a state or region stored with surrounding spaces, as the adapter itself always did, instead of showing it as no longer available.
@@ -145,11 +145,6 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
 ### 0.15.1 (2026-09-04)
 
 - Fixed: Installations kept whatever holiday data was already on the system, so corrections and new countries never arrived. An update now brings the current data along.
-
-### 0.15.0 (2026-09-04)
-
-- Fixed: With no holiday type enabled the adapter reported nothing without a word while the card still previewed a full year. Card and log now say it.
-- Changed: Channel and data point names are refreshed on every run, so renames reach updated installations too — a manual rename of them is overwritten.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

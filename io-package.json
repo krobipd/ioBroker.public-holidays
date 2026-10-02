@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.18.0",
+    "version": "0.19.0",
     "news": {
+      "0.19.0": {
+        "en": "New instances start switched off until they are set up; existing ones keep running. Requires Admin 8.0.14\nThe settings card recognises a state or region stored with surrounding spaces",
+        "de": "Neue Instanzen starten ausgeschaltet, bis sie eingerichtet sind; bestehende laufen weiter. Benötigt Admin 8.0.14\nDie Einstellungskarte erkennt ein mit Leerzeichen gespeichertes Bundesland oder eine Region",
+        "ru": "Новые экземпляры запускаются выключенными до настройки; существующие продолжают работать. Требуется Admin 8.0.14\nКарточка настроек распознаёт регион или область, сохранённые с пробелами",
+        "pt": "Novas instâncias começam desligadas até serem configuradas; as existentes continuam a funcionar. Requer Admin 8.0.14\nO cartão de definições reconhece um estado ou região guardado com espaços à volta",
+        "nl": "Nieuwe instanties starten uitgeschakeld tot ze zijn ingesteld; bestaande blijven draaien. Vereist Admin 8.0.14\nDe instellingenkaart herkent een deelstaat of regio die met spaties is opgeslagen",
+        "fr": "Les nouvelles instances démarrent désactivées jusqu'à leur configuration ; les existantes continuent. Nécessite Admin 8.0.14\nLa carte de réglages reconnaît un État ou une région enregistrés avec des espaces",
+        "it": "Le nuove istanze partono disattivate finché non sono configurate; quelle esistenti continuano. Richiede Admin 8.0.14\nLa scheda delle impostazioni riconosce uno stato o una regione salvati con spazi",
+        "es": "Las instancias nuevas arrancan desactivadas hasta configurarlas; las existentes siguen funcionando. Requiere Admin 8.0.14\nLa tarjeta de ajustes reconoce un estado o región guardado con espacios alrededor",
+        "pl": "Nowe instancje startują wyłączone, dopóki nie zostaną skonfigurowane; istniejące działają dalej. Wymaga Admin 8.0.14\nKarta ustawień rozpoznaje kraj związkowy lub region zapisany ze spacjami",
+        "uk": "Нові екземпляри запускаються вимкненими до налаштування; наявні працюють далі. Потрібен Admin 8.0.14\nКартка налаштувань розпізнає область або регіон, збережені з пробілами",
+        "zh-cn": "新实例在完成设置前保持关闭；现有实例继续运行。需要 Admin 8.0.14\n设置卡片可识别带前后空格保存的州或地区"
+      },
       "0.18.0": {
         "en": "Holidays lasting several days count on every day (Russian New Year, Chuseok, Tết, Eid …), and the next holiday skips the rest of the one running today\nBridge days follow the country's own weekend and come from public and bank holidays only; excluding a holiday also excludes its substitute days\nThe system country is detected for more names, the settings card shows holiday names in your language and previews the detected country; Uzbekistan added",
         "de": "Mehrtägige Feiertage zählen an jedem Tag (russisches Neujahr, Chuseok, Tết, Opferfest …), und der nächste Feiertag überspringt den Rest des heute laufenden\nBrückentage richten sich nach dem Wochenende des Landes und entstehen nur aus gesetzlichen und Bankfeiertagen; ein ausgeschlossener Feiertag schließt seine Ersatztage mit aus\nDas Systemland wird für mehr Namen erkannt, die Einstellungskarte zeigt Feiertagsnamen in der Systemsprache und eine Vorschau für das erkannte Land; Usbekistan neu",
