@@ -59,7 +59,7 @@ scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-hol
 2. **date-holidays ist die einzige Engine, offline** — die Daten-Lizenz ist CC-BY-SA-3.0, auch wenn die SPDX-Angabe des Pakets es untertreibt.
 3. **Runtime und Karte lesen die Einstellungen und bauen die Tagesliste mit denselben Funktionen aus `holiday-shared.ts` (`buildScopeDays`, Leser, Scope-Code-Regeln)** — die Vorschau zeigt, was publiziert wird, und kann nicht auseinanderlaufen.
 4. **Mehrtägige Feiertage zählen an jedem Tag, an dessen Mittag (Ortszeit) sie noch laufen; der Vorabend zählt nicht** — date-holidays führt sie als EINEN Eintrag mit Dauer.
-5. **`next` überspringt die restlichen Tage des heute laufenden Feiertags** — ein Feiertag, der heute läuft, steht in `today`.
+5. **`next` zeigt den nächsten Feiertagstag nach heute; läuft ein mehrtägiger Feiertag, ist das sein nächster Tag (Tag 2, Tag 3 …), nichts wird übersprungen** — krobi 2026-10-02 (Register K5); der heutige Tag selbst steht in `today`.
 6. **Brückentag = einzelner Arbeitstag zwischen zwei freien Tagen, mindestens einer davon ein Feiertag des Saatjahres** — Wochenende je Land (date-holidays-Daten vor CLDR), Auslöser nur ganztägige public/bank.
 7. **Ein Exclude trifft seine Ersatztage mit; ein Ersatztag wird nur eindeutig oder über den Namen zugeordnet** — eine falsche Zuordnung risse fremde Tage mit.
 8. **Kollision auf einem Datum: Typ-Priorität, dann echter Feiertag vor Ersatztag, dann kleinere ID** — alle drei total, der Name hängt nie an der Lieferreihenfolge.

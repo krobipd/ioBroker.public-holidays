@@ -70,8 +70,8 @@ Serbien und Taiwan.
 
 Manche Feiertage dauern mehrere Tage — die Neujahrsferien in Russland, Chuseok in Korea, Tết in
 Vietnam, das Opferfest in vielen Ländern. Jeder dieser Tage zählt: `today.isHoliday` ist an jedem
-von ihnen wahr. `next` zeigt den nächsten Feiertag nach dem heute laufenden, nicht den zweiten Tag
-desselben Feiertags. Ein Feiertag, der am Vorabend beginnt (jüdische und islamische Tage beginnen
+von ihnen wahr. `next` zeigt den nächsten Feiertagstag — läuft gerade ein Feiertag, ist das sein
+nächster Tag (Tag 2, Tag 3 …), nichts wird übersprungen. Ein Feiertag, der am Vorabend beginnt (jüdische und islamische Tage beginnen
 mit der Dämmerung), zählt ab seinem ersten vollen Tag.
 
 ### Brückentage
@@ -139,7 +139,7 @@ gewählt, zeigt sie das erkannte Systemland.
 
 Alle Datenpunkte sind nur lesbar und tragen im Objektbaum eine kurze Erklärung in der eingestellten
 Sprache. `next` schaut strikt nach vorn: Ein Feiertag, der heute ist, steht in `today`, nicht in
-`next` — ebenso die restlichen Tage eines Feiertags, der heute läuft.
+`next`; der nächste Tag eines heute laufenden Feiertags ist `next`.
 
 Die Namen der Kanäle und Datenpunkte folgen der ioBroker-Systemsprache und werden bei jedem
 Durchgang aufgefrischt — auch auf Anlagen, die aktualisiert statt neu installiert wurden. Ein von

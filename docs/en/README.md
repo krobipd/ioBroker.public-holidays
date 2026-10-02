@@ -66,8 +66,8 @@ with a data update — in 42 countries, among them Norway, Poland, Romania, Serb
 
 Some holidays last several days — the New Year holidays in Russia, Chuseok in Korea, Tết in
 Vietnam, Eid in many countries. Every one of those days counts: `today.isHoliday` is true on each of
-them. `next` shows the next holiday after the one running today, not the second day of the same
-holiday. A holiday that begins on the evening before (Jewish and Islamic days begin at dusk) counts
+them. `next` shows the next holiday day — while a holiday is running, that is its next day (day 2,
+day 3, …), nothing is skipped. A holiday that begins on the evening before (Jewish and Islamic days begin at dusk) counts
 from its first full day.
 
 ### Bridge days
@@ -132,7 +132,7 @@ you see is what you get. With no country chosen it shows the detected system cou
 
 All data points are read-only, and each one carries a short explanation in your language that you
 can read in the object tree. `next` looks strictly ahead: a holiday that is today appears in
-`today`, not in `next` — and so do the remaining days of a holiday that is running today.
+`today`, not in `next`; the next day of a holiday running today is `next`.
 
 The names of the channels and data points follow your ioBroker system language and are refreshed on
 every run — including on installations that were updated rather than newly installed. If you rename

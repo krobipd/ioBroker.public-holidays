@@ -330,12 +330,12 @@ describe("localization", () => {
 // ─── Multi-day holidays (0.18.0) ────────────────────────────────────
 
 describe("multi-day holidays count on every day", () => {
-  it("RU 3 January: today is the New Year holiday, tomorrow too, next is Christmas on 7 January", () => {
+  it("RU 3 January: today is the New Year holiday, and next is its next day, 4 January", () => {
     const result = compute(makeConfig({ country: "RU" }), ["en"], { referenceDate: makeDate("2026-01-03") });
     expect(result.today).toEqual({ name: "New Year Holiday", isHoliday: true });
     expect(result.tomorrow.isHoliday).toBe(true);
-    // The rest of the holiday running today stays in today/tomorrow — `next` is the next holiday.
-    expect(result.next).toMatchObject({ name: "Christmas Day", date: "2026-01-07", daysUntil: 4 });
+    // Nothing of the holiday running today is skipped: its next day is `next`.
+    expect(result.next).toMatchObject({ name: "New Year Holiday", date: "2026-01-04", daysUntil: 1 });
   });
 
   it("the day before a multi-day holiday: next is its first day", () => {

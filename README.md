@@ -107,6 +107,10 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- Changed: While a holiday lasting several days is running, the next holiday is its next day (day 2, day 3 …) instead of the following holiday.
+
 ### 0.19.0 (2026-10-02)
 
 - Changed: New instances start switched off until you have set them up; existing instances keep running. The adapter now requires Admin 8.0.14, the current stable.

@@ -276,19 +276,18 @@ function dayInfo(days: Map<string, HolidayDay>, key: string): DayInfo {
 }
 
 /**
- * The next holiday still AHEAD: a holiday running today stays in `today` — so the remaining days of
- * the occurrence running today are skipped too (RU on 3 January: today "New Year Holiday", next
- * Christmas on 7 January, not "New Year Holiday, in 1 day" four days in a row).
+ * The next holiday DAY after today. A multi-day holiday running today counts with its next day too —
+ * nothing is skipped (krobi 2026-10-02): RU on 3 January gives "New Year Holiday" on 4 January, in
+ * 1 day.
  *
  * @param days the day list
  * @param todayKey today's calendar key
- * @returns the next holiday, or the empty result when none lies ahead
+ * @returns the next holiday day, or the empty result when none lies ahead
  */
 function nextHoliday(days: Map<string, HolidayDay>, todayKey: string): NextHoliday {
-  const runningToday = days.get(todayKey)?.occurrence;
   let nearest: HolidayDay | undefined;
   for (const [dateKey, h] of days) {
-    if (dateKey > todayKey && h.occurrence !== runningToday && (!nearest || dateKey < nearest.date)) {
+    if (dateKey > todayKey && (!nearest || dateKey < nearest.date)) {
       nearest = h;
     }
   }
