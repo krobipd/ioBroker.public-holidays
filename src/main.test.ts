@@ -238,7 +238,7 @@ describe("onReady — happy path", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2027-01-01T12:00:00"));
     const { internal, stub } = setup({ country: "DE" });
-    // German system language → German holiday names (resolveLanguages chain).
+    // German system language → German holiday names (pickHolidayLanguages).
     stub.objects.set("system.config", { common: { language: "de" } });
 
     await internal.onReady();
