@@ -75,6 +75,35 @@ scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-hol
 18. **Neue Instanzen starten deaktiviert (`common.enabled: false`)** — Paket-Check `instance-enabled`; bestehende Instanzen behalten ihre Einstellung.
 19. **Die zwölf States sind schreibgeschützt und werden im Speicher gegen EIN Sammel-Lesen verglichen** — `setStateChangedAsync` liest jeden State einzeln (Ressourcen-Prüfung des Inventars).
 
+<!-- core-decisions:begin (generated from the sealed register — change only through the Werkbank) -->
+
+## Core decisions (sealed)
+
+krobi's decisions for this adapter. The register with his verbatim words lives in the locked Werkbank tool tree; a change is a request to the Werkbank, never an edit here. Each guarded rule has a test under `src/decisions/`.
+
+- **P-01** Every release checks date-holidays and always ships its newest version, so that an existing installation gets it too.
+- **P-02** Every datapoint is always there; no setting creates or omits single datapoints.
+- **P-03** The log line names the next holiday's date in the system's date format; the datapoint `next.date` stays machine-readable (ISO).
+- **P-04** Every run writes one summary with the next holiday to the log, at level info.
+- **P-05** public-holidays is a purely offline holiday adapter (date-holidays) with no online calendar, school holidays or ICS subscriptions; it connects nowhere and therefore has no connection datapoint.
+- **K1** One run a day (schedule mode), no long-running process.
+- **K2** date-holidays is the only data source, offline.
+- **K3** The admin card and the adapter compute with the same functions; the preview shows exactly what is published.
+- **K4** A holiday counts on every calendar day it covers, even when it starts in the afternoon; a multi-day holiday counts on each of its days; a start on the evening before does not make that day a holiday.
+- **K5** `next` shows the next holiday day; while a multi-day holiday runs, that is its next day too (day 2, day 3, …), nothing is skipped.
+- **K6** A bridge day is a single working day between two days off, at least one of them a holiday; the weekend follows the country.
+- **K7** An excluded holiday takes its substitute days with it; a substitute is matched only when unambiguous or by name.
+- **K8** When two holidays fall on one date, the type rank decides, then a real holiday before a substitute day, then the id.
+- **K9** No holiday type selected means no holidays, never silently all.
+- **K10** Country detection knows both admin name lists and names the reason when it fails.
+- **K11** Start order: translations, cleanup of old settings, instance repair; every repair means a restart.
+- **K14** The card writes several fields in one write.
+- **K15** A value orphaned on opening is shown, never saved automatically.
+- **K16** The days follow the server clock; a different time zone shows only in the debug log.
+- **K17** The twelve areas date-holidays cannot load are warned about and marked in the card.
+
+<!-- core-decisions:end -->
+
 ## State Tree
 
 4 Tages-Kanäle × (name, isHoliday) + next × (name, isHoliday, date, daysUntil `unit: d`) = 12 States, 17 Objekte.
