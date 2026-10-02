@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import Holidays from "date-holidays";
@@ -28,7 +28,8 @@ describe("the advertised country count matches the bundled date-holidays data", 
 
   it("io-package.json common.desc in every language", () => {
     const desc = (JSON.parse(read("io-package.json")) as { common: { desc: Record<string, string> } }).common.desc;
-    expect(Object.keys(desc)).toHaveLength(11);
+    const languages = readdirSync(join(adapterDir, "admin", "i18n")).map(f => f.replace(".json", ""));
+    expect(Object.keys(desc).sort()).toEqual(languages.sort());
     for (const [lang, text] of Object.entries(desc)) {
       // The first three-digit number of each description is the country count.
       expect(text.match(/\d{3}/)?.[0], `${lang}: ${text}`).toBe(String(count));

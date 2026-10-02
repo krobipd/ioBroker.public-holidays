@@ -1,5 +1,5 @@
-import { enabledTypeKeys } from "./holiday-shared";
-import { resolveCountryCode } from "./i18n";
+import { resolveCountry } from "./country";
+import { enabledTypeKeys, readStringArray, readTrimmed } from "./holiday-shared";
 import type { AdapterConfig } from "./types";
 
 /**
@@ -10,7 +10,7 @@ import type { AdapterConfig } from "./types";
  * rules are testable without an adapter stub — the same separation the rest of `lib/` already has.
  *
  * Both country paths — the explicitly configured one and the one detected from
- * `system.config.common.country` — go through {@link resolveCountryCode}. ioBroker.admin stores a
+ * `system.config.common.country` — go through {@link resolveCountry}. ioBroker.admin stores a
  * country NAME ("Austria"), date-holidays needs the alpha-2 code, and until v0.15.1 only the
  * detected path translated: a name that had found its way into `native.country` (a hand-edited
  * object, a script setup, an imported config) failed with "not recognized" although the very same
@@ -23,7 +23,7 @@ import type { AdapterConfig } from "./types";
  */
 export function parseConfig(raw: Record<string, unknown>, fallbackCountry = ""): AdapterConfig | null {
   const configured = configuredCountry(raw);
-  const country = configured ? resolveCountryCode(configured) || configured : fallbackCountry;
+  const country = configured ? resolveCountry(configured).code || configured : fallbackCountry;
   if (!country) {
     return null;
   }
@@ -33,7 +33,7 @@ export function parseConfig(raw: Record<string, unknown>, fallbackCountry = ""):
     state: readTrimmed(raw, "state"),
     region: readTrimmed(raw, "region"),
     holidayTypes: enabledTypeKeys(flag => raw[flag]),
-    excludeHolidays: toStringArray(raw.excludeHolidays),
+    excludeHolidays: readStringArray(raw, "excludeHolidays"),
     includeBridgeDays: raw.includeBridgeDays === true,
   };
 }
@@ -47,26 +47,4 @@ export function parseConfig(raw: Record<string, unknown>, fallbackCountry = ""):
  */
 export function configuredCountry(raw: Record<string, unknown>): string {
   return readTrimmed(raw, "country");
-}
-
-/**
- * One trimmed string field of the raw config; "" when unset or not a string.
- *
- * @param raw the `native` record
- * @param attr the field name
- * @returns the trimmed value, or ""
- */
-function readTrimmed(raw: Record<string, unknown>, attr: string): string {
-  const v = raw[attr];
-  return typeof v === "string" ? v.trim() : "";
-}
-
-/**
- * The string entries of a raw config array; [] for anything else.
- *
- * @param val the raw field value
- * @returns the strings it contains
- */
-function toStringArray(val: unknown): string[] {
-  return Array.isArray(val) ? val.filter((x): x is string => typeof x === "string") : [];
 }

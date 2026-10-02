@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -16,6 +16,10 @@ import { describe, expect, it } from "vitest";
 // the manifest must carry a `desc` exactly where the runtime writes one, from a key that exists.
 
 const adapterDir = join(__dirname, "..", "..");
+/** The languages the adapter translates into — one admin/i18n file each. */
+const LANGUAGES = readdirSync(join(adapterDir, "admin", "i18n"))
+  .map(f => f.replace(".json", ""))
+  .sort();
 
 interface ManifestObject {
   _id?: string;
@@ -103,7 +107,7 @@ describe("instanceObjects reach existing installations", () => {
         if (call?.descKey) {
           // An i18n key adapter-core cannot resolve silently becomes `{ en: "<key>" }`.
           expect(englishKeys, `admin/i18n/en.json has no key "${call.descKey}"`).toContain(call.descKey);
-          expect(Object.keys(obj.common?.desc as Record<string, string>).length).toBe(11);
+          expect(Object.keys(obj.common?.desc as Record<string, string>).sort()).toEqual(LANGUAGES);
         }
       });
     }

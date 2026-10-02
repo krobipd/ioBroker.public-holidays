@@ -1,29 +1,25 @@
 import { describe, expect, it } from "vitest";
 import Holidays from "date-holidays";
+import { compute, makeConfig } from "../../test/helpers";
 import {
   beats,
   bridgeDayName,
   BRIDGE_DAY_NAMES,
+  buildScopeDays,
+  daysBetween,
   enabledTypeKeys,
   HOLIDAY_TYPES,
+  isLoadableScopeKey,
+  isSubstituteId,
+  readStringArray,
+  readTrimmed,
+  sameCode,
   shiftKey,
+  SUPPORTED_LANGS,
+  toDateKey,
   toHolidayId,
   typeRank,
 } from "./holiday-shared";
-import { computeHolidays } from "./holiday-engine";
-import type { AdapterConfig } from "./types";
-
-function makeConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
-  return {
-    country: "DE",
-    state: "",
-    region: "",
-    holidayTypes: ["public"],
-    excludeHolidays: [],
-    includeBridgeDays: false,
-    ...overrides,
-  };
-}
 
 // ─── the collision rule (audit finding F6) ──────────────────────────────────
 
@@ -75,14 +71,14 @@ describe("beats — which holiday survives a shared date", () => {
 // order date-holidays happened to emit them in, and both landed on the substitute.
 describe("real collisions resolve to the day that genuinely belongs there", () => {
   it("AL 2027-11-29: Liberation Day beats the moved Independence Day", () => {
-    const computed = computeHolidays(makeConfig({ country: "AL" }), ["en"], {
+    const computed = compute(makeConfig({ country: "AL" }), ["en"], {
       referenceDate: new Date("2027-11-28T12:00:00"),
     });
     expect(computed.tomorrow.name).toBe("Liberation Day");
   });
 
   it("TW 2027-04-05: Tomb Sweeping Day beats the moved Children's Day", () => {
-    const computed = computeHolidays(makeConfig({ country: "TW" }), ["en"], {
+    const computed = compute(makeConfig({ country: "TW" }), ["en"], {
       referenceDate: new Date("2027-04-05T12:00:00"),
     });
     expect(computed.today.name).toBe("Tomb Sweeping Day");
@@ -130,10 +126,8 @@ describe("enabledTypeKeys", () => {
 });
 
 describe("bridgeDayName", () => {
-  it("covers every language the adapter supports", () => {
-    expect(Object.keys(BRIDGE_DAY_NAMES).sort()).toEqual(
-      ["de", "en", "es", "fr", "it", "nl", "pl", "pt", "ru", "uk", "zh"].sort(),
-    );
+  it("covers exactly the languages the adapter presents holiday names in (drift guard)", () => {
+    expect(Object.keys(BRIDGE_DAY_NAMES).sort()).toEqual([...SUPPORTED_LANGS].sort());
   });
 
   it("reduces a language tag to its base language", () => {
@@ -158,5 +152,90 @@ describe("shiftKey", () => {
   it("survives the spring DST switch (Europe/Berlin, 2026-03-29)", () => {
     expect(shiftKey("2026-03-28", 1)).toBe("2026-03-29");
     expect(shiftKey("2026-03-29", 1)).toBe("2026-03-30");
+  });
+});
+
+describe("toDateKey and daysBetween", () => {
+  it("formats the local calendar date", () => {
+    expect(toDateKey(new Date(2026, 0, 5, 0, 0, 30))).toBe("2026-01-05");
+    expect(toDateKey(new Date(2026, 11, 31, 23, 59, 30))).toBe("2026-12-31");
+  });
+
+  it("counts calendar days, across a year boundary and a DST switch", () => {
+    expect(daysBetween("2026-12-30", "2027-01-02")).toBe(3);
+    expect(daysBetween("2026-03-28", "2026-04-03")).toBe(6);
+    expect(daysBetween("2026-10-24", "2026-10-26")).toBe(2);
+  });
+});
+
+describe("toHolidayId", () => {
+  it("derives the id from the rule, cleaned", () => {
+    expect(toHolidayId("New Year's Day", "01-01")).toBe("01-01");
+    expect(toHolidayId("Good Friday", "easter -2")).toBe("easter_-2");
+    expect(toHolidayId("x", "substitutes 12-26 if saturday then next monday")).toBe(
+      "substitutes_12-26_if_saturday_then_next_monday",
+    );
+  });
+
+  it("falls back to the name for a rule too short to be one", () => {
+    expect(toHolidayId("Fête du Travail", "x")).toBe("fete_du_travail");
+    expect(toHolidayId("Día de Reyes")).toBe("dia_de_reyes");
+  });
+});
+
+describe("isSubstituteId", () => {
+  it("knows a substitute day by its id", () => {
+    expect(isSubstituteId("substitutes_12-26_if_saturday_then_next_monday")).toBe(true);
+    expect(isSubstituteId("12-26")).toBe(false);
+  });
+});
+
+describe("readTrimmed and readStringArray — the stored settings, read the same on both sides", () => {
+  it("trims a string field and reads anything else as empty", () => {
+    expect(readTrimmed({ state: " BY " }, "state")).toBe("BY");
+    expect(readTrimmed({ state: 7 }, "state")).toBe("");
+    expect(readTrimmed({}, "state")).toBe("");
+  });
+
+  it("keeps the strings of a list field and reads anything else as empty", () => {
+    expect(readStringArray({ excludeHolidays: ["01-01", 2, "12-26"] }, "excludeHolidays")).toEqual(["01-01", "12-26"]);
+    expect(readStringArray({ excludeHolidays: "01-01" }, "excludeHolidays")).toEqual([]);
+  });
+});
+
+describe("sameCode and isLoadableScopeKey", () => {
+  it("a scope code matches regardless of case", () => {
+    expect(sameCode("by", "BY")).toBe(true);
+    expect(sameCode("BY", "BW")).toBe(false);
+  });
+
+  it("only an all-upper-case key can be loaded", () => {
+    expect(isLoadableScopeKey("BY")).toBe(true);
+    expect(isLoadableScopeKey("Timaru")).toBe(false);
+  });
+});
+
+describe("buildScopeDays — the window both sides build the days over", () => {
+  it("reads the year before, the year and the year after", () => {
+    const years: number[] = [];
+    buildScopeDays(
+      {
+        getHolidays: y => {
+          years.push(y);
+          return [];
+        },
+      },
+      2026,
+      { types: ["public"], excludes: [], bridgeDays: false, country: "DE", bridgeName: "" },
+    );
+    expect(years).toEqual([2025, 2026, 2027]);
+  });
+
+  it("adds bridge days only when switched on, named as given", () => {
+    const thursday = { date: "2026-05-14 00:00:00", name: "Ascension", type: "public", rule: "easter 39" };
+    const source = { getHolidays: (y: number) => (y === 2026 ? [thursday] : []) };
+    const opts = { types: ["public"], excludes: [], country: "DE", bridgeName: "Brückentag" };
+    expect(buildScopeDays(source, 2026, { ...opts, bridgeDays: false }).days.has("2026-05-15")).toBe(false);
+    expect(buildScopeDays(source, 2026, { ...opts, bridgeDays: true }).days.get("2026-05-15")?.name).toBe("Brückentag");
   });
 });

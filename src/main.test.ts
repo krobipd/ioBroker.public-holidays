@@ -9,12 +9,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@iobroker/adapter-core", () => {
-  interface ObjEntry {
-    type?: string;
-    common?: Record<string, unknown>;
-    native?: Record<string, unknown>;
-  }
-
   class StubAdapter {
     namespace = "public-holidays.0";
     adapterDir = "/stub-adapter-dir";
@@ -23,6 +17,8 @@ vi.mock("@iobroker/adapter-core", () => {
     states = new Map<string, { val: unknown; ack: boolean }>();
     logs: { level: string; msg: string }[] = [];
     stop = vi.fn();
+    /** Like a real install without the plugin system — overridden where a test hands an error to Sentry. */
+    supportsFeature = vi.fn((_feature: string) => false);
     /** How often the instance's OWN object was written — every write costs a restart. */
     instanceObjectWrites = 0;
     /** Writes of the adapter's own objects (the 17 refreshes). */
@@ -41,9 +37,13 @@ vi.mock("@iobroker/adapter-core", () => {
       error: (m: string): void => void this.logs.push({ level: "error", msg: m }),
     };
 
+    /** The handlers the adapter registered — the tests fire them as js-controller would. */
+    handlers = new Map<string, (...args: unknown[]) => unknown>();
+
     constructor(_options?: unknown) {}
 
-    on(_event: string, _cb: (...args: unknown[]) => unknown): this {
+    on(event: string, cb: (...args: unknown[]) => unknown): this {
+      this.handlers.set(event, cb);
       return this;
     }
 
@@ -153,7 +153,13 @@ vi.mock("@iobroker/adapter-core", () => {
   };
 });
 
+import { I18n } from "@iobroker/adapter-core";
+import { ioPackage } from "../test/helpers";
 import { PublicHolidaysAdapter } from "./main";
+
+/** The manifest's objects and states — what a complete run writes. */
+const OBJECT_COUNT = ioPackage().instanceObjects.length;
+const STATE_COUNT = ioPackage().instanceObjects.filter(o => o.type === "state").length;
 
 interface ObjEntry {
   type?: string;
@@ -169,6 +175,7 @@ interface StubSurface {
   logs: { level: string; msg: string }[];
   log: { level: string; info: (m: string) => void };
   stop: ReturnType<typeof vi.fn>;
+  handlers: Map<string, (...args: unknown[]) => unknown>;
   instanceObjectWrites: number;
   objectWrites: number;
   stateWrites: number;
@@ -183,20 +190,31 @@ interface StubSurface {
   } | null;
 }
 
-/** Typed access to the private members the orchestration tests drive. */
-interface Internal {
+/** The two lifecycle events, fired through the handlers the adapter registered. */
+interface Lifecycle {
   onReady: () => Promise<void>;
   onUnload: (callback: () => void) => void;
 }
 
 function setup(config: Record<string, unknown> = {}): {
   adapter: PublicHolidaysAdapter;
-  internal: Internal;
+  internal: Lifecycle;
   stub: StubSurface;
 } {
   const adapter = new PublicHolidaysAdapter();
   const stub = adapter as unknown as StubSurface;
-  const internal = adapter as unknown as Internal;
+  // A handler the constructor never registered fails here — js-controller would never run it.
+  const handler = (event: string): ((...args: unknown[]) => unknown) => {
+    const cb = stub.handlers.get(event);
+    if (!cb) {
+      throw new Error(`no "${event}" handler registered`);
+    }
+    return cb;
+  };
+  const internal: Lifecycle = {
+    onReady: () => handler("ready")() as Promise<void>,
+    onUnload: callback => void handler("unload")(callback),
+  };
   stub.config = config;
   // Instance object in schedule mode by default (no migration needed).
   stub.objects.set("system.adapter.public-holidays.0", {
@@ -227,9 +245,9 @@ describe("onReady — happy path", () => {
 
     expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: true, ack: true });
     expect(stub.states.get("public-holidays.0.today.name")?.val).toBe("Neujahr");
-    expect(stub.states.get("public-holidays.0.next.date")?.val).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(typeof stub.states.get("public-holidays.0.next.daysUntil")?.val).toBe("number");
-    expect(stub.states.size).toBe(12);
+    expect(stub.states.get("public-holidays.0.next.date")?.val).toBe("2027-03-26");
+    expect(stub.states.get("public-holidays.0.next.daysUntil")?.val).toBe(84);
+    expect(stub.states.size).toBe(STATE_COUNT);
     expect(stub.stop).toHaveBeenCalledTimes(1);
     expect(logsOf(stub, "error")).toEqual([]);
   });
@@ -263,11 +281,15 @@ describe("onReady — happy path", () => {
     expect(stub.states.get("public-holidays.0.next.isHoliday")?.val).toBe(true);
   });
 
-  it("creates all 17 objects (5 channels + 12 states)", async () => {
+  it("creates every manifest object", async () => {
     const { internal, stub } = setup({ country: "DE" });
     await internal.onReady();
-    const own = [...stub.objects.keys()].filter(id => id.startsWith("public-holidays.0."));
-    expect(own).toHaveLength(17);
+    const own = [...stub.objects.keys()].filter(id => id.startsWith("public-holidays.0.")).sort();
+    expect(own).toEqual(
+      ioPackage()
+        .instanceObjects.map(o => `public-holidays.0.${o._id}`)
+        .sort(),
+    );
   });
 
   // audit finding F12 — the holiday listing computes an extra year and builds a line naming every
@@ -288,22 +310,20 @@ describe("onReady — happy path", () => {
     expect(listing[0]).toContain("DE/BY:");
   });
 
-  it("logs the Today/next-holiday summary at info on a holiday", async () => {
+  it("logs the Today/next-holiday summary at info on every run — a holiday and a normal day", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
-    const { internal, stub } = setup({ country: "DE" });
-    await internal.onReady();
-    expect(logsOf(stub, "info").some(m => m.startsWith("Today: ") && m.includes("next holiday: "))).toBe(true);
-  });
-
-  it("logs the next-holiday summary at info on a normal day too, so it shows on every run", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2027-03-10T12:00:00"));
-    const { internal, stub } = setup({ country: "DE" });
-    await internal.onReady();
-    expect(logsOf(stub, "info").some(m => m.startsWith("Today: no holiday") && m.includes("next holiday: "))).toBe(
-      true,
-    );
+    for (const [day, today] of [
+      ["2027-01-01T12:00:00", "Today: New Year's Day"],
+      ["2027-03-10T12:00:00", "Today: no holiday"],
+    ]) {
+      vi.setSystemTime(new Date(day));
+      const { internal, stub } = setup({ country: "DE" });
+      await internal.onReady();
+      expect(
+        logsOf(stub, "info").some(m => m.startsWith(`${today}, next holiday: `)),
+        day,
+      ).toBe(true);
+    }
   });
 
   it("removes deprecated states left over from older versions", async () => {
@@ -315,6 +335,31 @@ describe("onReady — happy path", () => {
 
     expect(stub.objects.has("public-holidays.0.next.duration")).toBe(false);
     expect(stub.objects.has("public-holidays.0.today.id")).toBe(false);
+  });
+});
+
+describe("onReady — lifecycle", () => {
+  it("loads the translations first — before the settings migration may stand the run down", async () => {
+    const order: string[] = [];
+    vi.mocked(I18n.init).mockImplementationOnce(() => {
+      order.push("i18n");
+      return Promise.resolve();
+    });
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule" },
+      native: { excludePublic: ["11-11"] },
+    });
+    const write = stub.extendForeignObjectAsync.bind(stub);
+    stub.extendForeignObjectAsync = (id, obj) => {
+      order.push("instance write");
+      return write(id, obj);
+    };
+
+    await internal.onReady();
+
+    expect(order).toEqual(["i18n", "instance write"]);
   });
 });
 
@@ -454,7 +499,7 @@ describe("onReady — instance-object repair", () => {
     third.stub.objects = db;
     await third.internal.onReady(); // nothing left to repair — the run computes
     expect(third.stub.instanceObjectWrites).toBe(0);
-    expect(third.stub.states.size).toBe(12);
+    expect(third.stub.states.size).toBe(STATE_COUNT);
 
     const inst = db.get("system.adapter.public-holidays.0")!;
     expect(inst.common).toHaveProperty("supportedMessages", null);
@@ -514,7 +559,7 @@ describe("onReady — instance-object repair", () => {
 
     expect(logsOf(stub, "debug").some(m => m.includes("Could not check the instance object"))).toBe(true);
     expect(logsOf(stub, "error")).toEqual([]);
-    expect(stub.states.size).toBe(12);
+    expect(stub.states.size).toBe(STATE_COUNT);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 });
@@ -552,7 +597,7 @@ describe("onReady — country detection chain", () => {
 
     expect(logsOf(stub, "warn").some(m => m.includes("No country configured"))).toBe(true);
     // A truthful empty result, not silence: the twelve states carry their manifest defaults.
-    expect(stub.states.size).toBe(12);
+    expect(stub.states.size).toBe(STATE_COUNT);
     expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
     expect(stub.states.get("public-holidays.0.next.date")).toEqual({ val: "", ack: true });
     expect(stub.states.get("public-holidays.0.next.daysUntil")).toEqual({ val: 0, ack: true });
@@ -570,7 +615,7 @@ describe("onReady — country detection chain", () => {
     expect(logsOf(stub, "warn")).toContain(
       "System country 'Atlantis' is not recognized — choose a country in the adapter settings",
     );
-    expect(stub.states.size).toBe(12);
+    expect(stub.states.size).toBe(STATE_COUNT);
     expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
   });
 
@@ -639,7 +684,7 @@ describe("onReady — country detection chain", () => {
 
     expect(logsOf(stub, "warn").some(m => m.includes("Could not read the ioBroker system settings"))).toBe(true);
     expect(stub.states.get("public-holidays.0.today.name")?.val).toBe("New Year's Day");
-    expect(stub.states.size).toBe(12);
+    expect(stub.states.size).toBe(STATE_COUNT);
     expect(logsOf(stub, "error")).toEqual([]);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
@@ -651,7 +696,7 @@ describe("onReady — country detection chain", () => {
 
     expect(logsOf(stub, "warn").some(m => m.includes("'XX' is not recognized"))).toBe(true);
     // Still publishes (empty) states and stops cleanly.
-    expect(stub.states.size).toBe(12);
+    expect(stub.states.size).toBe(STATE_COUNT);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 });
@@ -746,8 +791,8 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     vi.setSystemTime(new Date("2026-06-01T00:00:30"));
     const { internal, stub } = setup({ country: "DE" });
     await internal.onReady();
-    expect(stub.objectWrites).toBe(17);
-    expect(stub.stateWrites).toBe(12);
+    expect(stub.objectWrites).toBe(OBJECT_COUNT);
+    expect(stub.stateWrites).toBe(STATE_COUNT);
 
     stub.objectWrites = 0;
     stub.stateWrites = 0;
@@ -788,12 +833,6 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     );
   });
 
-  it("a region without a state: no stray slash in the warning", async () => {
-    const { internal, stub } = setup({ country: "DE", region: "ZZ" });
-    await internal.onReady();
-    expect(logsOf(stub, "warn")).toContain("Region 'ZZ' is unknown for DE — using broader holidays");
-  });
-
   it("a scope date-holidays cannot load says so (NZ Timaru)", async () => {
     const { internal, stub } = setup({ country: "NZ", state: "CAN", region: "Timaru" });
     await internal.onReady();
@@ -831,15 +870,6 @@ describe("onReady — diagnostics warnings", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("Region 'ZZ' is unknown"))).toBe(true);
-    expect(stub.stop).toHaveBeenCalledTimes(1);
-  });
-
-  it("warns when a configured exclude no longer matches any holiday", async () => {
-    const { internal, stub } = setup({ country: "DE", excludeHolidays: ["bogus_stale_exclude"] });
-
-    await internal.onReady();
-
-    expect(logsOf(stub, "warn").some(m => m.includes("no longer occur in the holiday data"))).toBe(true);
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 

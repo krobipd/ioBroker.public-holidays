@@ -1,11 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
-
-// `config.ts` reaches `resolveCountryCode` in i18n.ts, which imports @iobroker/adapter-core —
-// and that module calls process.exit(10) outside a real js-controller install. Only the I18n
-// helper is touched here, so stub it the way i18n.test.ts does.
-vi.mock("@iobroker/adapter-core", () => ({
-  I18n: { getTranslatedObject: vi.fn((key: string) => ({ en: key })) },
-}));
+import { describe, expect, it } from "vitest";
 
 import { configuredCountry, parseConfig } from "./config";
 
@@ -73,14 +66,6 @@ describe("parseConfig", () => {
   describe("country resolution (same path for configured and detected)", () => {
     it("resolves a stored ISO clear-name to the code date-holidays needs", () => {
       expect(parseConfig({ country: "Austria" })?.country).toBe("AT");
-    });
-
-    it("is case-insensitive about the name", () => {
-      expect(parseConfig({ country: "germany" })?.country).toBe("DE");
-    });
-
-    it("leaves an already-valid code alone", () => {
-      expect(parseConfig({ country: "DE" })?.country).toBe("DE");
     });
 
     it("keeps an unresolvable value verbatim so the scope warning can name it", () => {

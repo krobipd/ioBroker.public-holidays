@@ -18,7 +18,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { I18n } from "@iobroker/gui-components";
 
 import HolidayConfig from "./HolidayConfig";
-import { getCountryOptions, getStateOptions } from "./scope-options";
+import { buildPreviewHolidays, getCountryOptions, getStateOptions } from "./scope-options";
 import en from "./i18n/en.json";
 
 type Data = Record<string, unknown>;
@@ -285,7 +285,12 @@ describe("HolidayConfig shows what the runtime will publish (0.18.0)", () => {
   it("the preview counts the year it shows", async () => {
     const { container: el } = await mount({ country: "DE", typePublic: true, excludeHolidays: [] });
     await settle(100);
-    expect(el.textContent).toContain(String(new Date().getFullYear()));
+    const year = new Date().getFullYear();
+    const count = buildPreviewHolidays(
+      { country: "DE", state: "", region: "", types: ["public"], excludeHolidays: [], includeBridgeDays: false },
+      { systemLanguage: "en", referenceYear: year },
+    ).length;
+    expect(el.textContent).toContain(en.ph_hc_preview_count.replace("%s", String(count)).replace("%s", String(year)));
   });
 
   it("editing the exclude list keeps orphans and excludes of switched-off types (audit M31)", async () => {
@@ -308,10 +313,14 @@ describe("HolidayConfig shows what the runtime will publish (0.18.0)", () => {
     expect(excludes.length).toBe(3);
   });
 
-  it("a hand-written lower-case state is the state, not a stale value", async () => {
+  it.each([
+    ["lower-case", "by"],
+    // The runtime trims the stored state (holiday-shared readTrimmed) — the card reads it the same way.
+    ["surrounded by spaces", " BY "],
+  ])("a hand-written %s state is the state, not a stale value", async (_how, state) => {
     const { container: el, writes } = await mount({
       country: "DE",
-      state: "by",
+      state,
       typePublic: true,
       excludeHolidays: [],
     });

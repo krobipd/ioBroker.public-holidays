@@ -1,6 +1,7 @@
 // The SINGLE source for everything the runtime (src/) and the admin card (src-admin/) must agree
-// on: the holiday type list, the exclude id, the same-date collision rule and the bridge-day
-// algorithm including its name.
+// on: how the stored settings are read, the holiday type list, the scope-code rules, the exclude id,
+// the same-date collision rule, the bridge-day algorithm including its name, the day list over its
+// three-year window (buildScopeDays) and the calendar keys.
 //
 // Until v0.15.1 each of these lived twice — once here, once in src-admin — because "importing from
 // src/ would risk the MF build". That was an assertion, never a measurement. Measured 2026-09-06:
@@ -59,6 +60,57 @@ export function enabledTypeKeys(getFlag: (flag: string) => unknown): string[] {
   return HOLIDAY_TYPES.filter(t => (t.defaultOn ? getFlag(t.flag) !== false : getFlag(t.flag) === true)).map(
     t => t.key,
   );
+}
+
+/**
+ * One trimmed string field of a raw `native` record; "" when unset or not a string. The runtime and
+ * the card read the stored scope the same way — a hand-edited `" BY"` is Bavaria on both sides.
+ *
+ * @param record the raw `native` record
+ * @param attr the field name
+ * @returns the trimmed value, or ""
+ */
+export function readTrimmed(record: Record<string, unknown>, attr: string): string {
+  const v = record[attr];
+  return typeof v === "string" ? v.trim() : "";
+}
+
+/**
+ * The string entries of a raw `native` list field; [] for anything else.
+ *
+ * @param record the raw `native` record
+ * @param attr the field name
+ * @returns the strings it contains
+ */
+export function readStringArray(record: Record<string, unknown>, attr: string): string[] {
+  const v = record[attr];
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
+// --- scope codes ---------------------------------------------------------------------------------
+
+/**
+ * Whether two state/region codes name the same scope. date-holidays upper-cases what it is given,
+ * so a hand-written `by` IS Bavaria — runtime and card must not call it unknown.
+ *
+ * @param a one code
+ * @param b the other
+ * @returns true when they are the same code regardless of case
+ */
+export function sameCode(a: string, b: string): boolean {
+  return a.toUpperCase() === b.toUpperCase();
+}
+
+/**
+ * Whether date-holidays can load a state/region key at all. It upper-cases every key it is handed
+ * (`splitName`), so a key written in mixed case (`NZ/CAN/Timaru`, ten Cook Islands) silently loads
+ * the broader scope instead (library defect, date-holidays issue 671).
+ *
+ * @param key the state or region key as the data spells it
+ * @returns false for a mixed-case key
+ */
+export function isLoadableScopeKey(key: string): boolean {
+  return key === key.toUpperCase();
 }
 
 /**
@@ -178,6 +230,9 @@ export function pickHolidayLanguages(systemLang: string, available: readonly str
   return lang === "en" ? ["en"] : [lang, "en"];
 }
 
+/** One day in milliseconds. */
+export const DAY_MS = 86400000;
+
 /**
  * Shift a `YYYY-MM-DD` key by whole days, staying on local calendar dates. Parsing with an explicit
  * `T00:00:00` (never the bare key, which JS reads as UTC) keeps the weekday correct in
@@ -190,10 +245,33 @@ export function pickHolidayLanguages(systemLang: string, available: readonly str
 export function shiftKey(dateKey: string, days: number): string {
   const d = new Date(`${dateKey}T00:00:00`);
   d.setDate(d.getDate() + days);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+  return toDateKey(d);
+}
+
+/**
+ * The local calendar key of a date — the one place a key is formatted.
+ *
+ * @param date the date
+ * @returns YYYY-MM-DD in local time
+ */
+export function toDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+/**
+ * Whole calendar days from one key to another. Local midnight to local midnight is not a whole
+ * multiple of 24 h across a DST switch — rounding turns the 23 h / 25 h day back into the calendar
+ * distance.
+ *
+ * @param fromKey the earlier calendar key
+ * @param toKey the later calendar key
+ * @returns the number of days between them
+ */
+export function daysBetween(fromKey: string, toKey: string): number {
+  return Math.round((new Date(`${toKey}T00:00:00`).getTime() - new Date(`${fromKey}T00:00:00`).getTime()) / DAY_MS);
 }
 
 /**
@@ -226,7 +304,6 @@ export interface SourceHoliday {
   substitute?: boolean;
 }
 
-const DAY_MS = 86400000;
 const NOON_MS = 43200000;
 const DATE_TIME = /^\d{4}-\d{2}-\d{2} (\d{2}):(\d{2}):(\d{2})(?: ([+-])(\d{2})(\d{2}))?/;
 
@@ -370,6 +447,19 @@ export function detectBridgeKeys(
 
 const CONDITION = /_(?:if|not_on|and)_/;
 
+/** The prefix date-holidays gives the id of a day moved by a `substitutes` rule. */
+const SUBSTITUTE_PREFIX = "substitutes_";
+
+/**
+ * Whether an id is the id of a substitute day (`substitutes_12-26_if_saturday_then_next_monday`).
+ *
+ * @param id a holiday id
+ * @returns true for a substitute id
+ */
+export function isSubstituteId(id: string): boolean {
+  return id.startsWith(SUBSTITUTE_PREFIX);
+}
+
 /**
  * The date part of a holiday id — the id without the `substitutes_` prefix, cut before its first
  * condition: `substitutes_12-26_if_saturday_then_next_monday` and `12-26` both give `12-26`.
@@ -380,7 +470,7 @@ const CONDITION = /_(?:if|not_on|and)_/;
  * @returns its date part
  */
 export function excludeKey(id: string): string {
-  const s = id.startsWith("substitutes_") ? id.slice("substitutes_".length) : id;
+  const s = isSubstituteId(id) ? id.slice(SUBSTITUTE_PREFIX.length) : id;
   const m = CONDITION.exec(s);
   return m ? s.slice(0, m.index) : s;
 }
@@ -393,7 +483,7 @@ export function excludeKey(id: string): string {
  * @param id its id
  */
 function isSubstituteEntry(h: Pick<SourceHoliday, "substitute">, id: string): boolean {
-  return h.substitute === true || id.startsWith("substitutes_");
+  return h.substitute === true || isSubstituteId(id);
 }
 
 /**
@@ -535,6 +625,52 @@ export function addBridgeDays(
       }
     }
   }
+}
+
+/** What a scope's day list is built from: the holidays of one year, all types. */
+export interface HolidaySource {
+  /**
+   * The holidays of a year (date-holidays `getHolidays`).
+   *
+   * @param year the year
+   */
+  getHolidays(year: number): SourceHoliday[] | undefined;
+}
+
+/**
+ * The days the runtime publishes around `year` — the runtime's result and the card's preview are
+ * built HERE, with the same window and the same steps: the holidays of the year before, the year and
+ * the year after (a multi-day holiday and a bridge day cross the year boundary), the day list
+ * ({@link buildDayMap}) and, when enabled, the bridge days of the country's weekend.
+ *
+ * @param source the scope's holidays, per year
+ * @param year the reference year
+ * @param options the enabled types, the excluded ids, the bridge-day switch, the country (weekend), the bridge-day name
+ * @param options.types the enabled holiday types
+ * @param options.excludes the excluded holiday ids
+ * @param options.bridgeDays whether bridge days are added
+ * @param options.country the country code (its weekend)
+ * @param options.bridgeName the bridge-day name to publish
+ * @returns the days keyed by calendar date, every raw holiday of the window, and the window's years
+ */
+export function buildScopeDays(
+  source: HolidaySource,
+  year: number,
+  options: {
+    types: readonly string[];
+    excludes: readonly string[];
+    bridgeDays: boolean;
+    country: string;
+    bridgeName: string;
+  },
+): { days: Map<string, HolidayDay>; raws: SourceHoliday[]; years: number[] } {
+  const years = [year - 1, year, year + 1];
+  const raws = years.flatMap(y => source.getHolidays(y) ?? []);
+  const days = buildDayMap(raws, { types: options.types, excludes: options.excludes });
+  if (options.bridgeDays) {
+    addBridgeDays(days, years, weekendDays(options.country), options.bridgeName);
+  }
+  return { days, raws, years };
 }
 
 // --- dates for people ----------------------------------------------------------------------------

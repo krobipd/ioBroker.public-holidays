@@ -1,21 +1,14 @@
-// Pure cascade logic for the guided admin card, deliberately free of React/MUI so a vitest test
-// under src/ can import and exercise it directly. The country/state/region taxonomy is served
+// Pure cascade logic for the guided admin card, deliberately free of React/MUI so its tests exercise
+// it without rendering. The country/state/region taxonomy is served
 // client-side from the card's own bundled date-holidays, replacing the 145 KB static jsonConfig
 // the generator used to emit. Its bundled version is held equal to the runtime's by
-// `npm run update:date-holidays` (guard: date-holidays-version-parity.test.ts).
+// `npm run update:date-holidays` (guard: date-holidays-currency.test.ts).
 //
 // The collision rule and the bridge-day algorithm come from src/lib/holiday-shared.ts — the SAME
-// module the runtime uses, so the preview cannot drift from what gets published. The explicit
-// `.js` extension is required because the ROOT tsconfig (node16 ESM resolution) type-checks this
-// file too.
+// module the runtime uses, so the preview cannot drift from what gets published.
 import Holidays from "date-holidays";
-import {
-  addBridgeDays,
-  buildDayMap,
-  pickHolidayLanguages,
-  type SourceHoliday,
-  weekendDays,
-} from "../../src/lib/holiday-shared.js";
+import { buildScopeDays, isLoadableScopeKey, pickHolidayLanguages } from "../../src/lib/holiday-shared.js";
+import { type MakeScopedHolidays, makeScopedHolidays, type ScopeSelection } from "./scoped-holidays";
 
 /** One entry of a country/state/region picker. */
 export interface ScopeOption {
@@ -51,13 +44,13 @@ function toOptions(
     .map(({ value, name }) => ({
       value,
       label: `${name} (${value})`,
-      ...(value === value.toUpperCase() ? {} : { unloadable: true }),
+      ...(isLoadableScopeKey(value) ? {} : { unloadable: true }),
     }));
 }
 
 /**
  * The display name of a country in the admin language. date-holidays translates country names for
- * a handful of countries only (German: 12 of 207), so a German list read "日本 (JP)" and
+ * a handful of countries only, so a German list read "日本 (JP)" and
  * "Ελλάδα (GR)", and a search for "Japan" found nothing. `Intl.DisplayNames` knows every ISO region
  * in every browser language; `fallback: "none"` makes it say "unknown" (undefined) instead of echoing
  * the bare code, so the library's own name stays the fallback.
@@ -135,22 +128,12 @@ export function getRegionOptions(
 
 // --- live preview of the holidays the runtime would compute for the current scope ---
 
-/** The scope the preview is built for. */
-export interface PreviewScope {
-  /** The country code. */
-  country: string;
-  /** The state code, "" for none. */
-  state: string;
-  /** The region code, "" for none. */
-  region: string;
-  /**
-   * Enabled holiday types. An empty list means NO holidays at all — the same thing the runtime
-   * does (`buildDayMap` keeps only types in this list). The preview would otherwise show a full
-   * year of holidays for a configuration that publishes nothing.
-   */
-  types: string[];
+/** The scope the preview is built for: the selection plus what the runtime filters by. */
+export interface PreviewScope extends ScopeSelection {
   /** The excluded holiday ids. */
   excludeHolidays: string[];
+  /** Whether bridge days are reported. */
+  includeBridgeDays: boolean;
 }
 
 /** One chip of the preview. */
@@ -163,40 +146,23 @@ export interface PreviewHoliday {
   type: string;
 }
 
-type MakeScopedHolidays = (country: string, state?: string, region?: string) => Holidays;
-const defaultMakeScoped: MakeScopedHolidays = (country, state, region) => {
-  if (state && region) {
-    return new Holidays(country, state, region);
-  }
-  if (state) {
-    return new Holidays(country, state);
-  }
-  return new Holidays(country);
-};
-
 /**
- * The holidays the runtime would publish for `scope` in `referenceYear`, built by the SAME
- * functions the runtime uses (holiday-shared buildDayMap + addBridgeDays) over the SAME three-year
- * window, then cut to the year shown ("N holidays for 2026") — a bridge day across the year boundary
- * (31 December before a Friday New Year) is decided the same way on both sides. Names come in the
- * language the runtime publishes, the system language (holiday-shared pickHolidayLanguages).
- * `makeHolidays` is injectable so the logic is testable without the date-holidays constructor; the
- * DEFAULT maker is exercised too (scope-options.test.ts), because it is the one the admin actually
- * runs (audit finding F10).
+ * The holidays the runtime would publish for `scope` in `referenceYear`, built by the SAME function
+ * the runtime uses (holiday-shared buildScopeDays, the same three-year window), then cut to the year
+ * shown ("N holidays for 2026") — a bridge day across the year boundary (31 December before a Friday
+ * New Year) is decided the same way on both sides. Names come in the language the runtime publishes,
+ * the system language (holiday-shared pickHolidayLanguages).
  *
- * @param scope the scope, the enabled types and the excludes
- * @param includeBridgeDays whether bridge days are reported
- * @param systemLanguage the ioBroker system language
- * @param referenceYear the year shown
- * @param makeHolidays builds the scope's date-holidays instance
+ * @param scope the scope, the enabled types, the excludes and the bridge-day switch
+ * @param options the system language, the year shown and the scope constructor
+ * @param options.systemLanguage the ioBroker system language
+ * @param options.referenceYear the year shown
+ * @param options.makeHolidays builds the scope's date-holidays instance
  * @returns the days of the year, in date order
  */
 export function buildPreviewHolidays(
   scope: PreviewScope,
-  includeBridgeDays: boolean,
-  systemLanguage: string,
-  referenceYear: number,
-  makeHolidays: MakeScopedHolidays = defaultMakeScoped,
+  options: { systemLanguage: string; referenceYear: number; makeHolidays?: MakeScopedHolidays },
 ): PreviewHoliday[] {
   // No country, or no enabled type: the runtime publishes nothing, so the preview shows nothing.
   if (!scope.country || scope.types.length === 0) {
@@ -205,23 +171,21 @@ export function buildPreviewHolidays(
 
   let hd: Holidays;
   try {
-    // The scoped construction (country / +state / +region) lives in the maker itself —
-    // empty strings are folded to "absent" here instead of re-branching per call site.
-    hd = makeHolidays(scope.country, scope.state || undefined, scope.region || undefined);
+    hd = (options.makeHolidays ?? makeScopedHolidays)(scope.country, scope.state, scope.region);
   } catch {
     return [];
   }
-  hd.setLanguages(pickHolidayLanguages(systemLanguage, hd.getLanguages?.() ?? []));
+  hd.setLanguages(pickHolidayLanguages(options.systemLanguage, hd.getLanguages()));
 
-  const years = [referenceYear - 1, referenceYear, referenceYear + 1];
-  const raws = years.flatMap(y => (hd.getHolidays(y) || []) as SourceHoliday[]);
-  const days = buildDayMap(raws, { types: scope.types, excludes: scope.excludeHolidays });
-  if (includeBridgeDays) {
-    // The localized "bridge day" name is filled in by the card; the preview only needs the date.
-    addBridgeDays(days, years, weekendDays(scope.country), "");
-  }
-
-  const prefix = String(referenceYear);
+  // The localized "bridge day" name is filled in by the card; the preview only needs the date.
+  const { days } = buildScopeDays(hd, options.referenceYear, {
+    types: scope.types,
+    excludes: scope.excludeHolidays,
+    bridgeDays: scope.includeBridgeDays,
+    country: scope.country,
+    bridgeName: "",
+  });
+  const prefix = String(options.referenceYear);
   return Array.from(days.values())
     .filter(d => d.date.startsWith(prefix))
     .map(({ date, name, type }) => ({ date, name, type }))

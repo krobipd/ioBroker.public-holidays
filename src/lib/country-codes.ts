@@ -4,7 +4,7 @@
 // - the system settings dialog (MainSettingsDialog.tsx: <MenuItem value={elem.name}>) — the ISO
 //   names of src-admin/src/assets/json/countries.json ("Viet Nam", "Korea, Republic of"), mapped
 //   by COUNTRY_NAME_TO_CODE;
-// - the first-run wizard up to Admin 8.0.14 (the stable 8.0.11 and all of 7.x) — its own list
+// - the first-run wizard up to Admin 8.0.14 (the stable 8.0.14 and every earlier version) — its own list
 //   `COUNTRIES` ("Vietnam", "Korea", "Zaire"), mapped by WIZARD_COUNTRY_ALIASES. It stores the
 //   English key and translates only the label (measured in the 8.0.11 bundle: `getOptionLabel`
 //   translates, `onChange` stores the option). 8.0.15 made both lists the same without migrating

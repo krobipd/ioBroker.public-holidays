@@ -3,7 +3,7 @@
 // keep the admin card's bundled copy in lockstep with the runtime's. Not a release hook: the release
 // hook runs AFTER the pre-run proved the tree, so nothing there may change it (fleet rule, round 44).
 // The release run's npm update (phase C) lifts date-holidays like every dependency; when the card's
-// pin does not follow, date-holidays-version-parity.test.ts turns the pre-run red — this is the fix.
+// pin does not follow, date-holidays-currency.test.ts turns the pre-run red — this is the fix.
 //
 // date-holidays ships holiday DATA (new countries, changed dates, corrected classifications) in
 // every kind of release, so a release that ships an older copy ships wrong holidays.
@@ -18,7 +18,7 @@
 // dependabot, so it never moves on its own — if the two drift the card can offer a scope the
 // runtime doesn't compute. This gate pins src-admin to the version the runtime actually resolves
 // and installs it, so the shipped card always sees the same holiday data. The independent guard
-// src/lib/date-holidays-version-parity.test.ts fails CI if this ever drifts.
+// src/lib/date-holidays-currency.test.ts fails CI if this ever drifts.
 //
 // Rebuild (step 4): after a bump the tracked card bundle in admin/custom/ still carries the old data.
 // Only when this tool actually changed a version does it re-run the tests and rebuild the card; an

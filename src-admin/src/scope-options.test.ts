@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type Holidays from "date-holidays";
+import { ALL_TYPES, makeFakeHolidays } from "../../test/helpers";
 import {
   getCountryOptions,
   getStateOptions,
@@ -47,6 +48,14 @@ describe("getStateOptions", () => {
       { value: "BE", label: "Berlin (BE)" },
     ]);
   });
+
+  it("marks a mixed-case key date-holidays cannot load", () => {
+    const hd = makeFakeHd({ states: { CK: { Aitutaki: "Aitutaki", RAR: "Rarotonga" } } });
+    expect(getStateOptions("CK", "en", () => hd)).toEqual([
+      { value: "Aitutaki", label: "Aitutaki (Aitutaki)", unloadable: true },
+      { value: "RAR", label: "Rarotonga (RAR)" },
+    ]);
+  });
 });
 
 describe("getRegionOptions", () => {
@@ -64,156 +73,83 @@ describe("getRegionOptions", () => {
   });
 });
 
-// A date-holidays stand-in for the preview: canned holidays per year + records scope routing.
-interface FakePreviewHoliday {
-  name: string;
-  rule?: string;
-  type: string;
-  date: string;
-}
-function makeFakeScope(byYear: Record<number, FakePreviewHoliday[]>): {
-  make: (country: string, state?: string, region?: string) => Holidays;
-  calls: Array<[string, string?, string?]>;
-} {
-  const calls: Array<[string, string?, string?]> = [];
-  const make = (country: string, state?: string, region?: string): Holidays => {
-    calls.push([country, state, region]);
-    return {
-      setLanguages: () => undefined,
-      getHolidays: (y: number) => byYear[y] ?? [],
-    } as unknown as Holidays;
-  };
-  return { make, calls };
-}
-
-// Default scope has every type enabled: an EMPTY type list means "no holidays at all" (the
-// runtime's semantics), so it is a case of its own rather than a neutral default.
-const ALL_TYPES = ["public", "bank", "school", "optional", "observance"];
-
 const pscope = (over: Partial<PreviewScope> = {}): PreviewScope => ({
   country: "DE",
   state: "",
   region: "",
   types: ALL_TYPES,
   excludeHolidays: [],
+  includeBridgeDays: false,
   ...over,
 });
 
+const at2026 = (
+  makeHolidays?: (c: string, s: string, r: string) => Holidays,
+): Parameters<typeof buildPreviewHolidays>[1] => ({
+  systemLanguage: "en",
+  referenceYear: 2026,
+  makeHolidays,
+});
+
 describe("buildPreviewHolidays", () => {
-  it("returns [] without a country", () => {
-    const { make } = makeFakeScope({});
-    expect(buildPreviewHolidays(pscope({ country: "" }), false, "en", 2026, make)).toEqual([]);
-  });
-
-  it("routes state+region into the constructor", () => {
-    const { make, calls } = makeFakeScope({ 2026: [] });
-    buildPreviewHolidays(pscope({ state: "BY", region: "A" }), false, "en", 2026, make);
-    expect(calls[0]).toEqual(["DE", "BY", "A"]);
-  });
-
-  it("previews nothing when the date-holidays constructor throws — the card has no outer handler", () => {
-    const make = (): Holidays => {
+  it("previews nothing without a country, without an enabled type, or when the scope cannot be built", () => {
+    const { make } = makeFakeHolidays({
+      2026: [{ name: "Public Day", rule: "pubrule", type: "public", date: "2026-05-01" }],
+    });
+    expect(buildPreviewHolidays(pscope({ country: "" }), at2026(make))).toEqual([]);
+    // The runtime's type filter drops every holiday when the list is empty — a full year here
+    // would promise states the adapter never writes.
+    expect(buildPreviewHolidays(pscope({ types: [] }), at2026(make))).toEqual([]);
+    const failing = (): Holidays => {
       throw new Error("no data for this scope");
     };
-    expect(buildPreviewHolidays(pscope({}), true, "en", 2026, make)).toEqual([]);
+    expect(buildPreviewHolidays(pscope(), at2026(failing))).toEqual([]);
   });
 
-  it("previews nothing when no type is enabled — mirrors what the runtime publishes", () => {
-    // The runtime's type filter drops every holiday when the list is empty. A preview that
-    // showed a full year here would promise states the adapter never writes.
-    const { make } = makeFakeScope({
+  it("routes the scope into the constructor", () => {
+    const { make, calls } = makeFakeHolidays({});
+    buildPreviewHolidays(pscope({ state: "BY", region: "A" }), at2026(make));
+    expect(calls).toEqual([["DE", "BY", "A"]]);
+  });
+
+  it("keeps the enabled types, drops excluded ids, sorts by date", () => {
+    const { make } = makeFakeHolidays({
       2026: [
-        { name: "Public Day", rule: "pubrule", type: "public", date: "2026-05-01" },
-        { name: "Bank Day", rule: "bankrule", type: "bank", date: "2026-06-01" },
+        { name: "Dec", rule: "decrule", type: "public", date: "2026-12-25 00:00:00" },
+        { name: "Bank Day", rule: "bankrule", type: "bank", date: "2026-06-01 00:00:00" },
+        { name: "Excluded", rule: "excrule", type: "public", date: "2026-07-01 00:00:00" },
+        { name: "Jan", rule: "janrule", type: "public", date: "2026-01-01 00:00:00" },
       ],
     });
-    expect(buildPreviewHolidays(pscope({ types: [] }), true, "en", 2026, make)).toEqual([]);
+    const res = buildPreviewHolidays(pscope({ types: ["public"], excludeHolidays: ["excrule"] }), at2026(make));
+    expect(res).toEqual([
+      { date: "2026-01-01", name: "Jan", type: "public" },
+      { date: "2026-12-25", name: "Dec", type: "public" },
+    ]);
   });
 
-  it("keeps only enabled types and drops excluded ids", () => {
-    const { make } = makeFakeScope({
-      2026: [
-        { name: "Public Day", rule: "pubrule", type: "public", date: "2026-05-01" },
-        { name: "Bank Day", rule: "bankrule", type: "bank", date: "2026-06-01" },
-        { name: "Excluded", rule: "excrule", type: "public", date: "2026-07-01" },
-      ],
+  it("adds the bridge days only when they are switched on — the rule is the runtime's", () => {
+    // 2026-05-14 (Thu) = Ascension → Fri 05-15.
+    const { make } = makeFakeHolidays({
+      2026: [{ name: "Ascension", rule: "ascension", type: "public", date: "2026-05-14 00:00:00" }],
     });
-    const res = buildPreviewHolidays(
-      pscope({ types: ["public"], excludeHolidays: ["excrule"] }),
-      false,
-      "en",
-      2026,
-      make,
-    );
-    expect(res.map(h => h.name)).toEqual(["Public Day"]);
-  });
-
-  it("dedupes a same-date collision by type priority (public wins over bank)", () => {
-    const { make } = makeFakeScope({
-      2026: [
-        { name: "Bank Version", rule: "bankrule", type: "bank", date: "2026-05-01" },
-        { name: "Public Version", rule: "pubrule", type: "public", date: "2026-05-01" },
-      ],
-    });
-    const res = buildPreviewHolidays(pscope(), false, "en", 2026, make);
-    expect(res).toHaveLength(1);
-    expect(res[0].name).toBe("Public Version");
-  });
-
-  it("sorts the surviving holidays by date", () => {
-    const { make } = makeFakeScope({
-      2026: [
-        { name: "Dec", rule: "decrule", type: "public", date: "2026-12-25" },
-        { name: "Jan", rule: "janrule", type: "public", date: "2026-01-01" },
-      ],
-    });
-    const res = buildPreviewHolidays(pscope(), false, "en", 2026, make);
-    expect(res.map(h => h.name)).toEqual(["Jan", "Dec"]);
-  });
-
-  // 2026-05-14 (Thu) = Ascension, 05-12 = Tue, 05-13 = Wed, 05-11 = Mon, 05-15 = Fri (verified).
-  it("adds a Friday bridge after a Thursday holiday when includeBridgeDays is on", () => {
-    const { make } = makeFakeScope({
-      2026: [{ name: "Ascension", rule: "ascension", type: "public", date: "2026-05-14" }],
-    });
-    const res = buildPreviewHolidays(pscope(), true, "en", 2026, make);
-    expect(res.filter(h => h.type === "bridge").map(h => h.date)).toEqual(["2026-05-15"]);
-  });
-
-  it("adds no bridges when includeBridgeDays is off", () => {
-    const { make } = makeFakeScope({
-      2026: [{ name: "Ascension", rule: "ascension", type: "public", date: "2026-05-14" }],
-    });
-    const res = buildPreviewHolidays(pscope(), false, "en", 2026, make);
-    expect(res.some(h => h.type === "bridge")).toBe(false);
-  });
-
-  it("bridges the Monday before a Tuesday holiday and a Wednesday bracketed by Tue+Thu", () => {
-    const { make } = makeFakeScope({
-      2026: [
-        { name: "Tue Holiday", rule: "tuerule", type: "public", date: "2026-05-12" },
-        { name: "Thu Holiday", rule: "thurule", type: "public", date: "2026-05-14" },
-      ],
-    });
-    const res = buildPreviewHolidays(pscope(), true, "en", 2026, make);
-    const bridges = res
-      .filter(h => h.type === "bridge")
-      .map(h => h.date)
-      .sort();
-    expect(bridges).toEqual(["2026-05-11", "2026-05-13", "2026-05-15"]);
+    expect(buildPreviewHolidays(pscope(), at2026(make)).some(h => h.type === "bridge")).toBe(false);
+    expect(
+      buildPreviewHolidays(pscope({ includeBridgeDays: true }), at2026(make))
+        .filter(h => h.type === "bridge")
+        .map(h => h.date),
+    ).toEqual(["2026-05-15"]);
   });
 });
 
 // ─── the DEFAULT makers (audit finding F10) ─────────────────────────────────
 //
-// Same gap as in exclude-options: every case above injects a fake, leaving the constructors the
-// admin card actually runs (lines 86-92) untouched by any test. These go through the real library.
+// The constructors the card actually runs, through the real library.
 describe("the cascade and the preview with the real date-holidays constructor", () => {
   it("getCountryOptions lists the countries date-holidays supports", () => {
     const options = getCountryOptions("en");
-    expect(options.length).toBeGreaterThan(200);
-    expect(options.some(o => o.value === "DE")).toBe(true);
-    expect(options.find(o => o.value === "DE")?.label).toContain("(DE)");
+    expect(options.find(o => o.value === "DE")?.label).toBe("Germany (DE)");
+    expect(options.find(o => o.value === "JP")?.label).toBe("Japan (JP)");
   });
 
   it("getStateOptions/getRegionOptions walk down the real taxonomy", () => {
@@ -222,44 +158,14 @@ describe("the cascade and the preview with the real date-holidays constructor", 
     expect(getRegionOptions("DE", "", "en")).toEqual([]);
   });
 
-  it("buildPreviewHolidays passes country/state/region to the constructor in that order", () => {
-    const country = buildPreviewHolidays(
-      { country: "DE", state: "", region: "", types: ["public"], excludeHolidays: [] },
-      false,
-      "en",
-      2026,
-    );
-    const state = buildPreviewHolidays(
-      { country: "DE", state: "BY", region: "", types: ["public"], excludeHolidays: [] },
-      false,
-      "en",
-      2026,
-    );
-    const region = buildPreviewHolidays(
-      { country: "DE", state: "BY", region: "A", types: ["public"], excludeHolidays: [] },
-      false,
-      "en",
-      2026,
-    );
+  it("passes country/state/region to the constructor in that order", () => {
+    const real = (over: Partial<PreviewScope>): ReturnType<typeof buildPreviewHolidays> =>
+      buildPreviewHolidays(pscope({ types: ["public"], ...over }), at2026());
+    const country = real({});
+    const state = real({ state: "BY" });
+    const region = real({ state: "BY", region: "A" });
     expect(state.length).toBeGreaterThan(country.length);
     expect(region.length).toBeGreaterThan(state.length);
     expect(region.some(h => h.date === "2026-08-08")).toBe(true);
-  });
-
-  it("adds bridge days to the real preview when they are switched on", () => {
-    const plain = buildPreviewHolidays(
-      { country: "DE", state: "BY", region: "", types: ["public"], excludeHolidays: [] },
-      false,
-      "en",
-      2026,
-    );
-    const bridged = buildPreviewHolidays(
-      { country: "DE", state: "BY", region: "", types: ["public"], excludeHolidays: [] },
-      true,
-      "en",
-      2026,
-    );
-    expect(bridged.length).toBeGreaterThan(plain.length);
-    expect(bridged.filter(h => h.type === "bridge").length).toBeGreaterThan(0);
   });
 });

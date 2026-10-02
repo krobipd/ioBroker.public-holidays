@@ -7,6 +7,7 @@ import {
   buildDayMap,
   excludeKey,
   expandHolidayDays,
+  formatDateForDisplay,
   formatDayMonth,
   isFullDay,
   pickHolidayLanguages,
@@ -24,7 +25,7 @@ import {
  * @param state the state code
  */
 function raws(years: number[], country: string, state?: string): SourceHoliday[] {
-  const hd = state ? new Holidays(country, state) : new Holidays(country);
+  const hd = new Holidays(country, state ?? "");
   hd.setLanguages(["en"]);
   return years.flatMap(y => hd.getHolidays(y) as SourceHoliday[]);
 }
@@ -259,6 +260,43 @@ describe("pickHolidayLanguages — the language the runtime publishes in", () =>
   it("English when the country's data lacks the language, or the language is not one of ioBroker's", () => {
     expect(pickHolidayLanguages("ru", ["es", "ca", "en"])).toEqual(["en"]);
     expect(pickHolidayLanguages("ja", ["ja", "en"])).toEqual(["en"]);
+  });
+
+  // Against the languages the real data carries: Swedish exists for SE but is no ioBroker language —
+  // passing it through would give a half-translated tree.
+  it.each([
+    ["de", "DE", ["de", "en"]],
+    ["DE", "DE", ["de", "en"]],
+    ["de-AT", "AT", ["de", "en"]],
+    ["fr", "FR", ["fr", "en"]],
+    ["it", "IT", ["it", "en"]],
+    ["es", "ES", ["es", "en"]],
+    ["pt", "PT", ["pt", "en"]],
+    ["nl", "NL", ["nl", "en"]],
+    ["pl", "PL", ["pl", "en"]],
+    ["ru", "RU", ["ru", "en"]],
+    ["sv", "SE", ["en"]],
+    ["zh", "DE", ["en"]],
+    ["", "DE", ["en"]],
+    ["xx", "DE", ["en"]],
+  ])("system %s, country %s → %j", (system, country, expected) => {
+    expect(pickHolidayLanguages(system, new Holidays(country).getLanguages())).toEqual(expected);
+  });
+});
+
+describe("formatDateForDisplay — the log line's date in the system format", () => {
+  it("renders the ISO key in the system date format, two-digit years too", () => {
+    expect(formatDateForDisplay("2026-10-26", "DD.MM.YYYY")).toBe("26.10.2026");
+    expect(formatDateForDisplay("2026-10-26", "MM/DD/YYYY")).toBe("10/26/2026");
+    expect(formatDateForDisplay("2026-10-26", "YYYY.MM.DD")).toBe("2026.10.26");
+    expect(formatDateForDisplay("2026-10-26", "DD.MM.YY")).toBe("26.10.26");
+  });
+
+  it("returns the key unchanged for an empty or unrecognized format, or a malformed key", () => {
+    expect(formatDateForDisplay("2026-10-26", "")).toBe("2026-10-26");
+    expect(formatDateForDisplay("2026-10-26", "garbage")).toBe("2026-10-26");
+    expect(formatDateForDisplay("", "DD.MM.YYYY")).toBe("");
+    expect(formatDateForDisplay("26.10.2026", "DD.MM.YYYY")).toBe("26.10.2026");
   });
 });
 

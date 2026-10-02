@@ -19,8 +19,7 @@ const SHARED = join(adapterDir, "src", "lib", "holiday-shared.ts");
 
 /**
  * Every .ts/.tsx source file. Tests are excluded (a test may legitimately spell a rule out), and so
- * are `.d.ts` files: `vite build` in src-admin/ drops a generated declaration next to every src/
- * module the card imports, and a mirror of the shared file is not a second definition of it.
+ * are `.d.ts` files: a generated declaration is a mirror of its source, not a second definition.
  *
  * @param dir the directory to walk
  */
@@ -77,6 +76,14 @@ const SINGLE_SOURCE: Array<{ what: string; marker: RegExp; home?: string }> = [
   { what: "the holiday occurrence of a day", marker: /`\$\{id\}@\$\{keys\[0\]\}`/ },
   { what: "the holiday-name language rule", marker: /available\.includes\(lang\)/ },
   { what: "the bridge-day names", marker: /BRIDGE_DAY_NAMES\s*[:=]\s*(Record|\{)/ },
+  { what: "the three-year window of the day list", marker: /\[\s*\w+\s*-\s*1,\s*\w+,\s*\w+\s*\+\s*1\s*\]/ },
+  { what: "the stored-field reader (trimmed)", marker: /typeof v === "string" \? v\.trim\(\)/ },
+  { what: "the stored-list reader", marker: /\(x\): x is string => typeof x === "string"/ },
+  { what: "the scope-code match regardless of case", marker: /\.toUpperCase\(\)\s*===\s*\w+\.toUpperCase\(\)/ },
+  { what: "the loadable scope-key rule", marker: /(\w+)\s*===\s*\1\.toUpperCase\(\)/ },
+  { what: "the substitute-id prefix", marker: /"substitutes_"/ },
+  { what: "one day in milliseconds", marker: /86400000/ },
+  { what: "the calendar-key format", marker: /padStart\(2,\s*"0"\)/ },
   { what: "the admin wizard's country names", marker: /"Ivory Coast":\s*"CI"/, home: COUNTRY_CODES },
   { what: "the country resolution", marker: /reason:\s*"ambiguous"|"ambiguous"\s*:\s*"no-data"/, home: COUNTRY_CODES },
 ];
@@ -107,7 +114,7 @@ describe("one definition, not two (src/ and src-admin/ share holiday-shared.ts)"
   });
 
   it("the admin card imports the shared module rather than copying from it", () => {
-    for (const rel of ["exclude-options.ts", "scope-options.ts", "HolidayPanel.tsx"]) {
+    for (const rel of ["exclude-options.ts", "scope-options.ts", "HolidayPanel.tsx", "Tiers.tsx"]) {
       const text = readFileSync(join(adapterDir, "src-admin", "src", rel), "utf8");
       expect(text, `${rel} does not import holiday-shared`).toContain("../../src/lib/holiday-shared.js");
     }

@@ -5,6 +5,7 @@ import { configuredCountry, parseConfig } from "./lib/config";
 import { errText } from "./lib/err-text";
 import { KnownObjects } from "./lib/known-objects";
 import { errLine, oneLine } from "./lib/log-text";
+import { resolveCountry } from "./lib/country";
 import {
   computeHolidays,
   createHolidaysInstance,
@@ -12,9 +13,17 @@ import {
   emptyResult,
   logAvailableHolidays,
 } from "./lib/holiday-engine";
-import { formatDateForDisplay, getSystemConfig, resolveCountry, resolveLanguages } from "./lib/i18n";
+import { pickHolidayLanguages } from "./lib/holiday-shared";
 import { migrateNativeKeys, type NativeKeyMigration } from "./lib/native-key-migration";
+import {
+  hostZoneNote,
+  scopeIssueText,
+  staleExcludesText,
+  summaryLine,
+  systemCountryProblemText,
+} from "./lib/run-messages";
 import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./lib/state-publisher";
+import { getSystemConfig } from "./lib/system-config";
 
 /**
  * Settings keys earlier versions declared and this one no longer reads — nulled on the first start
@@ -122,13 +131,7 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         if (detectedCountry) {
           this.log.debug(`Using system country: ${detectedCountry}`);
         } else {
-          const name = oneLine(sysConfig.country);
-          systemCountryProblem =
-            detected.reason === "ambiguous"
-              ? `System country '${name}' covers several countries — choose the country in the adapter settings`
-              : detected.reason === "no-data"
-                ? `System country '${name}' has no holiday data — choose a country in the adapter settings`
-                : `System country '${name}' is not recognized — choose a country in the adapter settings`;
+          systemCountryProblem = systemCountryProblemText(detected.reason, sysConfig.country);
         }
       }
 
@@ -152,80 +155,53 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         this.log.warn("No holiday type is enabled — no holidays will be reported; enable at least one in the settings");
       }
 
-      // Build the date-holidays instance once and reuse it for language detection, scope checks
-      // and computation. getLanguages() is country-scoped, so the full-scope instance answers it
-      // just as well — no throwaway second instance (audit finding L4).
+      // ONE date-holidays instance for language detection, scope checks and computation —
+      // getLanguages() is country-scoped, so the full-scope instance answers it (audit finding L4).
       const hd = createHolidaysInstance(config);
-      const languages = resolveLanguages(sysConfig.language, hd);
+      const languages = pickHolidayLanguages(sysConfig.language, hd.getLanguages());
       hd.setLanguages(languages);
       this.log.debug(`System language: ${oneLine(sysConfig.language)}, holiday languages: [${languages.join(", ")}]`);
 
-      // The days follow the HOST clock (the daily run fires at the host's midnight). A container
-      // left on UTC while the country is elsewhere shifts every day by hours — worth a line when
-      // someone looks at debug output, not a daily warning (a country other than the host's own is
-      // a legitimate choice).
-      const hostZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const countryZones = hd.getTimezones?.() ?? [];
-      if (countryZones.length > 0 && !countryZones.includes(hostZone)) {
-        this.log.debug(
-          `Host time zone ${oneLine(hostZone)} is not one of ${oneLine(config.country)}'s (${countryZones.join(", ")}) — days follow the host clock`,
-        );
+      const zoneNote = hostZoneNote(
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+        config.country,
+        hd.getTimezones(),
+      );
+      if (zoneNote) {
+        this.log.debug(zoneNote);
       }
 
-      const issue = detectScopeIssue(config, languages, hd);
-      if (issue?.kind === "country") {
-        this.log.warn(`Country '${oneLine(config.country)}' is not recognized — check the country setting`);
-      } else if (issue?.kind === "state") {
-        this.log.warn(
-          `State '${oneLine(config.state)}' is unknown for ${oneLine(config.country)} — using country-level holidays`,
-        );
-      } else if (issue?.kind === "region") {
-        const scope = config.state ? `${oneLine(config.country)}/${oneLine(config.state)}` : oneLine(config.country);
-        this.log.warn(`Region '${oneLine(config.region)}' is unknown for ${scope} — using broader holidays`);
-      } else if (issue?.kind === "unloadable") {
-        const key = oneLine(config.region || config.state);
-        this.log.warn(`date-holidays cannot load '${key}' (library defect) — using the broader scope's holidays`);
+      const issue = detectScopeIssue(hd, config);
+      if (issue) {
+        this.log.warn(scopeIssueText(issue, config));
       }
 
-      const computed = computeHolidays(config, languages, { instance: hd, systemLanguage: sysConfig.language });
+      const computed = computeHolidays(hd, config, { systemLanguage: sysConfig.language });
       if (computed.unmatchedExcludes.length > 0) {
-        this.log.warn(
-          `These excluded holidays no longer occur in the holiday data (a one-off date that has passed, or changed by a date-holidays update): ${oneLine(
-            computed.unmatchedExcludes.join(", "),
-          )}`,
-        );
+        this.log.warn(staleExcludesText(computed.unmatchedExcludes));
       }
 
       // Guarded, not unconditional: the listing computes an extra year and builds a line naming
       // every holiday, which is pure waste while nobody reads debug output (audit finding F12).
       if (this.log.level === "debug" || this.log.level === "silly") {
-        logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
+        logAvailableHolidays(hd, config, msg => this.log.debug(msg));
       }
 
       await cleanupDeprecatedStates(this, known);
       await ensureObjects(this, known);
       await publishStates(this, computed);
 
-      // The log line shows the date the way the user's ioBroker displays dates
-      // (system.config dateFormat, e.g. "26.10.2026"); the next.date STATE stays ISO.
-      const days = computed.next.daysUntil;
-      const nextText = computed.next.isHoliday
-        ? `${oneLine(computed.next.name)} on ${formatDateForDisplay(computed.next.date, sysConfig.dateFormat)} (in ${days} ${days === 1 ? "day" : "days"})`
-        : "no upcoming holiday";
-      const summary = `Today: ${
-        computed.today.isHoliday ? oneLine(computed.today.name) : "no holiday"
-      }, next holiday: ${nextText}`;
       // Logged at info on every run — the start run and each daily schedule run — so the next
       // holiday is always visible in the log (krobi 2026-08-10). Written AFTER the states, so the
       // line never reports values that did not reach the database.
-      this.log.info(summary);
+      this.log.info(summaryLine(computed, sysConfig.dateFormat));
     } catch (err: unknown) {
       this.log.error(`onReady failed: ${errLine(err)}`);
       // The Sentry plugin only hooks uncaught exceptions — a caught error has to be handed over
       // (plugin README, "Send specific errors to Sentry"). The two other catches (instance-object
       // repair, deprecated-state cleanup) stay quiet on purpose: expected broker hiccups with a
       // local fallback, not adapter defects.
-      if (this.supportsFeature?.("PLUGINS")) {
+      if (this.supportsFeature("PLUGINS")) {
         await this.reportToSentry(err);
       }
     }

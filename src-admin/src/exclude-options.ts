@@ -1,24 +1,19 @@
-// Pure exclude-list logic for the admin component, deliberately free of React/MUI so a vitest
-// test under src/ can import and exercise it directly.
+// Pure exclude-list logic for the admin card, deliberately free of React/MUI so its tests exercise
+// it without rendering.
 //
-// The holiday id and the type list come from src/lib/holiday-shared.ts — the SAME module the
+// The holiday id and the substitute rule come from src/lib/holiday-shared.ts — the SAME module the
 // runtime uses. Until v0.15.1 both were copied here because an import from `src/` "would risk the
 // MF build"; measured 2026-09-06 that is not so (tsc + `npm run build:admin` both pass), so the
-// copies and their parity guards are gone. The explicit `.js` extension is required because the
-// ROOT tsconfig (node16 ESM resolution) type-checks this file too; Vite and the src-admin tsconfig
-// resolve it to the .ts file all the same.
-import Holidays from "date-holidays";
+// copies and their parity guards are gone.
+import type Holidays from "date-holidays";
 import {
-  HOLIDAY_TYPES,
-  enabledTypeKeys,
   formatDayMonth,
   pickHolidayLanguages,
   type SourceHoliday,
   substituteBases,
   toHolidayId,
 } from "../../src/lib/holiday-shared.js";
-
-export { HOLIDAY_TYPES, enabledTypeKeys, toHolidayId };
+import { type MakeScopedHolidays, makeScopedHolidays, type ScopeSelection } from "./scoped-holidays";
 
 /** One entry of the exclude list. */
 export interface ExcludeOption {
@@ -28,57 +23,26 @@ export interface ExcludeOption {
   label: string;
 }
 
-/** The scope the exclude list is built for. */
-export interface ScopeSelection {
-  /** The country code. */
-  country: string;
-  /** The state code, "" for none. */
-  state: string;
-  /** The region code, "" for none. */
-  region: string;
-  /**
-   * Enabled holiday types. An empty list means NO holidays at all — exactly what the runtime
-   * does (`getFilteredHolidays` keeps only types in this list, so an empty one drops
-   * everything). The card must not offer holidays the adapter would never report.
-   */
-  types: string[];
-}
-
-type MakeHolidays = (country: string, state?: string, region?: string) => Holidays;
-
-const defaultMakeHolidays: MakeHolidays = (country, state, region) => {
-  if (state && region) {
-    return new Holidays(country, state, region);
-  }
-  if (state) {
-    return new Holidays(country, state);
-  }
-  return new Holidays(country);
-};
-
 /**
  * Exclude options for a scope: holidays of exactly country/state/region, named in the language the
  * runtime publishes (the system language, holiday-shared pickHolidayLanguages), restricted to the
  * enabled types, deduped by id (earlier year wins), sorted by MM-DD so a next-year-only holiday
  * slots into the calendar instead of landing at the end. A substitute day is not offered on its
- * own: excluding its holiday takes it along (holiday-shared substituteBases). `makeHolidays` is
- * injectable so the logic is testable without the date-holidays constructor — the DEFAULT maker is
- * exercised too (exclude-options.test.ts), because it is the one the admin actually runs and a
- * swapped argument would otherwise ship green (audit finding F10).
+ * own: excluding its holiday takes it along (holiday-shared substituteBases). The window is this
+ * year and the next — what a user can still pick; the runtime's wider window (year before included)
+ * only matters for its own day list.
  *
  * @param scope the scope and the enabled types
- * @param systemLanguage the ioBroker system language
- * @param referenceYear the year shown
- * @param makeHolidays builds the scope's date-holidays instance
- * @param dateFormat the system date format
+ * @param options the system language, the year shown, the date format and the scope constructor
+ * @param options.systemLanguage the ioBroker system language
+ * @param options.referenceYear the year shown
+ * @param options.dateFormat the system date format (the chips' day/month order)
+ * @param options.makeHolidays builds the scope's date-holidays instance
  * @returns the options, in calendar order
  */
 export function buildExcludeOptions(
   scope: ScopeSelection,
-  systemLanguage: string,
-  referenceYear: number,
-  makeHolidays: MakeHolidays = defaultMakeHolidays,
-  dateFormat = "DD.MM.YYYY",
+  options: { systemLanguage: string; referenceYear: number; dateFormat: string; makeHolidays?: MakeScopedHolidays },
 ): ExcludeOption[] {
   // No country, or no enabled type: the runtime reports nothing, so there is nothing to exclude.
   if (!scope.country || scope.types.length === 0) {
@@ -87,17 +51,14 @@ export function buildExcludeOptions(
 
   let hd: Holidays;
   try {
-    // The scoped construction (country / +state / +region) lives in the maker itself —
-    // empty strings are folded to "absent" here instead of re-branching per call site.
-    hd = makeHolidays(scope.country, scope.state || undefined, scope.region || undefined);
+    hd = (options.makeHolidays ?? makeScopedHolidays)(scope.country, scope.state, scope.region);
   } catch {
     return [];
   }
-  hd.setLanguages(pickHolidayLanguages(systemLanguage, hd.getLanguages?.() ?? []));
+  hd.setLanguages(pickHolidayLanguages(options.systemLanguage, hd.getLanguages()));
 
-  // Cover the same window the runtime evaluates (this year + next) so a holiday that only
-  // exists in the coming year can still be picked; dedupe by id, first (earlier year) wins.
-  const raws = [referenceYear, referenceYear + 1].flatMap(y => (hd.getHolidays(y) || []) as SourceHoliday[]);
+  const year = options.referenceYear;
+  const raws = [year, year + 1].flatMap(y => (hd.getHolidays(y) ?? []) as SourceHoliday[]);
   const substitutes = substituteBases(raws);
   const seen = new Map<string, Pick<SourceHoliday, "name" | "date">>();
   for (const h of raws) {
@@ -108,15 +69,12 @@ export function buildExcludeOptions(
     if (substitutes.has(id) || seen.has(id)) {
       continue;
     }
-    seen.set(id, { name: h.name, date: (h.date || "").substring(0, 10) });
+    seen.set(id, { name: h.name, date: h.date.substring(0, 10) });
   }
 
   return Array.from(seen.entries())
     .sort((a, b) => a[1].date.substring(5).localeCompare(b[1].date.substring(5)))
-    .map(([id, v]) => {
-      const dateLabel = v.date ? formatDayMonth(v.date, dateFormat) : "";
-      return { id, label: dateLabel ? `${v.name} (${dateLabel})` : v.name };
-    });
+    .map(([id, v]) => ({ id, label: `${v.name} (${formatDayMonth(v.date, options.dateFormat)})` }));
 }
 
 /**
