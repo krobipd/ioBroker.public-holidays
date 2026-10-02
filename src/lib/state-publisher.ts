@@ -1,10 +1,17 @@
 import type { ComputedHolidays, DayInfo, NextHoliday } from "./types";
-import { errText } from "./error-utils";
+import { coveredBy, type KnownObjects } from "./known-objects";
+import { errLine } from "./log-text";
 import { tName, type I18nKey } from "./i18n";
 
-const DAY_CHANNELS = ["today", "yesterday", "tomorrow", "dayAfterTomorrow"] as const;
-const DAY_FIELDS = ["name", "isHoliday"] as const;
-const NEXT_FIELDS = ["name", "isHoliday", "date", "daysUntil"] as const;
+// The published states: channel and field names ARE the keys of the computed result.
+const DAY_CHANNELS = [
+  "today",
+  "yesterday",
+  "tomorrow",
+  "dayAfterTomorrow",
+] as const satisfies readonly (keyof ComputedHolidays)[];
+const DAY_FIELDS = ["name", "isHoliday"] as const satisfies readonly (keyof DayInfo)[];
+const NEXT_FIELDS = ["name", "isHoliday", "date", "daysUntil"] as const satisfies readonly (keyof NextHoliday)[];
 
 /**
  * Objects earlier versions created, children before their channel (a channel goes last, when it is
@@ -45,7 +52,8 @@ const DEPRECATED_OBJECTS = [
 
 /**
  * Remove the states earlier versions created. `delObject` on a leaf state takes the VALUE with it,
- * so nothing is left behind in the states database.
+ * so nothing is left behind in the states database. Whether an id still exists comes from the tree
+ * {@link KnownObjects} read once at the start of the run — no read per id.
  *
  * A failure here used to be swallowed by an empty catch commented "already gone" — which is only
  * one of the reasons it can throw, and the other one (an unreachable objects DB) then vanished
@@ -53,17 +61,17 @@ const DEPRECATED_OBJECTS = [
  * losing today's holiday over it is not.
  *
  * @param adapter the adapter instance
+ * @param known the adapter's own object tree, loaded
  */
-export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter): Promise<void> {
+export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter, known: KnownObjects): Promise<void> {
   for (const id of DEPRECATED_OBJECTS) {
     try {
-      const obj = await adapter.getObjectAsync(id);
-      if (obj) {
-        await adapter.delObjectAsync(id);
+      if (known.get(id)) {
+        await known.remove(id);
         adapter.log.debug(`Removed deprecated state: ${id}`);
       }
     } catch (err: unknown) {
-      adapter.log.debug(`Could not remove the deprecated state ${id}: ${errText(err)}`);
+      adapter.log.debug(`Could not remove the deprecated state ${id}: ${errLine(err)}`);
     }
   }
 }
@@ -114,52 +122,23 @@ function stateObj(field: string, descKey?: I18nKey): ioBroker.PartialStateObject
 }
 
 /**
- * A value with its object keys sorted — key order carries no meaning in an ioBroker object, and
- * extendObject keeps the order an existing object already has.
+ * Write one refresh only when the stored object does not already carry it — js-controller writes an
+ * extendObject without comparing, so an unconditional refresh wrote 17 unchanged objects and sent 17
+ * object change events on every daily run. The stored object comes from the tree read once at the
+ * start of the run (fleet master `known-objects.ts`); an object the tree does not hold is written.
  *
- * @param v any JSON value
- * @returns its canonical JSON text
- */
-function canonical(v: unknown): string {
-  return JSON.stringify(v ?? null, (_k, x: unknown) =>
-    x && typeof x === "object" && !Array.isArray(x)
-      ? Object.fromEntries(
-          Object.keys(x)
-            .sort()
-            .map(k => [k, (x as Record<string, unknown>)[k]]),
-        )
-      : x,
-  );
-}
-
-/**
- * Write one refresh only when the object differs from it — js-controller writes an extendObject
- * without comparing, so an unconditional refresh wrote 17 unchanged objects and sent 17 object
- * change events on every daily run. A failed read writes: the refresh is the safe side.
- *
- * @param adapter the adapter instance
+ * @param known the adapter's own object tree, loaded
  * @param id the object id
  * @param patch the name/desc refresh
  * @param write the literal extendObject call for this id
  */
 async function refresh(
-  adapter: ioBroker.Adapter,
+  known: KnownObjects,
   id: string,
   patch: ioBroker.PartialChannelObject | ioBroker.PartialStateObject,
   write: (obj: ioBroker.PartialObject) => Promise<unknown>,
 ): Promise<void> {
-  let current: ioBroker.Object | null | undefined;
-  try {
-    current = await adapter.getObjectAsync(id);
-  } catch {
-    current = undefined;
-  }
-  if (
-    current &&
-    current.type === patch.type &&
-    canonical(current.common?.name) === canonical(patch.common?.name) &&
-    canonical(current.common?.desc) === canonical(patch.common?.desc)
-  ) {
+  if (coveredBy(patch, known.get(id))) {
     return;
   }
   await write(patch);
@@ -182,80 +161,63 @@ async function refresh(
  * uses 0 for "none found" are all things a user cannot read off the name.
  *
  * @param adapter the adapter instance
+ * @param known the adapter's own object tree, loaded
  */
-export async function ensureObjects(adapter: ioBroker.Adapter): Promise<void> {
-  await refresh(adapter, "today", channelObj("today"), o => adapter.extendObject("today", o));
-  await refresh(adapter, "today.name", stateObj("name", "descDayName"), o => adapter.extendObject("today.name", o));
-  await refresh(adapter, "today.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+export async function ensureObjects(adapter: ioBroker.Adapter, known: KnownObjects): Promise<void> {
+  await refresh(known, "today", channelObj("today"), o => adapter.extendObject("today", o));
+  await refresh(known, "today.name", stateObj("name", "descDayName"), o => adapter.extendObject("today.name", o));
+  await refresh(known, "today.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
     adapter.extendObject("today.isHoliday", o),
   );
 
-  await refresh(adapter, "yesterday", channelObj("yesterday"), o => adapter.extendObject("yesterday", o));
-  await refresh(adapter, "yesterday.name", stateObj("name", "descDayName"), o =>
+  await refresh(known, "yesterday", channelObj("yesterday"), o => adapter.extendObject("yesterday", o));
+  await refresh(known, "yesterday.name", stateObj("name", "descDayName"), o =>
     adapter.extendObject("yesterday.name", o),
   );
-  await refresh(adapter, "yesterday.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+  await refresh(known, "yesterday.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
     adapter.extendObject("yesterday.isHoliday", o),
   );
 
-  await refresh(adapter, "tomorrow", channelObj("tomorrow"), o => adapter.extendObject("tomorrow", o));
-  await refresh(adapter, "tomorrow.name", stateObj("name", "descDayName"), o =>
-    adapter.extendObject("tomorrow.name", o),
-  );
-  await refresh(adapter, "tomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+  await refresh(known, "tomorrow", channelObj("tomorrow"), o => adapter.extendObject("tomorrow", o));
+  await refresh(known, "tomorrow.name", stateObj("name", "descDayName"), o => adapter.extendObject("tomorrow.name", o));
+  await refresh(known, "tomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
     adapter.extendObject("tomorrow.isHoliday", o),
   );
 
-  await refresh(adapter, "dayAfterTomorrow", channelObj("dayAfterTomorrow"), o =>
+  await refresh(known, "dayAfterTomorrow", channelObj("dayAfterTomorrow"), o =>
     adapter.extendObject("dayAfterTomorrow", o),
   );
-  await refresh(adapter, "dayAfterTomorrow.name", stateObj("name", "descDayName"), o =>
+  await refresh(known, "dayAfterTomorrow.name", stateObj("name", "descDayName"), o =>
     adapter.extendObject("dayAfterTomorrow.name", o),
   );
-  await refresh(adapter, "dayAfterTomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
+  await refresh(known, "dayAfterTomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
     adapter.extendObject("dayAfterTomorrow.isHoliday", o),
   );
 
-  await refresh(adapter, "next", channelObj("next", "descNext"), o => adapter.extendObject("next", o));
-  await refresh(adapter, "next.name", stateObj("name", "descNextName"), o => adapter.extendObject("next.name", o));
-  await refresh(adapter, "next.isHoliday", stateObj("isHoliday", "descNextIsHoliday"), o =>
+  await refresh(known, "next", channelObj("next", "descNext"), o => adapter.extendObject("next", o));
+  await refresh(known, "next.name", stateObj("name", "descNextName"), o => adapter.extendObject("next.name", o));
+  await refresh(known, "next.isHoliday", stateObj("isHoliday", "descNextIsHoliday"), o =>
     adapter.extendObject("next.isHoliday", o),
   );
-  await refresh(adapter, "next.date", stateObj("date", "descNextDate"), o => adapter.extendObject("next.date", o));
-  await refresh(adapter, "next.daysUntil", stateObj("daysUntil", "descNextDaysUntil"), o =>
+  await refresh(known, "next.date", stateObj("date", "descNextDate"), o => adapter.extendObject("next.date", o));
+  await refresh(known, "next.daysUntil", stateObj("daysUntil", "descNextDaysUntil"), o =>
     adapter.extendObject("next.daysUntil", o),
   );
 }
 
-// Map state-field name → value getter.
-const DAY_VALUE: Record<string, (d: DayInfo) => string | boolean> = {
-  name: d => d.name,
-  isHoliday: d => d.isHoliday,
-};
-
-const NEXT_VALUE: Record<string, (n: NextHoliday) => string | boolean | number> = {
-  name: n => n.name,
-  isHoliday: n => n.isHoliday,
-  date: n => n.date,
-  daysUntil: n => n.daysUntil,
-};
-
+/**
+ * Write the twelve states of a computed result; a state whose value did not change is left alone.
+ *
+ * @param adapter the adapter instance
+ * @param computed the result to publish
+ */
 export async function publishStates(adapter: ioBroker.Adapter, computed: ComputedHolidays): Promise<void> {
-  const dayMap: Record<string, DayInfo> = {
-    today: computed.today,
-    yesterday: computed.yesterday,
-    tomorrow: computed.tomorrow,
-    dayAfterTomorrow: computed.dayAfterTomorrow,
-  };
-
   for (const ch of DAY_CHANNELS) {
-    const info = dayMap[ch];
     for (const field of DAY_FIELDS) {
-      await adapter.setStateChangedAsync(`${ch}.${field}`, DAY_VALUE[field](info), true);
+      await adapter.setStateChangedAsync(`${ch}.${field}`, computed[ch][field], true);
     }
   }
-
   for (const field of NEXT_FIELDS) {
-    await adapter.setStateChangedAsync(`next.${field}`, NEXT_VALUE[field](computed.next), true);
+    await adapter.setStateChangedAsync(`next.${field}`, computed.next[field], true);
   }
 }

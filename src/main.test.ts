@@ -91,8 +91,24 @@ vi.mock("@iobroker/adapter-core", () => {
       return Promise.resolve(obj ? structuredClone(obj) : null);
     }
 
-    delObjectAsync(id: string): Promise<void> {
+    delObjectAsync(id: string, _options?: { recursive?: boolean }): Promise<void> {
       this.objects.delete(this.fullId(id));
+      return Promise.resolve();
+    }
+
+    // The range read the fleet's KnownObjects loads the own tree with — copies, like every read.
+    getObjectListAsync(params: {
+      startkey: string;
+      endkey: string;
+    }): Promise<{ rows: Array<{ id: string; value: unknown }> }> {
+      const rows = [...this.objects.entries()]
+        .filter(([id]) => id >= params.startkey && id <= params.endkey)
+        .map(([id, value]) => ({ id, value: structuredClone(value) }));
+      return Promise.resolve({ rows });
+    }
+
+    setForeignObject(id: string, obj: ObjEntry): Promise<void> {
+      this.objects.set(id, structuredClone(obj));
       return Promise.resolve();
     }
 

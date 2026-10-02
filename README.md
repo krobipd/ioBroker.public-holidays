@@ -6,9 +6,14 @@
 
 **Support:** [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b?logo=ko-fi)](https://ko-fi.com/krobipd) [![PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/krobipd)
 
+> [!IMPORTANT]
+> This adapter cannot be installed from github
+
 Detects public holidays for 207 countries. Calculates offline — no cloud, no API calls. Updates daily at midnight.
 
 Holiday data provided by [date-holidays](https://github.com/commenthol/date-holidays) (ISC + CC-BY-SA-3.0).
+
+[🇺🇸 Documentation](./docs/en/README.md) · [🇩🇪 Dokumentation](./docs/de/README.md)
 
 ---
 
@@ -31,10 +36,8 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 ## Requirements
 
 - ioBroker js-controller >= 7.2.2
-- ioBroker Admin >= 8.0.11
+- ioBroker Admin >= 8.0.14
 - Node.js >= 22
-
-> The adapter CANNOT be installed via GitHub: The adapter must be installed via the ioBroker repository (stable or latest).
 
 ## Configuration
 

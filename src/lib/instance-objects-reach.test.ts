@@ -37,14 +37,14 @@ const englishKeys = Object.keys(
 
 /**
  * What `ensureObjects` actually writes, read off its source: id → builder call. Each object goes
- * through `refresh(adapter, "<id>", <builder>, o => adapter.extendObject("<id>", o))` — the id is
+ * through `refresh(known, "<id>", <builder>, o => adapter.extendObject("<id>", o))` — the id is
  * read from BOTH places and must agree, so a copy-paste slip (checked one object, wrote another)
  * cannot hide.
  */
 function refreshedObjects(): Map<string, { builder: string; key: string; descKey?: string; writes: string }> {
   const calls = new Map<string, { builder: string; key: string; descKey?: string; writes: string }>();
   const re =
-    /refresh\(\s*adapter,\s*"([^"]+)"\s*,\s*(channelObj|stateObj)\(\s*"([^"]+)"\s*(?:,\s*"([^"]+)"\s*)?\)\s*,\s*o\s*=>\s*adapter\.extendObject\(\s*"([^"]+)"/g;
+    /refresh\(\s*known,\s*"([^"]+)"\s*,\s*(channelObj|stateObj)\(\s*"([^"]+)"\s*(?:,\s*"([^"]+)"\s*)?\)\s*,\s*o\s*=>\s*adapter\.extendObject\(\s*"([^"]+)"/g;
   for (const m of source.matchAll(re)) {
     calls.set(m[1], { builder: m[2], key: m[3], descKey: m[4], writes: m[5] });
   }

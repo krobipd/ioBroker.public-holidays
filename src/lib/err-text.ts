@@ -1,11 +1,12 @@
+// Fleet master — the release run requires this file byte for byte in every adapter; change it in
+// Entwicklung/.consistency-master, never in an adapter.
 /**
- * The fleet's error-text helper (CLAUDE_PATTERNS.md § Async-Handler), verbatim: anything a `catch`
- * receives as text — never `[object Object]`, never without the reason.
+ * One readable line for anything a `catch` receives — never `[object Object]`, never without the reason.
  *
  * @param err the caught value
  * @returns the text
  */
-function describeError(err: unknown): string {
+export function errText(err: unknown): string {
   // It runs inside a `catch` and must not throw there: any property of a caught value can be a
   // getter that throws, or hold something other than a string.
   try {
@@ -26,7 +27,7 @@ function describeError(err: unknown): string {
         reason =
           (typeof causeMessage === "string" ? causeMessage : "") || (typeof causeCode === "string" ? causeCode : "");
       } else if (cause !== undefined && cause !== null) {
-        reason = describeError(cause);
+        reason = errText(cause);
       }
       // A wrapper that copies its cause's message would say it twice.
       return reason && !text.includes(reason) ? `${text} (${reason})` : text;
@@ -48,27 +49,4 @@ function describeError(err: unknown): string {
     // A getter that threw, a circular structure for JSON.stringify: the type tag.
     return Object.prototype.toString.call(err);
   }
-}
-
-/**
- * One readable line for anything a `catch` receives — the fleet helper, collapsed to one line so an
- * error text cannot forge extra log lines.
- *
- * @param err the caught value
- * @returns the text
- */
-export function errText(err: unknown): string {
-  return oneLine(describeError(err));
-}
-
-/**
- * Collapse newlines / tabs to single spaces so externally-sourced strings
- * (holiday names, configured country/language, error text) cannot forge extra
- * log lines or smuggle line breaks into the log / Sentry breadcrumb.
- *
- * @param s the text
- * @returns the text on one line
- */
-export function oneLine(s: string): string {
-  return s.replace(/[\r\n\t]+/g, " ").trim();
 }

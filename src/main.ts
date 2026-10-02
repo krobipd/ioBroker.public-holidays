@@ -2,7 +2,9 @@ import * as utils from "@iobroker/adapter-core";
 import { I18n } from "@iobroker/adapter-core";
 import { join } from "node:path";
 import { configuredCountry, parseConfig } from "./lib/config";
-import { errText, oneLine } from "./lib/error-utils";
+import { errText } from "./lib/err-text";
+import { KnownObjects } from "./lib/known-objects";
+import { errLine, oneLine } from "./lib/log-text";
 import {
   computeHolidays,
   createHolidaysInstance,
@@ -80,13 +82,17 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       return true;
     } catch (err: unknown) {
       // Objects DB unreachable — not worth failing the run over; the next run retries.
-      this.log.debug(`Could not check the instance object ${id}: ${errText(err)}`);
+      this.log.debug(`Could not check the instance object ${id}: ${errLine(err)}`);
       return false;
     }
   }
 
   private async onReady(): Promise<void> {
     try {
+      // The translations load first (fleet form): js-controller delivers messages before onReady has
+      // finished, and loading them writes nothing, so it costs the restart paths below nothing.
+      await I18n.init(join(this.adapterDir, "admin"), this);
+
       // Every instance-object change restarts the instance, so there is no point computing
       // and publishing in a process that is on its way out. The settings migration comes first
       // (fleet form); an installation that needs both writes restarts twice, once per write.
@@ -99,7 +105,9 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         return;
       }
 
-      await I18n.init(join(this.adapterDir, "admin"), this);
+      // The own tree, read once: every object write below is compared against it (fleet master).
+      const known = new KnownObjects(this);
+      await known.load();
 
       this.log.debug("Computing holidays...");
       const sysConfig = await getSystemConfig(this);
@@ -129,7 +137,7 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         // Publish a truthful empty result instead of leaving the previous run's values standing
         // (the same reasoning as the empty type selection below): a `today.isHoliday` that stays
         // `true` forever because the country was cleared is a wrong datapoint with no expiry.
-        await ensureObjects(this);
+        await ensureObjects(this, known);
         await publishStates(this, emptyResult());
         void this.stop?.();
         return;
@@ -193,8 +201,8 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         logAvailableHolidays(config, languages, msg => this.log.debug(msg), hd);
       }
 
-      await cleanupDeprecatedStates(this);
-      await ensureObjects(this);
+      await cleanupDeprecatedStates(this, known);
+      await ensureObjects(this, known);
       await publishStates(this, computed);
 
       // The log line shows the date the way the user's ioBroker displays dates
@@ -211,7 +219,7 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       // line never reports values that did not reach the database.
       this.log.info(summary);
     } catch (err: unknown) {
-      this.log.error(`onReady failed: ${errText(err)}`);
+      this.log.error(`onReady failed: ${errLine(err)}`);
       // The Sentry plugin only hooks uncaught exceptions — a caught error has to be handed over
       // (plugin README, "Send specific errors to Sentry"). The two other catches (instance-object
       // repair, deprecated-state cleanup) stay quiet on purpose: expected broker hiccups with a
@@ -236,7 +244,7 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       sentry?.captureException(err);
       await sentry?.flush?.(2000);
     } catch (reportErr: unknown) {
-      this.log.debug(`Could not hand the error to Sentry: ${errText(reportErr)}`);
+      this.log.debug(`Could not hand the error to Sentry: ${errLine(reportErr)}`);
     }
   }
 

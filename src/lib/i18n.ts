@@ -2,7 +2,7 @@ import { I18n } from "@iobroker/adapter-core";
 import Holidays from "date-holidays";
 import type translations from "../../admin/i18n/en.json";
 import { type CountryResolution, resolveCountryName } from "./country-codes";
-import { errText } from "./error-utils";
+import { errLine } from "./log-text";
 import { pickHolidayLanguages } from "./holiday-shared";
 
 // Pure helpers the admin card shares live in holiday-shared.ts; re-exported here for the runtime.
@@ -79,7 +79,7 @@ export async function getSystemConfig(adapter: ioBroker.Adapter): Promise<System
     };
   } catch (err: unknown) {
     adapter.log.warn(
-      `Could not read the ioBroker system settings (${errText(err)}) — no country auto-detection, holiday names in English, log dates in ISO format`,
+      `Could not read the ioBroker system settings (${errLine(err)}) — no country auto-detection, holiday names in English, log dates in ISO format`,
     );
     return { country: "", language: "en", dateFormat: "" };
   }

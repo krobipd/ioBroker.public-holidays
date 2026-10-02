@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+// Fleet master — the release run requires this file byte for byte in every adapter; change it in
+// Entwicklung/.consistency-master, never in an adapter.
 import http from "node:http";
 import net from "node:net";
-import { errText, oneLine } from "./error-utils";
+import { errText } from "./err-text";
 
 /** A port nothing listens on. */
 async function closedPort(): Promise<number> {
@@ -99,6 +100,20 @@ describe("errText — shapes of a cause", () => {
     expect(errText(new Error("x", { cause: new Error("") }))).toBe("x");
     expect(errText(new TypeError(""))).toBe("TypeError");
   });
+  it("a cause with an empty message says its code only when the code is text", () => {
+    expect(errText(new Error("x", { cause: Object.assign(new Error(""), { code: "ENOTFOUND" }) }))).toBe(
+      "x (ENOTFOUND)",
+    );
+    expect(errText(new Error("x", { cause: Object.assign(new Error(""), { code: 42 }) }))).toBe("x");
+  });
+  it("a cause whose message is not text falls back to its code, else adds nothing", () => {
+    const coded = Object.assign(new Error("y"), { code: "ECONNRESET" });
+    Object.defineProperty(coded, "message", { value: 42 });
+    expect(errText(new Error("x", { cause: coded }))).toBe("x (ECONNRESET)");
+    const bare = new Error("y");
+    Object.defineProperty(bare, "message", { value: 42 });
+    expect(errText(new Error("x", { cause: bare }))).toBe("x");
+  });
   it("a cause that is an empty-message AggregateError says its code", () => {
     const agg = Object.assign(new AggregateError([], ""), {
       code: "ECONNREFUSED",
@@ -115,6 +130,7 @@ describe("errText — the non-Error branches stay", () => {
     expect(errText(1n)).toBe("1");
     expect(errText(Symbol("q"))).toBe("Symbol(q)");
     expect(errText({ code: "ECONNRESET" })).toBe('{"code":"ECONNRESET"}');
+    expect(errText({ toJSON: () => undefined })).toBe("[object Object]");
     const cyc: Record<string, unknown> = {};
     cyc.self = cyc;
     expect(errText(cyc)).toBe("[object Object]");
@@ -153,44 +169,5 @@ describe("errText — it never throws and never prints source text", () => {
     const plain = new Error("x");
     Object.defineProperty(plain, "message", { value: 42 });
     expect(errText(plain)).toBe("42");
-  });
-});
-
-// --- adapter-specific: the one-line guarantee ---
-
-describe("errText", () => {
-  it("returns the message of an Error", () => {
-    expect(errText(new Error("boom"))).toBe("boom");
-  });
-
-  it("returns a string as-is", () => {
-    expect(errText("plain")).toBe("plain");
-  });
-
-  it("stringifies non-Error, non-string values", () => {
-    expect(errText(42)).toBe("42");
-    expect(errText(null)).toBe("null");
-    expect(errText(undefined)).toBe("undefined");
-    expect(errText({ a: 1 })).toBe('{"a":1}');
-  });
-
-  it("collapses newlines in the message (no log forging)", () => {
-    expect(errText(new Error("line1\nline2"))).toBe("line1 line2");
-  });
-});
-
-describe("oneLine", () => {
-  it("collapses newlines and tabs to single spaces and trims", () => {
-    expect(oneLine("a\nb")).toBe("a b");
-    expect(oneLine("a\r\n\tb")).toBe("a b");
-    expect(oneLine("  spaced  ")).toBe("spaced");
-  });
-
-  it("leaves a clean single-line string unchanged", () => {
-    expect(oneLine("Christi Himmelfahrt")).toBe("Christi Himmelfahrt");
-  });
-
-  it("returns an empty string for empty input", () => {
-    expect(oneLine("")).toBe("");
   });
 });

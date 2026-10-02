@@ -11,7 +11,7 @@ import {
   toHolidayId,
   weekendDays,
 } from "./holiday-shared";
-import { oneLine } from "./error-utils";
+import { oneLine } from "./log-text";
 
 // The type list, the exclude id, the collision rule and the bridge-day algorithm live in
 // holiday-shared.ts — the admin card imports the very same module, so there is nothing left to
