@@ -80,19 +80,6 @@
         "pl": "Wiersz dziennika o następnym święcie pokazuje teraz datę w formacie Twojego systemu, np. 26.10.2026 zamiast 2026-10-26; punkt danych z datą pozostaje czytelny maszynowo.",
         "uk": "Рядок журналу про наступне свято тепер показує дату у форматі вашої системи, наприклад 26.10.2026 замість 2026-10-26; сама точка даних дати лишається машиночитаною.",
         "zh-cn": "下一个节假日的日志行现在按系统日期格式显示日期，例如 26.10.2026 而不是 2026-10-26；日期数据点本身保持机器可读。"
-      },
-      "0.13.2": {
-        "en": "Heads-up for Austria: St. Martin's, Rupert's and Referendum Day count as observances now and disappear unless that type is enabled. Plus data fixes for Ireland, Russia and others.",
-        "de": "Achtung Österreich: Martini, Rupert und der Tag der Volksabstimmung gelten jetzt als Gedenktage und verschwinden, wenn dieser Typ nicht aktiv ist. Dazu Korrekturen für Irland, Russland und weitere.",
-        "ru": "Внимание, Австрия: День св. Мартина, День св. Руперта и День референдума теперь памятные даты и исчезают, если этот тип не включён. Также исправления для Ирландии, России и других.",
-        "pt": "Atenção, Áustria: São Martinho, São Ruperto e o Dia do Referendo passam a ser efemérides e desaparecem se esse tipo não estiver ativo. Além disso, correções para Irlanda, Rússia e outros.",
-        "nl": "Let op, Oostenrijk: Sint-Maarten, Sint-Rupert en Referendumdag tellen nu als gedenkdagen en verdwijnen als dat type niet aanstaat. Daarnaast correcties voor Ierland, Rusland en andere.",
-        "fr": "Attention, Autriche : la Saint-Martin, la Saint-Rupert et le jour du référendum sont désormais des commémorations et disparaissent si ce type n'est pas activé. Plus des corrections ailleurs.",
-        "it": "Attenzione Austria: San Martino, San Ruperto e il Giorno del Referendum ora sono ricorrenze e spariscono se quel tipo non è attivo. In più correzioni per Irlanda, Russia e altri paesi.",
-        "es": "Atención Austria: San Martín, San Ruperto y el Día del Referéndum ahora son conmemoraciones y desaparecen si ese tipo no está activado. Además, correcciones para Irlanda, Rusia y otros.",
-        "pl": "Uwaga Austria: św. Marcin, św. Rupert i Dzień Referendum liczą się teraz jako dni pamięci i znikają, jeśli ten typ nie jest włączony. Do tego poprawki dla Irlandii, Rosji i innych.",
-        "uk": "Увага, Австрія: День св. Мартина, День св. Руперта та День референдуму тепер пам'ятні дати й зникають, якщо цей тип не увімкнено. Також виправлення для Ірландії, Росії та інших.",
-        "zh-cn": "奥地利请注意：圣马丁节、圣鲁伯特节和公投日现在算作纪念日，若未启用该类型则不再显示。另有爱尔兰、俄罗斯等国的数据修正。"
       }
     },
     "plugins": {
