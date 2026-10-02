@@ -27,7 +27,7 @@ vi.mock("@iobroker/adapter-core", () => {
     instanceObjectWrites = 0;
     /** Writes of the adapter's own objects (the 17 refreshes). */
     objectWrites = 0;
-    /** State writes that reached the store (an unchanged setStateChanged does not). */
+    /** State writes that reached the store. */
     stateWrites = 0;
     /** Simulates a broker hiccup on the next instance-object read. */
     failNextForeignObjectRead = false;
@@ -121,23 +121,25 @@ vi.mock("@iobroker/adapter-core", () => {
       return Promise.resolve();
     }
 
-    // setStateChanged as js-controller implements it: an unchanged value and ack write nothing.
-    setStateChangedAsync(id: string, val: unknown, ack: boolean): Promise<void> {
-      const full = this.fullId(id);
-      const current = this.states.get(full);
-      if (!current || current.val !== val || current.ack !== ack) {
-        this.states.set(full, { val, ack });
-        this.stateWrites++;
-      }
+    // A plain setState always writes, like the database: an unchanged value is the adapter's to skip.
+    setState(id: string, state: { val: unknown; ack: boolean }): Promise<void> {
+      this.states.set(this.fullId(id), { val: state.val, ack: state.ack });
+      this.stateWrites++;
       return Promise.resolve();
     }
 
-    // A plain setState always writes — present so a switch to it shows in the write count instead
-    // of failing on a missing method.
-    setStateAsync(id: string, val: unknown, ack: boolean): Promise<void> {
-      this.states.set(this.fullId(id), { val, ack });
-      this.stateWrites++;
-      return Promise.resolve();
+    /**
+     * The bulk read of a pattern (`<namespace>.*`) — copies, like every read.
+     *
+     * @param pattern the id pattern, `<namespace>.*`
+     */
+    getStatesAsync(pattern: string): Promise<Record<string, { val: unknown; ack: boolean }>> {
+      const prefix = pattern.replace(/\*$/, "");
+      return Promise.resolve(
+        Object.fromEntries(
+          [...this.states.entries()].filter(([id]) => id.startsWith(prefix)).map(([id, s]) => [id, structuredClone(s)]),
+        ),
+      );
     }
   }
 
@@ -172,7 +174,7 @@ interface StubSurface {
   stateWrites: number;
   failNextForeignObjectRead: boolean;
   extendObject: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
-  setStateChangedAsync: (id: string, val: unknown, ack: boolean) => Promise<void>;
+  setState: (id: string, state: { val: unknown; ack: boolean }) => Promise<void>;
   extendForeignObjectAsync: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
   getForeignObjectAsync: (id: string) => Promise<ObjEntry | null>;
   supportsFeature?: (feature: string) => boolean;
@@ -759,10 +761,10 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     vi.setSystemTime(new Date("2026-10-02T00:00:30"));
     const { internal, stub } = setup({ country: "DE" });
     const order: string[] = [];
-    const setState = stub.setStateChangedAsync.bind(stub);
-    stub.setStateChangedAsync = (id: string, val: unknown, ack: boolean): Promise<void> => {
+    const setState = stub.setState.bind(stub);
+    stub.setState = (id: string, state: { val: unknown; ack: boolean }): Promise<void> => {
       order.push("state");
-      return setState(id, val, ack);
+      return setState(id, state);
     };
     const info = stub.log.info;
     stub.log.info = (m: string): void => {

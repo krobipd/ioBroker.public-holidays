@@ -39,7 +39,8 @@ function makeMockAdapter(
   setForeignObject: Mock;
   delObjectAsync: Mock;
   getObjectListAsync: Mock;
-  setStateChangedAsync: Mock;
+  getStatesAsync: Mock;
+  setState: Mock;
   log: { debug: Mock };
   states: Record<string, { val: unknown; ack: boolean }>;
   objects: Record<string, unknown>;
@@ -70,8 +71,12 @@ function makeMockAdapter(
         rows: Object.entries(objects).map(([id, value]) => ({ id: NS + id, value: structuredClone(value) })),
       }),
     ),
-    setStateChangedAsync: vi.fn((id: string, val: unknown, ack: boolean) => {
-      states[id] = { val, ack };
+    // One bulk read of the namespace, as copies (package check read-stub-copy).
+    getStatesAsync: vi.fn(() =>
+      Promise.resolve(Object.fromEntries(Object.entries(states).map(([id, s]) => [NS + id, structuredClone(s)]))),
+    ),
+    setState: vi.fn((id: string, state: { val: unknown; ack: boolean }) => {
+      states[id] = { ...state };
       return Promise.resolve();
     }),
     log: { debug: vi.fn() },
@@ -237,5 +242,30 @@ describe("publishStates", () => {
       "next.date": { val: "2026-04-03", ack: true },
       "next.daysUntil": { val: 92, ack: true },
     });
+  });
+
+  it("reads the namespace once and writes only the values that changed", async () => {
+    // All twelve are read-only: compared in memory against one bulk read, never per state against the
+    // database (fleet rule, checked by the inventory's resource probe).
+    const adapter = makeMockAdapter();
+    await publishStates(adapter as any, makeComputed());
+    adapter.setState.mockClear();
+    adapter.getStatesAsync.mockClear();
+    const changed = makeComputed();
+    changed.next.daysUntil = 91;
+    await publishStates(adapter as any, changed);
+    expect(adapter.getStatesAsync).toHaveBeenCalledTimes(1);
+    expect(adapter.getStatesAsync).toHaveBeenCalledWith("public-holidays.0.*");
+    expect(adapter.setState.mock.calls.map(c => c[0] as string)).toEqual(["next.daysUntil"]);
+  });
+
+  it("rewrites a value that is the same but unacknowledged or carries a quality code", async () => {
+    const adapter = makeMockAdapter();
+    await publishStates(adapter as any, makeComputed());
+    adapter.states["today.name"] = { val: "Neujahr", ack: false };
+    (adapter.states["next.date"] as Record<string, unknown>).q = 0x01;
+    adapter.setState.mockClear();
+    await publishStates(adapter as any, makeComputed());
+    expect(adapter.setState.mock.calls.map(c => c[0] as string).sort()).toEqual(["next.date", "today.name"]);
   });
 });

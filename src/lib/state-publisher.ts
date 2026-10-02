@@ -207,17 +207,29 @@ export async function ensureObjects(adapter: ioBroker.Adapter, known: KnownObjec
 
 /**
  * Write the twelve states of a computed result; a state whose value did not change is left alone.
+ * All twelve are read-only (`common.write: false`) — only this adapter writes them — so they are
+ * compared in memory against ONE bulk read of the own namespace, never per state against the
+ * database (`setStateChangedAsync` reads each state singly; fleet rule, inventory resource check).
+ * Compared is what js-controller compares: the value strictly, `ack` and `q`.
  *
  * @param adapter the adapter instance
  * @param computed the result to publish
  */
 export async function publishStates(adapter: ioBroker.Adapter, computed: ComputedHolidays): Promise<void> {
+  const stored = await adapter.getStatesAsync(`${adapter.namespace}.*`);
+  const publish = async (id: string, val: string | boolean | number): Promise<void> => {
+    const current = stored[`${adapter.namespace}.${id}`];
+    if (current?.val === val && current.ack && !current.q) {
+      return;
+    }
+    await adapter.setState(id, { val, ack: true });
+  };
   for (const ch of DAY_CHANNELS) {
     for (const field of DAY_FIELDS) {
-      await adapter.setStateChangedAsync(`${ch}.${field}`, computed[ch][field], true);
+      await publish(`${ch}.${field}`, computed[ch][field]);
     }
   }
   for (const field of NEXT_FIELDS) {
-    await adapter.setStateChangedAsync(`next.${field}`, computed.next[field], true);
+    await publish(`next.${field}`, computed.next[field]);
   }
 }
