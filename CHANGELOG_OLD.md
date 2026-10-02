@@ -1,6 +1,10 @@
 # Older changelog entries
 
 No older entries yet.
+## 0.15.1 (2026-09-04)
+
+- Fixed: Installations kept whatever holiday data was already on the system, so corrections and new countries never arrived. An update now brings the current data along.
+
 ## 0.15.0 (2026-09-04)
 
 - Fixed: With no holiday type enabled the adapter reported nothing without a word while the card still previewed a full year. Card and log now say it.

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "public-holidays",
-    "version": "0.19.0",
+    "version": "0.20.0",
     "news": {
+      "0.20.0": {
+        "en": "While a holiday lasting several days is running, the next holiday is its next day (day 2, day 3 …) instead of the following holiday.",
+        "de": "Während ein mehrtägiger Feiertag läuft, ist der nächste Feiertag sein nächster Tag (Tag 2, Tag 3 …) statt des darauffolgenden Feiertags.",
+        "ru": "Пока длится многодневный праздник, следующим праздником считается его следующий день (день 2, день 3 …), а не следующий праздник.",
+        "pt": "Enquanto decorre um feriado de vários dias, o próximo feriado é o seu dia seguinte (dia 2, dia 3 …) em vez do feriado seguinte.",
+        "nl": "Zolang een meerdaagse feestdag loopt, is de volgende feestdag zijn volgende dag (dag 2, dag 3 …) in plaats van de feestdag daarna.",
+        "fr": "Pendant un jour férié de plusieurs jours, le prochain jour férié est son jour suivant (jour 2, jour 3 …) au lieu du jour férié suivant.",
+        "it": "Mentre è in corso una festività di più giorni, la prossima festività è il suo giorno successivo (giorno 2, giorno 3 …) invece della festività seguente.",
+        "es": "Mientras dura un festivo de varios días, el próximo festivo es su día siguiente (día 2, día 3 …) en lugar del festivo posterior.",
+        "pl": "Gdy trwa wielodniowe święto, następnym świętem jest jego kolejny dzień (dzień 2, dzień 3 …), a nie dopiero następne, inne święto.",
+        "uk": "Поки триває багатоденне свято, наступним святом є його наступний день (день 2, день 3 …), а не наступне, вже інше свято.",
+        "zh-cn": "多日节假日进行期间，下一个节假日显示为其下一天（第 2 天、第 3 天……），而不是之后的另一个节假日。"
+      },
       "0.19.0": {
         "en": "New instances start switched off until they are set up; existing ones keep running. Requires Admin 8.0.14\nThe settings card recognises a state or region stored with surrounding spaces",
         "de": "Neue Instanzen starten ausgeschaltet, bis sie eingerichtet sind; bestehende laufen weiter. Benötigt Admin 8.0.14\nDie Einstellungskarte erkennt ein mit Leerzeichen gespeichertes Bundesland oder eine Region",

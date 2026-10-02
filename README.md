@@ -107,7 +107,7 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.20.0 (2026-10-02)
 
 - Changed: While a holiday lasting several days is running, the next holiday is its next day (day 2, day 3 …) instead of the following holiday.
 
@@ -145,10 +145,6 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
 - Fixed: A country written as a name instead of its code was rejected in the settings, although the same name worked when it came from the ioBroker system settings.
 - Fixed: Refreshed holiday data — Belgian holidays now carry English names, and the entries for Albania and Andorra were corrected.
 - Changed: Install the adapter from the ioBroker repository (stable or latest) — installing from GitHub is no longer supported.
-
-### 0.15.1 (2026-09-04)
-
-- Fixed: Installations kept whatever holiday data was already on the system, so corrections and new countries never arrived. An update now brings the current data along.
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
