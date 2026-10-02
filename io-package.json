@@ -80,19 +80,6 @@
         "pl": "Karta ustawień pokazuje teraz, co adapter naprawdę zgłasza przy wyłączonych typach świąt, a nazwy kanałów i punktów danych są odświeżane.",
         "uk": "Картка налаштувань тепер показує, що адаптер справді повідомляє за вимкнених типів свят, а назви каналів і точок даних оновлюються.",
         "zh-cn": "未启用任何假日类型时，设置卡片现在显示适配器真正报告的内容，并刷新通道和数据点名称。"
-      },
-      "0.14.0": {
-        "en": "The next-holiday log line now shows the date in your system's date format, for example 26.10.2026 instead of 2026-10-26; the date data point itself stays machine-readable.",
-        "de": "Die Log-Zeile zum nächsten Feiertag zeigt das Datum jetzt im Datumsformat deines Systems, z. B. 26.10.2026 statt 2026-10-26; der Datums-Datenpunkt selbst bleibt maschinenlesbar.",
-        "ru": "Строка журнала о следующем празднике теперь показывает дату в формате вашей системы, например 26.10.2026 вместо 2026-10-26; сама точка данных даты остаётся машиночитаемой.",
-        "pt": "A linha de registo do próximo feriado mostra agora a data no formato do seu sistema, por exemplo 26.10.2026 em vez de 2026-10-26; o ponto de dados da data continua legível por máquina.",
-        "nl": "De logregel voor de volgende feestdag toont de datum nu in het datumformaat van je systeem, bijvoorbeeld 26.10.2026 in plaats van 2026-10-26; het datum-datapunt zelf blijft machineleesbaar.",
-        "fr": "La ligne de journal du prochain jour férié affiche désormais la date au format de votre système, par exemple 26.10.2026 au lieu de 2026-10-26 ; le point de donnée de date reste lisible par machine.",
-        "it": "La riga di log della prossima festività mostra ora la data nel formato del tuo sistema, ad esempio 26.10.2026 invece di 2026-10-26; il punto dati della data resta leggibile dalla macchina.",
-        "es": "La línea de registro del próximo festivo muestra ahora la fecha en el formato de tu sistema, por ejemplo 26.10.2026 en lugar de 2026-10-26; el punto de datos de fecha sigue siendo legible por máquina.",
-        "pl": "Wiersz dziennika o następnym święcie pokazuje teraz datę w formacie Twojego systemu, np. 26.10.2026 zamiast 2026-10-26; punkt danych z datą pozostaje czytelny maszynowo.",
-        "uk": "Рядок журналу про наступне свято тепер показує дату у форматі вашої системи, наприклад 26.10.2026 замість 2026-10-26; сама точка даних дати лишається машиночитаною.",
-        "zh-cn": "下一个节假日的日志行现在按系统日期格式显示日期，例如 26.10.2026 而不是 2026-10-26；日期数据点本身保持机器可读。"
       }
     },
     "plugins": {
