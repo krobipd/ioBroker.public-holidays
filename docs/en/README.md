@@ -19,7 +19,8 @@ covers 207 countries including their states, provinces and regions.
    Installing from a GitHub URL is not supported.
 2. Open the instance settings. All settings live on one guided card, worked through from top to
    bottom.
-3. Save. The adapter calculates immediately and writes its data points.
+3. Save, then switch the instance on — a new instance starts switched off until it is set up. The
+   adapter calculates immediately and writes its data points.
 
 ### Location
 

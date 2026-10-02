@@ -20,7 +20,8 @@ Bundesländern, Kantonen, Provinzen und Regionen abdeckt.
    Eine Installation über eine GitHub-Adresse wird nicht unterstützt.
 2. Die Instanz-Einstellungen öffnen. Alle Einstellungen liegen auf einer geführten Karte, die von
    oben nach unten durchgearbeitet wird.
-3. Speichern. Der Adapter rechnet sofort und schreibt seine Datenpunkte.
+3. Speichern und die Instanz einschalten — eine neue Instanz startet ausgeschaltet, bis sie eingerichtet
+   ist. Der Adapter rechnet sofort und schreibt seine Datenpunkte.
 
 ### Standort
 

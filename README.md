@@ -107,6 +107,12 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- Changed: New instances start switched off until you have set them up; existing instances keep running. The adapter now requires Admin 8.0.14, the current stable.
+- Fixed: The settings card recognises a state or region stored with surrounding spaces, as the adapter itself always did, instead of showing it as no longer available.
+- Improved: A run writes only the data points whose value changed and reads its objects in one go instead of one by one.
+
 ### 0.18.0 (2026-09-25) — stable
 
 - Fixed: Holidays lasting several days now count on every day (Russian New Year, Chuseok, Tết, Eid …); the next holiday skips the rest of the one running today.
