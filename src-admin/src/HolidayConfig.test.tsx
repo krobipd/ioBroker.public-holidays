@@ -330,6 +330,26 @@ describe("HolidayConfig shows what the runtime will publish (0.18.0)", () => {
     expect(writes).toHaveLength(0);
   });
 
+  it("a hand-written lower-case region is the region, not a stale value", async () => {
+    const { container: el, writes } = await mount({
+      country: "DE",
+      state: "BY",
+      region: "a",
+      typePublic: true,
+      excludeHolidays: [],
+    });
+    await settle(100);
+    expect(el.textContent).not.toContain(en.ph_hc_scope_stale.split(":")[0]);
+    expect(picker(el, en.ph_hc_region_label)?.value).toMatch(/\(A\)$/);
+    expect(writes).toHaveLength(0);
+  });
+
+  it("no country stored and none in the system settings: the preview asks for one", async () => {
+    const { container: el } = await mount({ typePublic: true, excludeHolidays: [] }, { country: "", language: "en" });
+    await settle(100);
+    expect(el.textContent).toContain(en.ph_hc_preview_none);
+  });
+
   it("a stale state with no picker for it is cleared in ONE write", async () => {
     const { container: el, writes } = await mount({
       country: "JP",
