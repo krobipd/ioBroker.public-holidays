@@ -6,6 +6,7 @@ import {
   bridgeDayName,
   BRIDGE_DAY_NAMES,
   buildScopeDays,
+  countryNamer,
   daysBetween,
   enabledTypeKeys,
   HOLIDAY_TYPES,
@@ -200,6 +201,17 @@ describe("readTrimmed and readStringArray — the stored settings, read the same
   it("keeps the strings of a list field and reads anything else as empty", () => {
     expect(readStringArray({ excludeHolidays: ["01-01", 2, "12-26"] }, "excludeHolidays")).toEqual(["01-01", "12-26"]);
     expect(readStringArray({ excludeHolidays: "01-01" }, "excludeHolidays")).toEqual([]);
+  });
+});
+
+describe("countryNamer — country names in the admin's language", () => {
+  it("names a country in the language asked for, not in the library's", () => {
+    expect(countryNamer("de")("AT", "Austria")).toBe("Österreich");
+    expect(countryNamer("zh-cn")("DE", "Germany")).toBe("德国");
+  });
+
+  it("keeps the library's name for a code Intl does not take as a region", () => {
+    expect(countryNamer("de")("not-a-region", "Library name")).toBe("Library name");
   });
 });
 

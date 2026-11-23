@@ -156,6 +156,7 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
 - New: Several calendars in one instance, each with its own country, state, region and holiday types — e.g. Germany Bavaria schools beside Austria banks.
 - Changed: Each calendar has its own folder now. Example: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Adjust paths in scripts and VIS.
 - New: Two settings decide what happens to a recorded datapoint when its calendar is deleted.
+- Improved: A calendar list in the settings that cannot be read now shows a notification in the admin.
 
 ### 0.20.0 (2026-10-02)
 
