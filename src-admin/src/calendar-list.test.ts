@@ -102,6 +102,13 @@ describe("the typed name and an id that cannot be saved", () => {
     ];
     expect(rebuildCalendarId(twice, 1, ctx).map(c => c.id)).toEqual(["de-by-public", "de-by-public-2"]);
   });
+
+  it("an id that cannot be saved changes only by the button or a new location — bridge days leave it", () => {
+    const list = [auto({ id: "", country: "DE", state: "BY" })];
+    expect(patchCalendar(list, 0, { includeBridgeDays: true }, list, ctx)[0].id).toBe("");
+    expect(patchCalendar([auto({ id: "a-", country: "DE" })], 0, { excludeHolidays: ["x"] }, [], ctx)[0].id).toBe("a-");
+    expect(patchCalendar(list, 0, { state: "BE" }, list, ctx)[0].id).toBe("de-be-public");
+  });
 });
 
 describe("list operations", () => {

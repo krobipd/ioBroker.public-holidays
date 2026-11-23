@@ -104,7 +104,8 @@ function standardId(cal: CalendarRecord, ctx: NamingContext): string {
  * The id after a change. The card never takes an id from the user (krobi 2026-11-21): it is built
  * from location and types, and only when those change — bridge days, excludes and the name leave the
  * folder where it is, so a `-2` stays even when its twin is gone. Back on the location and types the
- * calendar was saved with, it gets its saved id back: an edit undone moves nothing.
+ * calendar was saved with, it gets its saved id back: an edit undone moves nothing. An id that
+ * cannot be saved stays as it is, too, until location or types change or the button builds a new one.
  *
  * @param list the calendars, the changed one already changed
  * @param index the calendar that changed
@@ -122,7 +123,7 @@ function followingId(
 ): unknown {
   const cal = list[index];
   const base = standardId(cal, ctx);
-  if (isCalendarId(cal.id) && base === standardId(before, ctx)) {
+  if (base === standardId(before, ctx)) {
     return cal.id;
   }
   const others = idsOfOthers(list, index);
