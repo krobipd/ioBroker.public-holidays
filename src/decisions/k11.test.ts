@@ -91,7 +91,7 @@ vi.mock("@iobroker/adapter-core", () => {
   };
 });
 
-import { PublicHolidaysAdapter } from "../main";
+import * as mainModule from "../main";
 
 interface Stub {
   config: Record<string, unknown>;
@@ -102,6 +102,28 @@ interface Stub {
   stop: ReturnType<typeof vi.fn>;
 }
 
+/**
+ * The guard's precondition: what only shows that it can run, never what the rule says.
+ *
+ * @param ok whether it holds
+ * @param what what is missing otherwise
+ */
+function need(ok: unknown, what: string): asserts ok {
+  if (!ok) {
+    throw new Error(`precondition: ${what}`);
+  }
+}
+
+/**
+ * The settings of an instance with one calendar, its name and id the user's own.
+ *
+ * @param settings location, types, excludes, bridge days
+ * @returns the instance settings
+ */
+function oneCalendar(settings: Record<string, unknown>): Record<string, unknown> {
+  return { calendars: [{ uid: "a1", id: "cal-a", name: "cal-a", nameAuto: false, ...settings }] };
+}
+
 const SCHEDULE_INSTANCE = { common: { mode: "schedule", schedule: "0 0 * * *" }, native: {} };
 
 async function start(
@@ -109,35 +131,35 @@ async function start(
   instance: { common: Record<string, unknown>; native: Record<string, unknown> } = SCHEDULE_INSTANCE,
 ): Promise<Stub> {
   events.length = 0;
-  const stub = new PublicHolidaysAdapter() as unknown as Stub;
+  const stub = new mainModule.PublicHolidaysAdapter() as unknown as Stub;
   stub.config = config;
   stub.objects.set("system.adapter.public-holidays.0", { type: "instance", ...instance });
   const ready = stub.handlers.get("ready");
-  expect(ready).toBeTypeOf("function");
+  need(typeof ready === "function", "the adapter registers its ready handler");
   await (ready as () => Promise<void>)();
   return stub;
 }
 
 describe("K11 start order", () => {
   it("K11: translations load before the cleanup of an old setting, which restarts without a run", async () => {
-    const stub = await start(
-      { country: "AT" },
-      { common: { mode: "schedule", schedule: "0 0 * * *" }, native: { excludePublic: "x" } },
-    );
+    const stub = await start(oneCalendar({ country: "AT" }), {
+      common: { mode: "schedule", schedule: "0 0 * * *" },
+      native: { excludePublic: "x" },
+    });
     expect(events).toEqual(["translations", "instance write excludePublic"]);
     expect(stub.stop).toHaveBeenCalledTimes(1);
     expect(stub.states.size).toBe(0);
   });
 
   it("K11: the instance repair comes after the cleanup and restarts without a run", async () => {
-    const stub = await start({ country: "AT" }, { common: { mode: "daemon" }, native: {} });
+    const stub = await start(oneCalendar({ country: "AT" }), { common: { mode: "daemon" }, native: {} });
     expect(events).toEqual(["translations", "instance write mode,schedule"]);
     expect(stub.stop).toHaveBeenCalledTimes(1);
     expect(stub.states.size).toBe(0);
   });
 
   it("K11: an instance that needs no repair runs and publishes", async () => {
-    const stub = await start({ country: "AT" });
+    const stub = await start(oneCalendar({ country: "AT" }));
     expect(events).toEqual(["translations"]);
     expect(stub.states.size).toBeGreaterThan(0);
     expect(stub.stop).toHaveBeenCalledTimes(1);

@@ -23,10 +23,17 @@ async function rejection(p: Promise<unknown>): Promise<unknown> {
 }
 
 describe("errText — measured Node errors", () => {
-  it("fetch, unknown host: the DNS reason", async () => {
-    // `.invalid` never resolves (RFC 6761); a runner without DNS says EAI_AGAIN instead of ENOTFOUND.
-    expect(errText(await rejection(fetch("http://nonexistent.invalid/")))).toMatch(
-      /^fetch failed \(getaddrinfo E[A-Z_]+ nonexistent\.invalid\)$/,
+  it("fetch, unknown host: the DNS reason", () => {
+    // The shape fetch rejects with for a name no resolver knows (`.invalid` never resolves, RFC 6761). Built here
+    // since round 174: the real call waits for the runner's resolver, and a slow one ran into the test's time limit —
+    // a master test names no host the machine must resolve.
+    const cause = Object.assign(new Error("getaddrinfo ENOTFOUND nonexistent.invalid"), {
+      code: "ENOTFOUND",
+      syscall: "getaddrinfo",
+      hostname: "nonexistent.invalid",
+    });
+    expect(errText(new TypeError("fetch failed", { cause }))).toBe(
+      "fetch failed (getaddrinfo ENOTFOUND nonexistent.invalid)",
     );
   });
   it("fetch, refused on an address: the socket reason", async () => {
@@ -39,18 +46,25 @@ describe("errText — measured Node errors", () => {
     const srv = http.createServer(q => q.socket.destroy()).listen(0);
     await new Promise(r => srv.once("listening", r));
     const port = (srv.address() as net.AddressInfo).port;
-    const text = errText(await rejection(fetch(`http://127.0.0.1:${port}/`)));
-    await new Promise(r => srv.close(r));
-    expect(text).toBe("fetch failed (other side closed)");
+    try {
+      expect(errText(await rejection(fetch(`http://127.0.0.1:${port}/`)))).toBe("fetch failed (other side closed)");
+    } finally {
+      // round 157 (master audit M18): closed on a red run too — an open server outlived the test
+      await new Promise(r => srv.close(r));
+    }
   });
   it("fetch, timeout: the DOMException's own words, no cause", async () => {
     const srv = http.createServer(() => undefined).listen(0);
     await new Promise(r => srv.once("listening", r));
     const port = (srv.address() as net.AddressInfo).port;
-    const e = await rejection(fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(100) }));
-    srv.closeAllConnections();
-    await new Promise(r => srv.close(r));
-    expect(errText(e)).toBe("The operation was aborted due to timeout");
+    try {
+      // round 157 (master audit M17): the words are the same after 1 ms as after 100 ms
+      const e = await rejection(fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(1) }));
+      expect(errText(e)).toBe("The operation was aborted due to timeout");
+    } finally {
+      srv.closeAllConnections();
+      await new Promise(r => srv.close(r));
+    }
   });
   it("http.get/net.connect to localhost, refused: an empty message says its code", () => {
     // The shape Node 22 rejects with when both ::1 and 127.0.0.1 refuse (built here: whether

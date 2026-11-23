@@ -18,5 +18,11 @@
   "descNextName": "Leeg zolang er geen komende feestdag is gevonden.",
   "descNextIsHoliday": "Onwaar wanneer er helemaal geen komende feestdag is gevonden.",
   "descNextDate": "Altijd ISO-formaat (JJJJ-MM-DD), onafhankelijk van het in ioBroker ingestelde datumformaat.",
-  "descNextDaysUntil": "0 betekent dat er geen komende feestdag is gevonden — een echte ligt altijd minstens één dag vooruit."
+  "descNextDaysUntil": "0 betekent dat er geen komende feestdag is gevonden — een echte ligt altijd minstens één dag vooruit.",
+  "removalHeader": "Datapunten verwijderen",
+  "removalInfo": "Als de adapter een datapunt niet meer levert, verwijdert hij het. Deze twee opties bepalen wat er gebeurt met een datapunt dat je registreert (history, sql, influxdb). Het logboek telt de behouden datapunten.",
+  "deleteRecordedStates": "Datapunten met registratie verwijderen",
+  "deleteRecordedStatesHelp": "Uit: een datapunt met registratie blijft en wordt in het logboek geteld — controleer het handmatig",
+  "deleteRecordedHistory": "Ook de geregistreerde gegevens verwijderen",
+  "deleteRecordedHistoryHelp": "Elke registrerende instantie verwijdert eerst de gegevens van het datapunt"
 }

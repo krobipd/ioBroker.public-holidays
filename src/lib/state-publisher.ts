@@ -1,5 +1,5 @@
 import type { ComputedHolidays, DayInfo, NextHoliday } from "./types";
-import { coveredBy, type KnownObjects } from "./known-objects";
+import type { KnownObjects } from "./known-objects";
 import { errLine } from "./log-text";
 import { tName, type I18nKey } from "./i18n";
 
@@ -66,7 +66,10 @@ const DEPRECATED_OBJECTS = [
 export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter, known: KnownObjects): Promise<void> {
   for (const id of DEPRECATED_OBJECTS) {
     try {
-      if (known.get(id)) {
+      // A calendar folder may carry one of these names ("info", "aftertomorrow"): a folder is never
+      // one of the old objects, which were channels and states.
+      const stored = known.get(id) as { type?: unknown } | undefined;
+      if (stored && stored.type !== "folder") {
         await known.remove(id);
         adapter.log.debug(`Removed deprecated state: ${id}`);
       }
@@ -76,153 +79,186 @@ export async function cleanupDeprecatedStates(adapter: ioBroker.Adapter, known: 
   }
 }
 
-/**
- * The runtime refresh of one channel: name and explanation only.
- *
- * js-controller applies the manifest's `instanceObjects` on EVERY adapter start (7.2.2
- * `_createInstancesObjects` → `_extendObjects`) with `preserve: { common: ["name"], native: true }`
- * — so `type`, `role`, `unit`, `def` and `desc` reach an existing tree by themselves, and
- * `common.name` is the one field frozen to whatever the version that created the object wrote.
- * This call is what makes a rename reach an existing install; it deliberately carries NO
- * `preserve`: these names belong to the adapter (translated from `admin/i18n`), not to a user or
- * a manufacturer. Everything else stays in the manifest, the single source of the object shape.
- *
- * @param channel the channel id, which doubles as its i18n key
- * @param descKey the i18n key of the explanation, omitted where the name says it all
- * @returns the patch passed to `extendObject`
- */
-function channelObj(channel: string, descKey?: I18nKey): ioBroker.PartialChannelObject {
-  return {
-    type: "channel",
-    common: {
-      name: tName(channel as I18nKey),
-      ...(descKey ? { desc: tName(descKey) } : {}),
-    },
-  };
+/** The common part of one object of a calendar folder: its shape, with the i18n keys of its name and explanation. */
+interface TreeObject {
+  /** The id below the calendar folder. */
+  rel: string;
+  /** Channel or state. */
+  type: "channel" | "state";
+  /** The i18n key of the name. */
+  name: I18nKey;
+  /** The i18n key of the explanation, where the name does not say it all. */
+  desc?: I18nKey;
+  /** The state's shape; none for a channel. */
+  common?: Pick<ioBroker.StateCommon, "type" | "role" | "read" | "write" | "unit" | "def">;
 }
 
 /**
- * The runtime refresh of one state: name and explanation only — same reasoning as
- * {@link channelObj}. (Until v0.16.0 this carried a hand copy of type/role/read/write/unit/def,
- * built on the premise that a manifest-only field never reaches an existing tree; the platform
- * source says otherwise, see above.)
- *
- * @param field the field name, which doubles as its i18n key
- * @param descKey the i18n key of the explanation, omitted where the name says it all
- * @returns the patch passed to `extendObject`
- */
-function stateObj(field: string, descKey?: I18nKey): ioBroker.PartialStateObject {
-  return {
-    type: "state",
-    common: {
-      name: tName(field as I18nKey),
-      ...(descKey ? { desc: tName(descKey) } : {}),
-    },
-  };
-}
-
-/**
- * Write one refresh only when the stored object does not already carry it — js-controller writes an
- * extendObject without comparing, so an unconditional refresh wrote 17 unchanged objects and sent 17
- * object change events on every daily run. The stored object comes from the tree read once at the
- * start of the run (fleet master `known-objects.ts`); an object the tree does not hold is written.
- *
- * @param known the adapter's own object tree, loaded
- * @param id the object id
- * @param patch the name/desc refresh
- * @param write the literal extendObject call for this id
- */
-async function refresh(
-  known: KnownObjects,
-  id: string,
-  patch: ioBroker.PartialChannelObject | ioBroker.PartialStateObject,
-  write: (obj: ioBroker.PartialObject) => Promise<unknown>,
-): Promise<void> {
-  if (coveredBy(patch, known.get(id))) {
-    return;
-  }
-  await write(patch);
-}
-
-/**
- * Create/refresh all 17 objects (5 channels + 12 states) on every run.
- *
- * The ids are spelled out instead of looped for a reason: the manifest carries the same 17 as
- * `instanceObjects`, and the package check `instance-objects-refresh` checks that each of them is
- * refreshed at runtime by looking for a literal `extendObject("<id>"` in `src/` — a template-built
- * id would satisfy the tree but not the check that guards it.
- *
- * `extendObject` (never `setObject`): the objects carry user-owned side data — history/logging
- * settings live in `common.custom` — and a full write would drop it.
+ * The objects of one calendar folder: the five channels and twelve states 0.20.x had at the instance
+ * root, with the same type, role, unit and default, all read-only. Since the calendars came, the
+ * runtime is the one place of this shape (the manifest carries no instance objects any more).
  *
  * The four day channels and their two fields carry no explanation: "Today" / "Holiday name" say
  * everything there is to say. The `next` channel and its fields do — that a holiday falling today
  * is NOT in `next`, that the date stays ISO whatever the display format is, and that `daysUntil`
  * uses 0 for "none found" are all things a user cannot read off the name.
- *
- * @param adapter the adapter instance
- * @param known the adapter's own object tree, loaded
  */
-export async function ensureObjects(adapter: ioBroker.Adapter, known: KnownObjects): Promise<void> {
-  await refresh(known, "today", channelObj("today"), o => adapter.extendObject("today", o));
-  await refresh(known, "today.name", stateObj("name", "descDayName"), o => adapter.extendObject("today.name", o));
-  await refresh(known, "today.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
-    adapter.extendObject("today.isHoliday", o),
-  );
+export const CALENDAR_OBJECTS: readonly TreeObject[] = [
+  { rel: "today", type: "channel", name: "today" },
+  {
+    rel: "today.name",
+    type: "state",
+    name: "name",
+    desc: "descDayName",
+    common: { type: "string", role: "text", read: true, write: false, def: "" },
+  },
+  {
+    rel: "today.isHoliday",
+    type: "state",
+    name: "isHoliday",
+    desc: "descDayIsHoliday",
+    common: { type: "boolean", role: "indicator", read: true, write: false, def: false },
+  },
+  { rel: "yesterday", type: "channel", name: "yesterday" },
+  {
+    rel: "yesterday.name",
+    type: "state",
+    name: "name",
+    desc: "descDayName",
+    common: { type: "string", role: "text", read: true, write: false, def: "" },
+  },
+  {
+    rel: "yesterday.isHoliday",
+    type: "state",
+    name: "isHoliday",
+    desc: "descDayIsHoliday",
+    common: { type: "boolean", role: "indicator", read: true, write: false, def: false },
+  },
+  { rel: "tomorrow", type: "channel", name: "tomorrow" },
+  {
+    rel: "tomorrow.name",
+    type: "state",
+    name: "name",
+    desc: "descDayName",
+    common: { type: "string", role: "text", read: true, write: false, def: "" },
+  },
+  {
+    rel: "tomorrow.isHoliday",
+    type: "state",
+    name: "isHoliday",
+    desc: "descDayIsHoliday",
+    common: { type: "boolean", role: "indicator", read: true, write: false, def: false },
+  },
+  { rel: "dayAfterTomorrow", type: "channel", name: "dayAfterTomorrow" },
+  {
+    rel: "dayAfterTomorrow.name",
+    type: "state",
+    name: "name",
+    desc: "descDayName",
+    common: { type: "string", role: "text", read: true, write: false, def: "" },
+  },
+  {
+    rel: "dayAfterTomorrow.isHoliday",
+    type: "state",
+    name: "isHoliday",
+    desc: "descDayIsHoliday",
+    common: { type: "boolean", role: "indicator", read: true, write: false, def: false },
+  },
+  { rel: "next", type: "channel", name: "next", desc: "descNext" },
+  {
+    rel: "next.name",
+    type: "state",
+    name: "name",
+    desc: "descNextName",
+    common: { type: "string", role: "text", read: true, write: false, def: "" },
+  },
+  {
+    rel: "next.isHoliday",
+    type: "state",
+    name: "isHoliday",
+    desc: "descNextIsHoliday",
+    common: { type: "boolean", role: "indicator", read: true, write: false, def: false },
+  },
+  {
+    rel: "next.date",
+    type: "state",
+    name: "date",
+    desc: "descNextDate",
+    common: { type: "string", role: "date", read: true, write: false, def: "" },
+  },
+  {
+    rel: "next.daysUntil",
+    type: "state",
+    name: "daysUntil",
+    desc: "descNextDaysUntil",
+    common: { type: "number", role: "value.interval", read: true, write: false, unit: "d", def: 0 },
+  },
+];
 
-  await refresh(known, "yesterday", channelObj("yesterday"), o => adapter.extendObject("yesterday", o));
-  await refresh(known, "yesterday.name", stateObj("name", "descDayName"), o =>
-    adapter.extendObject("yesterday.name", o),
-  );
-  await refresh(known, "yesterday.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
-    adapter.extendObject("yesterday.isHoliday", o),
-  );
+/** The channels of a calendar folder — the ids 0.20.x had at the instance root. */
+export const CALENDAR_CHANNELS: readonly string[] = CALENDAR_OBJECTS.filter(o => o.type === "channel").map(o => o.rel);
 
-  await refresh(known, "tomorrow", channelObj("tomorrow"), o => adapter.extendObject("tomorrow", o));
-  await refresh(known, "tomorrow.name", stateObj("name", "descDayName"), o => adapter.extendObject("tomorrow.name", o));
-  await refresh(known, "tomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
-    adapter.extendObject("tomorrow.isHoliday", o),
-  );
-
-  await refresh(known, "dayAfterTomorrow", channelObj("dayAfterTomorrow"), o =>
-    adapter.extendObject("dayAfterTomorrow", o),
-  );
-  await refresh(known, "dayAfterTomorrow.name", stateObj("name", "descDayName"), o =>
-    adapter.extendObject("dayAfterTomorrow.name", o),
-  );
-  await refresh(known, "dayAfterTomorrow.isHoliday", stateObj("isHoliday", "descDayIsHoliday"), o =>
-    adapter.extendObject("dayAfterTomorrow.isHoliday", o),
-  );
-
-  await refresh(known, "next", channelObj("next", "descNext"), o => adapter.extendObject("next", o));
-  await refresh(known, "next.name", stateObj("name", "descNextName"), o => adapter.extendObject("next.name", o));
-  await refresh(known, "next.isHoliday", stateObj("isHoliday", "descNextIsHoliday"), o =>
-    adapter.extendObject("next.isHoliday", o),
-  );
-  await refresh(known, "next.date", stateObj("date", "descNextDate"), o => adapter.extendObject("next.date", o));
-  await refresh(known, "next.daysUntil", stateObj("daysUntil", "descNextDaysUntil"), o =>
-    adapter.extendObject("next.daysUntil", o),
-  );
+/** A calendar folder as it is written: its id, the name it carries and the uid that finds it again. */
+export interface CalendarFolder {
+  /** The folder id below the instance. */
+  id: string;
+  /** The folder name. */
+  name: string;
+  /** The calendar's uid ("" when the settings carry none). */
+  uid: string;
 }
 
 /**
- * Write the twelve states of a computed result; a state whose value did not change is left alone.
+ * Create or bring up to date one calendar folder and its 17 objects. Each write goes through the tree
+ * read once at the start of the run (fleet master `known-objects.ts`) and reaches the database only
+ * when it changes something — an unchanged daily run writes no object.
+ *
+ * `extendObject` (never `setObject`): the objects carry user-owned side data — history/logging
+ * settings live in `common.custom` — and a full write would drop it. The folder carries the
+ * calendar's uid in `native`, so a folder whose id the user changed is found again and moved.
+ *
+ * @param known the adapter's own object tree, loaded
+ * @param folder the calendar's folder
+ */
+export async function ensureCalendarObjects(known: KnownObjects, folder: CalendarFolder): Promise<void> {
+  await known.extend(folder.id, { type: "folder", common: { name: folder.name }, native: { uid: folder.uid } });
+  for (const o of CALENDAR_OBJECTS) {
+    const common = {
+      ...o.common,
+      name: tName(o.name),
+      ...(o.desc ? { desc: tName(o.desc) } : {}),
+    };
+    await known.extend(`${folder.id}.${o.rel}`, { type: o.type, common });
+  }
+}
+
+/** The states of the own namespace as one bulk read returns them: full id → state. */
+export type StoredStates = Record<string, ioBroker.State | null | undefined>;
+
+/**
+ * Write the twelve states of one calendar's result; a state whose value did not change is left alone.
  * All twelve are read-only (`common.write: false`) — only this adapter writes them — so they are
- * compared in memory against ONE bulk read of the own namespace, never per state against the
+ * compared in memory against ONE bulk read of the own namespace per run, never per state against the
  * database (`setStateChangedAsync` reads each state singly; fleet rule, inventory resource check).
  * Compared is what js-controller compares: the value strictly, `ack` and `q`.
  *
  * @param adapter the adapter instance
+ * @param stored the run's bulk read of the own states
+ * @param id the calendar's folder id
  * @param computed the result to publish
  */
-export async function publishStates(adapter: ioBroker.Adapter, computed: ComputedHolidays): Promise<void> {
-  const stored = await adapter.getStatesAsync(`${adapter.namespace}.*`);
-  const publish = async (id: string, val: string | boolean | number): Promise<void> => {
-    const current = stored[`${adapter.namespace}.${id}`];
+export async function publishCalendarStates(
+  adapter: ioBroker.Adapter,
+  stored: StoredStates,
+  id: string,
+  computed: ComputedHolidays,
+): Promise<void> {
+  const publish = async (rel: string, val: string | boolean | number): Promise<void> => {
+    const current = stored[`${adapter.namespace}.${id}.${rel}`];
     if (current?.val === val && current.ack && !current.q) {
       return;
     }
-    await adapter.setState(id, { val, ack: true });
+    await adapter.setState(`${id}.${rel}`, { val, ack: true });
   };
   for (const ch of DAY_CHANNELS) {
     for (const field of DAY_FIELDS) {

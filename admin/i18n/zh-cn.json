@@ -18,5 +18,11 @@
   "descNextName": "尚未找到下一个节日时为空。",
   "descNextIsHoliday": "完全没有找到下一个节日时为假。",
   "descNextDate": "始终为 ISO 格式（YYYY-MM-DD），与 ioBroker 中设置的日期格式无关。",
-  "descNextDaysUntil": "0 表示没有找到下一个节日 — 真正的节日总是至少在一天之后。"
+  "descNextDaysUntil": "0 表示没有找到下一个节日 — 真正的节日总是至少在一天之后。",
+  "removalHeader": "删除数据点",
+  "removalInfo": "当适配器不再提供某个数据点时，会将其删除。这两个选项决定您记录的数据点（history、sql、influxdb）如何处理。日志会统计保留的数据点数量。",
+  "deleteRecordedStates": "删除有记录的数据点",
+  "deleteRecordedStatesHelp": "关闭：有记录的数据点保留并计入日志——请手动检查",
+  "deleteRecordedHistory": "同时删除已记录的数据",
+  "deleteRecordedHistoryHelp": "每个记录实例先删除该数据点的数据"
 }

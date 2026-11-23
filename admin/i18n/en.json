@@ -18,5 +18,11 @@
   "descNextName": "Empty while no upcoming holiday was found.",
   "descNextIsHoliday": "False when no upcoming holiday was found at all.",
   "descNextDate": "Always ISO format (YYYY-MM-DD), independent of the date format set in ioBroker.",
-  "descNextDaysUntil": "0 means no upcoming holiday was found — a real one is always at least one day ahead."
+  "descNextDaysUntil": "0 means no upcoming holiday was found — a real one is always at least one day ahead.",
+  "removalHeader": "Deleting datapoints",
+  "removalInfo": "When the adapter no longer provides a datapoint, it deletes it. These two options decide what happens to a datapoint you record (history, sql, influxdb). The log counts the datapoints kept.",
+  "deleteRecordedStates": "Delete datapoints with recording",
+  "deleteRecordedStatesHelp": "Off: a datapoint with recording stays and is counted in the log — check it manually",
+  "deleteRecordedHistory": "Delete the recorded data too",
+  "deleteRecordedHistoryHelp": "Each recording instance deletes the data of the datapoint first"
 }

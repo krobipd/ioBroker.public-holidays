@@ -91,7 +91,7 @@ vi.mock("@iobroker/adapter-core", () => {
   };
 });
 
-import { PublicHolidaysAdapter } from "../main";
+import * as mainModule from "../main";
 
 interface Stub {
   config: Record<string, unknown>;
@@ -109,20 +109,44 @@ async function start(
   instance: { common: Record<string, unknown>; native: Record<string, unknown> } = SCHEDULE_INSTANCE,
 ): Promise<Stub> {
   events.length = 0;
-  const stub = new PublicHolidaysAdapter() as unknown as Stub;
+  const stub = new mainModule.PublicHolidaysAdapter() as unknown as Stub;
   stub.config = config;
   stub.objects.set("system.adapter.public-holidays.0", { type: "instance", ...instance });
   const ready = stub.handlers.get("ready");
-  expect(ready).toBeTypeOf("function");
+  need(typeof ready === "function", "the adapter registers its ready handler");
   await (ready as () => Promise<void>)();
   return stub;
 }
 
-async function runOn(day: Date, config: Record<string, unknown>): Promise<Stub> {
+/**
+ * The guard's precondition: what only shows that it can run, never what the rule says.
+ *
+ * @param ok whether it holds
+ * @param what what is missing otherwise
+ */
+function need(ok: unknown, what: string): asserts ok {
+  if (!ok) {
+    throw new Error(`precondition: ${what}`);
+  }
+}
+
+/**
+ * One calendar of the list, its name and id the user's own.
+ *
+ * @param id the folder id
+ * @param uid the calendar's uid
+ * @param settings location, types, excludes, bridge days
+ * @returns the calendar record
+ */
+function calendar(id: string, uid: string, settings: Record<string, unknown>): Record<string, unknown> {
+  return { uid, id, name: id, nameAuto: false, ...settings };
+}
+
+async function runOn(day: Date, ...calendars: Record<string, unknown>[]): Promise<Stub> {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(day);
   try {
-    return await start(config);
+    return await start({ calendars });
   } finally {
     vi.useRealTimers();
   }
@@ -132,16 +156,29 @@ function summaries(stub: Stub): { level: string; msg: string }[] {
   return stub.logs.filter(l => l.msg.includes("next holiday"));
 }
 
+const DAY = new Date(2026, 9, 20, 0, 0, 30);
+
 describe("P-04 one summary per run", () => {
   it("P-04: a run writes exactly one summary line, at info, naming the next holiday", async () => {
-    const stub = await runOn(new Date(2026, 9, 20, 0, 0, 30), { country: "AT" });
+    const stub = await runOn(DAY, calendar("cal-a", "a1", { country: "AT" }));
     expect(summaries(stub)).toHaveLength(1);
     expect(summaries(stub)[0].level).toBe("info");
     expect(summaries(stub)[0].msg).toMatch(/next holiday: .+ on .+ \(in \d+ days?\)$/);
   });
 
+  it("P-04: a run over several calendars writes one summary, at info, naming each one's next holiday", async () => {
+    const stub = await runOn(
+      DAY,
+      calendar("cal-a", "a1", { country: "AT" }),
+      calendar("cal-b", "b1", { country: "DE" }),
+    );
+    expect(summaries(stub)).toHaveLength(1);
+    expect(summaries(stub)[0].level).toBe("info");
+    expect(summaries(stub)[0].msg.match(/next holiday: .+? on .+? \(in \d+ days?\)/g)).toHaveLength(2);
+  });
+
   it("P-04: a run that finds no holiday ahead writes its one summary at info too", async () => {
-    const stub = await runOn(new Date(2026, 9, 20, 0, 0, 30), { country: "AT", typePublic: false });
+    const stub = await runOn(DAY, calendar("cal-a", "a1", { country: "AT", typePublic: false }));
     expect(summaries(stub)).toHaveLength(1);
     expect(summaries(stub)[0].level).toBe("info");
     expect(summaries(stub)[0].msg).toMatch(/next holiday: no upcoming holiday$/);

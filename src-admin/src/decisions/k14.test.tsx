@@ -4,7 +4,7 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { I18n } from "@iobroker/gui-components";
 
-import HolidayConfig from "../HolidayConfig";
+import CalendarsConfig from "../CalendarsConfig";
 import en from "../i18n/en.json";
 
 type Data = Record<string, unknown>;
@@ -23,12 +23,26 @@ window.matchMedia = () => ({
 I18n.setLanguage("en");
 I18n.extendTranslations(en, "en");
 
+/**
+ * The settings with one calendar at this location, its name and folder the user's own.
+ *
+ * @param location country, state and region
+ * @returns the native record
+ */
+function oneCalendar(location: Data): Data {
+  return {
+    calendars: [
+      { uid: "c1", name: "Mine", nameAuto: false, id: "mine", typePublic: true, excludeHolidays: [], ...location },
+    ],
+  };
+}
+
 /** Stands in for admin's JsonConfigComponent: owns the record and adopts every whole-record write. */
 class Parent extends React.Component<{ initial: Data; onWrite: (data: Data) => void }, { data: Data }> {
-  state = { data: { ...this.props.initial } };
+  state = { data: JSON.parse(JSON.stringify(this.props.initial)) as Data };
 
   render(): React.ReactNode {
-    return React.createElement(HolidayConfig as unknown as React.ComponentType<Record<string, unknown>>, {
+    return React.createElement(CalendarsConfig as unknown as React.ComponentType<Record<string, unknown>>, {
       oContext: {
         adapterName: "public-holidays",
         socket: {},
@@ -46,11 +60,11 @@ class Parent extends React.Component<{ initial: Data; onWrite: (data: Data) => v
       changed: false,
       themeName: "light",
       common: {},
-      attr: "_holidayCard",
+      attr: "_calendars",
       data: this.state.data,
       originalData: this.props.initial,
       onError: () => {},
-      schema: { type: "custom", url: "custom/customComponents.js", name: "HolidayConfig", i18n: true },
+      schema: { type: "custom", url: "custom/customComponents.js", name: "CalendarsConfig", i18n: true },
       onChange: (data: Data) => {
         this.props.onWrite(data);
         this.setState({ data });
@@ -92,6 +106,18 @@ afterEach(() => {
 });
 
 /**
+ * The guard's precondition: what only shows that it can run, never what the rule says.
+ *
+ * @param ok whether it holds
+ * @param what what is missing otherwise
+ */
+function need(ok: unknown, what: string): asserts ok {
+  if (!ok) {
+    throw new Error(`precondition: ${what}`);
+  }
+}
+
+/**
  * The text input of the picker with the given label.
  *
  * @param el the mounted card
@@ -101,8 +127,8 @@ afterEach(() => {
 function picker(el: HTMLElement, label: string): HTMLInputElement {
   const tag = Array.from(el.querySelectorAll("label")).find(l => l.textContent?.startsWith(label));
   const input = tag ? document.getElementById(tag.htmlFor) : null;
-  expect(input).toBeInstanceOf(HTMLInputElement);
-  return input as HTMLInputElement;
+  need(input instanceof HTMLInputElement, `the picker "${label}" is on the card`);
+  return input;
 }
 
 /**
@@ -119,34 +145,32 @@ function pickNext(input: HTMLInputElement): void {
   }
 }
 
+/**
+ * The first calendar of a written record.
+ *
+ * @param data the record
+ * @returns the calendar
+ */
+function firstCalendar(data: Data): Data {
+  return (data.calendars as Data[])[0];
+}
+
 describe("K14 several fields, one write", () => {
   it("K14: a new country clears state and region in the same single write", async () => {
-    const { el, writes } = await mount({
-      country: "DE",
-      state: "BY",
-      region: "A",
-      typePublic: true,
-      excludeHolidays: [],
-    });
+    const { el, writes } = await mount(oneCalendar({ country: "DE", state: "BY", region: "A" }));
     pickNext(picker(el, en.ph_hc_country_label));
     await settle(100);
     expect(writes).toHaveLength(1);
-    expect(writes[0].country).not.toBe("DE");
-    expect(writes[0]).toMatchObject({ state: "", region: "" });
+    expect(firstCalendar(writes[0]).country).not.toBe("DE");
+    expect(firstCalendar(writes[0])).toMatchObject({ state: "", region: "" });
   });
 
   it("K14: a new state clears the region in the same single write", async () => {
-    const { el, writes } = await mount({
-      country: "DE",
-      state: "BY",
-      region: "A",
-      typePublic: true,
-      excludeHolidays: [],
-    });
+    const { el, writes } = await mount(oneCalendar({ country: "DE", state: "BY", region: "A" }));
     pickNext(picker(el, en.ph_hc_state_label));
     await settle(100);
     expect(writes).toHaveLength(1);
-    expect(writes[0].state).not.toBe("BY");
-    expect(writes[0]).toMatchObject({ country: "DE", region: "" });
+    expect(firstCalendar(writes[0]).state).not.toBe("BY");
+    expect(firstCalendar(writes[0])).toMatchObject({ country: "DE", region: "" });
   });
 });

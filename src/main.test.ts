@@ -94,8 +94,13 @@ vi.mock("@iobroker/adapter-core", () => {
       return Promise.resolve(obj ? structuredClone(obj) : null);
     }
 
-    delObjectAsync(id: string, _options?: { recursive?: boolean }): Promise<void> {
-      this.objects.delete(this.fullId(id));
+    delObjectAsync(id: string, options?: { recursive?: boolean }): Promise<void> {
+      const full = this.fullId(id);
+      for (const key of [...this.objects.keys()]) {
+        if (key === full || (options?.recursive && key.startsWith(`${full}.`))) {
+          this.objects.delete(key);
+        }
+      }
       return Promise.resolve();
     }
 
@@ -118,6 +123,24 @@ vi.mock("@iobroker/adapter-core", () => {
     extendObject(id: string, obj: Partial<ObjEntry>): Promise<void> {
       this.objectWrites++;
       this.merge(this.fullId(id), obj);
+      return Promise.resolve();
+    }
+
+    // The fleet removal asks the recording instances before it deletes (object-removal.ts) — no
+    // recording instance runs here, so nobody answers.
+    sendToAsync = vi.fn((): Promise<unknown> => Promise.reject(new Error("no recording instance")));
+    /**
+     * Timers as the adapter offers them — a property, like the real one.
+     *
+     * @param callback what runs when the timer fires
+     * @param ms the delay
+     */
+    setTimeout = (callback: () => void, ms: number): ReturnType<typeof setTimeout> => setTimeout(callback, ms);
+    clearTimeout = (timer: ReturnType<typeof setTimeout> | undefined): void => clearTimeout(timer);
+    /** The run's wait for the removal's report line — counted, not waited. */
+    delays: number[] = [];
+    delay(ms: number): Promise<void> {
+      this.delays.push(ms);
       return Promise.resolve();
     }
 
@@ -154,12 +177,15 @@ vi.mock("@iobroker/adapter-core", () => {
 });
 
 import { I18n } from "@iobroker/adapter-core";
-import { ioPackage } from "../test/helpers";
+import { CALENDAR_OBJECTS } from "./lib/state-publisher";
 import { PublicHolidaysAdapter } from "./main";
 
-/** The manifest's objects and states — what a complete run writes. */
-const OBJECT_COUNT = ioPackage().instanceObjects.length;
-const STATE_COUNT = ioPackage().instanceObjects.filter(o => o.type === "state").length;
+/** The folder of a calendar and its objects and states — what a complete run of one calendar writes. */
+const OBJECT_COUNT = CALENDAR_OBJECTS.length + 1;
+const STATE_COUNT = CALENDAR_OBJECTS.filter(o => o.type === "state").length;
+
+/** The folder id the tests' single calendar publishes under. */
+const CAL = "public-holidays.0.cal";
 
 interface ObjEntry {
   type?: string;
@@ -180,6 +206,7 @@ interface StubSurface {
   objectWrites: number;
   stateWrites: number;
   failNextForeignObjectRead: boolean;
+  delays: number[];
   extendObject: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
   setState: (id: string, state: { val: unknown; ack: boolean }) => Promise<void>;
   extendForeignObjectAsync: (id: string, obj: Partial<ObjEntry>) => Promise<void>;
@@ -196,7 +223,24 @@ interface Lifecycle {
   onUnload: (callback: () => void) => void;
 }
 
-function setup(config: Record<string, unknown> = {}): {
+/**
+ * The settings of an instance with ONE calendar holding these settings, under the folder `cal`.
+ *
+ * @param settings location, types, excludes, bridge days
+ * @returns the native record
+ */
+function oneCalendar(settings: Record<string, unknown>): Record<string, unknown> {
+  return {
+    calendars: [{ uid: "c1", name: "Test", nameAuto: false, id: "cal", ...settings }],
+    deleteRecordedStates: true,
+    deleteRecordedHistory: false,
+  };
+}
+
+function setup(
+  settings: Record<string, unknown> = {},
+  config = oneCalendar(settings),
+): {
   adapter: PublicHolidaysAdapter;
   internal: Lifecycle;
   stub: StubSurface;
@@ -243,10 +287,10 @@ describe("onReady — happy path", () => {
 
     await internal.onReady();
 
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: true, ack: true });
-    expect(stub.states.get("public-holidays.0.today.name")?.val).toBe("Neujahr");
-    expect(stub.states.get("public-holidays.0.next.date")?.val).toBe("2027-03-26");
-    expect(stub.states.get("public-holidays.0.next.daysUntil")?.val).toBe(84);
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toEqual({ val: true, ack: true });
+    expect(stub.states.get(`${CAL}.today.name`)?.val).toBe("Neujahr");
+    expect(stub.states.get(`${CAL}.next.date`)?.val).toBe("2027-03-26");
+    expect(stub.states.get(`${CAL}.next.daysUntil`)?.val).toBe(84);
     expect(stub.states.size).toBe(STATE_COUNT);
     expect(stub.stop).toHaveBeenCalledTimes(1);
     expect(logsOf(stub, "error")).toEqual([]);
@@ -276,20 +320,17 @@ describe("onReady — happy path", () => {
 
     await internal.onReady();
 
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
-    expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
-    expect(stub.states.get("public-holidays.0.next.isHoliday")?.val).toBe(true);
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toEqual({ val: false, ack: true });
+    expect(stub.states.get(`${CAL}.today.name`)).toEqual({ val: "", ack: true });
+    expect(stub.states.get(`${CAL}.next.isHoliday`)?.val).toBe(true);
   });
 
-  it("creates every manifest object", async () => {
+  it("creates the calendar's folder with every object below it", async () => {
     const { internal, stub } = setup({ country: "DE" });
     await internal.onReady();
     const own = [...stub.objects.keys()].filter(id => id.startsWith("public-holidays.0.")).sort();
-    expect(own).toEqual(
-      ioPackage()
-        .instanceObjects.map(o => `public-holidays.0.${o._id}`)
-        .sort(),
-    );
+    expect(own).toEqual([CAL, ...CALENDAR_OBJECTS.map(o => `${CAL}.${o.rel}`)].sort());
+    expect(stub.objects.get(CAL)).toMatchObject({ type: "folder", common: { name: "Test" }, native: { uid: "c1" } });
   });
 
   // audit finding F12 — the holiday listing computes an extra year and builds a line naming every
@@ -320,7 +361,7 @@ describe("onReady — happy path", () => {
       const { internal, stub } = setup({ country: "DE" });
       await internal.onReady();
       expect(
-        logsOf(stub, "info").some(m => m.startsWith(`${today}, next holiday: `)),
+        logsOf(stub, "info").some(m => m.startsWith(`cal: ${today}, next holiday: `)),
         day,
       ).toBe(true);
     }
@@ -380,7 +421,7 @@ describe("onReady — instance-object repair", () => {
     expect(inst.common!.mode).toBe("schedule");
     expect(inst.common!.schedule).toBe("0 0 * * *");
     expect(logsOf(stub, "info").some(m => m.includes("Migrating from daemon to schedule"))).toBe(true);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeUndefined();
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toBeUndefined();
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -401,7 +442,7 @@ describe("onReady — instance-object repair", () => {
     const inst = stub.objects.get("system.adapter.public-holidays.0")!;
     expect(inst.common!.supportedMessages ?? null).toBeNull();
     expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(true);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeUndefined();
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toBeUndefined();
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -437,7 +478,7 @@ describe("onReady — instance-object repair", () => {
 
     expect(stub.instanceObjectWrites).toBe(0);
     expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(false);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toBeDefined();
   });
 
   it("drops the obsolete settings keys (excludePublic, the previous owner's holidays) and stands down", async () => {
@@ -473,7 +514,7 @@ describe("onReady — instance-object repair", () => {
     await internal.onReady();
 
     expect(stub.instanceObjectWrites).toBe(0);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toBeDefined();
   });
 
   it("an install with obsolete native AND common settings converges: one write per start, then none", async () => {
@@ -532,7 +573,7 @@ describe("onReady — instance-object repair", () => {
     expect(logsOf(stub, "info").some(m => m.includes("Migrating"))).toBe(false);
     expect(logsOf(stub, "info").some(m => m.includes("restarts once"))).toBe(false);
     expect(stub.instanceObjectWrites).toBe(0);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toBeDefined();
   });
 
   it("computes normally when the instance object cannot be read", async () => {
@@ -542,7 +583,7 @@ describe("onReady — instance-object repair", () => {
 
     await internal.onReady();
 
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toBeDefined();
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toBeDefined();
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -576,8 +617,8 @@ describe("onReady — country detection chain", () => {
     expect(logsOf(stub, "debug").some(m => m.includes("Using system country: AT"))).toBe(true);
     // Oct 26 (Nationalfeiertag) is public in AT but not DE — asserting today=holiday
     // proves the resolved AT data actually flowed through compute, not just detection.
-    expect(stub.states.get("public-holidays.0.today.isHoliday")?.val).toBe(true);
-    expect(stub.states.get("public-holidays.0.today.name")?.val).not.toBe("");
+    expect(stub.states.get(`${CAL}.today.isHoliday`)?.val).toBe(true);
+    expect(stub.states.get(`${CAL}.today.name`)?.val).not.toBe("");
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -598,9 +639,9 @@ describe("onReady — country detection chain", () => {
     expect(logsOf(stub, "warn").some(m => m.includes("No country configured"))).toBe(true);
     // A truthful empty result, not silence: the twelve states carry their manifest defaults.
     expect(stub.states.size).toBe(STATE_COUNT);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
-    expect(stub.states.get("public-holidays.0.next.date")).toEqual({ val: "", ack: true });
-    expect(stub.states.get("public-holidays.0.next.daysUntil")).toEqual({ val: 0, ack: true });
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toEqual({ val: false, ack: true });
+    expect(stub.states.get(`${CAL}.next.date`)).toEqual({ val: "", ack: true });
+    expect(stub.states.get(`${CAL}.next.daysUntil`)).toEqual({ val: 0, ack: true });
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -613,10 +654,10 @@ describe("onReady — country detection chain", () => {
     // The country IS set in the system settings — "No country configured" would send the user
     // looking in the wrong place.
     expect(logsOf(stub, "warn")).toContain(
-      "System country 'Atlantis' is not recognized — choose a country in the adapter settings",
+      "cal: System country 'Atlantis' is not recognized — choose a country in the adapter settings",
     );
     expect(stub.states.size).toBe(STATE_COUNT);
-    expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
+    expect(stub.states.get(`${CAL}.today.name`)).toEqual({ val: "", ack: true });
   });
 
   it("resolves a name of the admin wizard's own list (Admin <= 8.0.14): Vietnam", async () => {
@@ -627,8 +668,8 @@ describe("onReady — country detection chain", () => {
 
     await internal.onReady();
 
-    expect(logsOf(stub, "debug")).toContain("Using system country: VN");
-    expect(stub.states.get("public-holidays.0.today.isHoliday")?.val).toBe(true);
+    expect(logsOf(stub, "debug")).toContain("cal: Using system country: VN");
+    expect(stub.states.get(`${CAL}.today.isHoliday`)?.val).toBe(true);
   });
 
   it("names the real cause for a system country that covers several countries", async () => {
@@ -638,7 +679,7 @@ describe("onReady — country detection chain", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn")).toContain(
-      "System country 'Serbia and Montenegro' covers several countries — choose the country in the adapter settings",
+      "cal: System country 'Serbia and Montenegro' covers several countries — choose the country in the adapter settings",
     );
   });
 
@@ -649,7 +690,7 @@ describe("onReady — country detection chain", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn")).toContain(
-      "System country 'Qatar' has no holiday data — choose a country in the adapter settings",
+      "cal: System country 'Qatar' has no holiday data — choose a country in the adapter settings",
     );
   });
 
@@ -659,16 +700,16 @@ describe("onReady — country detection chain", () => {
     const { internal, stub } = setup({ country: "DE" });
 
     await internal.onReady();
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: true, ack: true });
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toEqual({ val: true, ack: true });
 
     // The user clears the country; the next run must not leave New Year standing forever.
-    stub.config = {};
+    stub.config = oneCalendar({});
     stub.stop.mockClear();
     await internal.onReady();
 
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
-    expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "", ack: true });
-    expect(stub.states.get("public-holidays.0.next.date")).toEqual({ val: "", ack: true });
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toEqual({ val: false, ack: true });
+    expect(stub.states.get(`${CAL}.today.name`)).toEqual({ val: "", ack: true });
+    expect(stub.states.get(`${CAL}.next.date`)).toEqual({ val: "", ack: true });
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -683,7 +724,7 @@ describe("onReady — country detection chain", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("Could not read the ioBroker system settings"))).toBe(true);
-    expect(stub.states.get("public-holidays.0.today.name")?.val).toBe("New Year's Day");
+    expect(stub.states.get(`${CAL}.today.name`)?.val).toBe("New Year's Day");
     expect(stub.states.size).toBe(STATE_COUNT);
     expect(logsOf(stub, "error")).toEqual([]);
     expect(stub.stop).toHaveBeenCalledTimes(1);
@@ -781,8 +822,8 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     const { internal, stub } = setup({ country: "US", includeBridgeDays: true });
     stub.objects.set("system.config", { common: { language: "de" } });
     return internal.onReady().then(() => {
-      expect(stub.states.get("public-holidays.0.today.name")).toEqual({ val: "Brückentag", ack: true });
-      expect(stub.states.get("public-holidays.0.yesterday.name")?.val).toBe("Thanksgiving Day");
+      expect(stub.states.get(`${CAL}.today.name`)).toEqual({ val: "Brückentag", ack: true });
+      expect(stub.states.get(`${CAL}.yesterday.name`)?.val).toBe("Thanksgiving Day");
     });
   });
 
@@ -813,14 +854,14 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     };
     const info = stub.log.info;
     stub.log.info = (m: string): void => {
-      order.push(m.startsWith("Today:") ? "summary" : "info");
+      order.push(m.startsWith("cal: Today:") ? "summary" : "info");
       info(m);
     };
 
     await internal.onReady();
 
     expect(order.lastIndexOf("state")).toBeLessThan(order.indexOf("summary"));
-    expect(logsOf(stub, "info").find(m => m.startsWith("Today:"))).toMatch(/\(in 1 day\)$/);
+    expect(logsOf(stub, "info").find(m => m.startsWith("cal: Today:"))).toMatch(/\(in 1 day\)$/);
   });
 
   it("says in debug output when the host clock is not in one of the country's zones", async () => {
@@ -828,7 +869,7 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     stub.log.level = "debug";
     await internal.onReady();
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    expect(logsOf(stub, "debug").some(m => m.startsWith(`Host time zone ${zone} is not one of JP's`))).toBe(
+    expect(logsOf(stub, "debug").some(m => m.startsWith(`cal: Host time zone ${zone} is not one of JP's`))).toBe(
       zone !== "Asia/Tokyo",
     );
   });
@@ -837,7 +878,7 @@ describe("onReady — what a run writes and says (0.18.0)", () => {
     const { internal, stub } = setup({ country: "NZ", state: "CAN", region: "Timaru" });
     await internal.onReady();
     expect(logsOf(stub, "warn")).toContain(
-      "date-holidays cannot load 'Timaru' (library defect) — using the broader scope's holidays",
+      "cal: date-holidays cannot load 'Timaru' (library defect) — using the broader scope's holidays",
     );
   });
 });
@@ -884,8 +925,8 @@ describe("onReady — diagnostics warnings", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("No holiday type is enabled"))).toBe(true);
-    expect(stub.states.get("public-holidays.0.today.isHoliday")).toEqual({ val: false, ack: true });
-    expect(stub.states.get("public-holidays.0.next.name")).toEqual({ val: "", ack: true });
+    expect(stub.states.get(`${CAL}.today.isHoliday`)).toEqual({ val: false, ack: true });
+    expect(stub.states.get(`${CAL}.next.name`)).toEqual({ val: "", ack: true });
     expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -895,5 +936,218 @@ describe("onReady — diagnostics warnings", () => {
     await internal.onReady();
 
     expect(logsOf(stub, "warn").some(m => m.includes("No holiday type is enabled"))).toBe(false);
+  });
+});
+
+describe("onReady — several calendars (multi-calendar)", () => {
+  /** The settings of 0.20.x as they stand after the update: the old keys beside the manifest default. */
+  const LEGACY = {
+    country: "DE",
+    state: "BY",
+    region: "",
+    typePublic: true,
+    typeBank: false,
+    typeSchool: true,
+    typeOptional: false,
+    typeObservance: false,
+    excludeHolidays: ["01-06"],
+    includeBridgeDays: true,
+    calendars: [
+      {
+        uid: "c1",
+        name: "",
+        nameAuto: true,
+        id: "system-public",
+        country: "",
+        state: "",
+        region: "",
+        typePublic: true,
+        typeBank: false,
+        typeSchool: false,
+        typeOptional: false,
+        typeObservance: false,
+        excludeHolidays: [],
+        includeBridgeDays: false,
+      },
+    ],
+    deleteRecordedStates: true,
+    deleteRecordedHistory: false,
+  };
+
+  it("publishes every calendar into its own folder and names each in the one summary line", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
+    const config = {
+      calendars: [
+        {
+          uid: "c1",
+          name: "Bavaria",
+          nameAuto: false,
+          id: "de-by-public",
+          country: "DE",
+          state: "BY",
+          typePublic: true,
+        },
+        { uid: "c2", name: "Banks", nameAuto: false, id: "at-bank", country: "AT", typeBank: true },
+      ],
+    };
+    const { internal, stub } = setup({}, config);
+    await internal.onReady();
+
+    expect(stub.states.get("public-holidays.0.de-by-public.today.isHoliday")).toEqual({ val: true, ack: true });
+    expect(stub.objects.get("public-holidays.0.at-bank")).toMatchObject({ type: "folder", native: { uid: "c2" } });
+    expect(stub.states.size).toBe(2 * STATE_COUNT);
+    const summary = logsOf(stub, "info");
+    expect(summary).toHaveLength(1);
+    expect(summary[0]).toMatch(/^de-by-public: Today: New Year's Day, next holiday: .*; at-bank: Today: /);
+  });
+
+  it("the first start after the update takes the single calendar of 0.20.x into the list in ONE write and stands down", async () => {
+    const { internal, stub } = setup({}, LEGACY);
+    stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule" },
+      native: structuredClone(LEGACY),
+    });
+
+    await internal.onReady();
+
+    expect(stub.instanceObjectWrites).toBe(1);
+    const native = stub.objects.get("system.adapter.public-holidays.0")!.native!;
+    expect(native.calendars).toEqual([
+      {
+        uid: "c1",
+        name: "",
+        nameAuto: true,
+        id: "de-by-public-school",
+        country: "DE",
+        state: "BY",
+        region: "",
+        typePublic: true,
+        typeBank: false,
+        typeSchool: true,
+        typeOptional: false,
+        typeObservance: false,
+        excludeHolidays: ["01-06"],
+        includeBridgeDays: true,
+      },
+    ]);
+    // every old key cleared in the same write — js-controller never deletes a native key
+    for (const key of [
+      "country",
+      "state",
+      "region",
+      "typePublic",
+      "typeSchool",
+      "excludeHolidays",
+      "includeBridgeDays",
+    ]) {
+      expect(native).toHaveProperty(key, null);
+    }
+    expect(stub.states.size).toBe(0);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("the start after the takeover runs the calendar under its standard folder and writes no settings", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T12:00:00"));
+    const first = setup({}, LEGACY);
+    first.stub.objects.set("system.adapter.public-holidays.0", {
+      type: "instance",
+      common: { mode: "schedule" },
+      native: structuredClone(LEGACY),
+    });
+    await first.internal.onReady();
+    const db = first.stub.objects;
+
+    const migrated = db.get("system.adapter.public-holidays.0")!.native!;
+    const second = setup({}, structuredClone(migrated));
+    second.stub.objects = db;
+    await second.internal.onReady();
+
+    expect(second.stub.instanceObjectWrites).toBe(0);
+    expect(second.stub.states.get("public-holidays.0.de-by-public-school.today.isHoliday")).toEqual({
+      val: true,
+      ack: true,
+    });
+    // the folder carries the standard name in the system language (English without system.config)
+    expect(db.get("public-holidays.0.de-by-public-school")?.common?.name).toBe("Germany · Bayern");
+  });
+
+  it("removes the folder of a deleted calendar; a folder without a calendar uid and one that is still to move stay", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("public-holidays.0.gone", { type: "folder", common: { name: "Gone" }, native: { uid: "c9" } });
+    stub.objects.set("public-holidays.0.gone.next", { type: "channel", common: { name: "next" } });
+    stub.objects.set("public-holidays.0.mine", { type: "folder", common: { name: "Mine" }, native: {} });
+    // calendar c1 publishes under "cal" now — its old folder is the move master's work, never deleted here
+    stub.objects.set("public-holidays.0.old", { type: "folder", common: { name: "Old" }, native: { uid: "c1" } });
+
+    await internal.onReady();
+
+    expect(stub.objects.has("public-holidays.0.gone")).toBe(false);
+    expect(stub.objects.has("public-holidays.0.gone.next")).toBe(false);
+    expect(stub.objects.has("public-holidays.0.mine")).toBe(true);
+    expect(stub.objects.has("public-holidays.0.old")).toBe(true);
+    // the run waits for the removal's report line before it stops
+    expect(stub.delays).toHaveLength(1);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the tree of 0.20.x at the instance root alone — its move is the move master's", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.objects.set("public-holidays.0.today", { type: "channel", common: { name: "today" } });
+    stub.objects.set("public-holidays.0.today.isHoliday", { type: "state", common: { name: "isHoliday" } });
+
+    await internal.onReady();
+
+    expect(stub.objects.has("public-holidays.0.today")).toBe(true);
+    expect(stub.objects.has("public-holidays.0.today.isHoliday")).toBe(true);
+    expect(stub.delays).toHaveLength(0);
+  });
+
+  it("a damaged calendar list changes nothing", async () => {
+    const { internal, stub } = setup({}, { calendars: "broken" });
+    stub.objects.set("public-holidays.0.cal", { type: "folder", common: { name: "Test" }, native: { uid: "c1" } });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn")).toEqual([
+      "The calendar list in the settings is damaged — nothing was changed; open the adapter settings and save them",
+    ]);
+    expect(stub.objects.has("public-holidays.0.cal")).toBe(true);
+    expect(stub.objectWrites).toBe(0);
+    expect(stub.states.size).toBe(0);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips a calendar without a valid id and the second of an id held twice, and runs the others", async () => {
+    const config = {
+      calendars: [
+        { uid: "c1", name: "A", id: "cal", country: "DE", typePublic: true },
+        { uid: "c2", name: "B", id: "Not Valid", country: "DE", typePublic: true },
+        { uid: "c3", name: "C", id: "cal", country: "AT", typePublic: true },
+      ],
+    };
+    const { internal, stub } = setup({}, config);
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn")).toEqual([
+      "Calendar 2 has no valid id ('Not Valid') — skipped; open the adapter settings",
+      "Calendar 3 uses the id 'cal' of a calendar above it — skipped; open the adapter settings",
+    ]);
+    expect(stub.states.size).toBe(STATE_COUNT);
+    expect(stub.objects.get(CAL)?.native).toEqual({ uid: "c1" });
+  });
+
+  it("an empty list says so and publishes nothing", async () => {
+    const { internal, stub } = setup({}, { calendars: [] });
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "warn")).toEqual(["No calendar is set up — add one in the adapter settings"]);
+    expect(stub.states.size).toBe(0);
+    expect(logsOf(stub, "info")).toEqual([]);
+    expect(stub.stop).toHaveBeenCalledTimes(1);
   });
 });

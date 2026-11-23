@@ -92,7 +92,7 @@ vi.mock("@iobroker/adapter-core", () => {
   };
 });
 
-import { PublicHolidaysAdapter } from "../main";
+import * as mainModule from "../main";
 
 interface Stub {
   config: Record<string, unknown>;
@@ -103,6 +103,28 @@ interface Stub {
   stop: ReturnType<typeof vi.fn>;
 }
 
+/**
+ * The guard's precondition: what only shows that it can run, never what the rule says.
+ *
+ * @param ok whether it holds
+ * @param what what is missing otherwise
+ */
+function need(ok: unknown, what: string): asserts ok {
+  if (!ok) {
+    throw new Error(`precondition: ${what}`);
+  }
+}
+
+/**
+ * The settings of an instance with one calendar, its name and id the user's own.
+ *
+ * @param settings location, types, excludes, bridge days
+ * @returns the instance settings
+ */
+function oneCalendar(settings: Record<string, unknown>): Record<string, unknown> {
+  return { calendars: [{ uid: "a1", id: "cal-a", name: "cal-a", nameAuto: false, ...settings }] };
+}
+
 const SCHEDULE_INSTANCE = { common: { mode: "schedule", schedule: "0 0 * * *" }, native: {} };
 
 async function start(
@@ -110,11 +132,11 @@ async function start(
   instance: { common: Record<string, unknown>; native: Record<string, unknown> } = SCHEDULE_INSTANCE,
 ): Promise<Stub> {
   events.length = 0;
-  const stub = new PublicHolidaysAdapter() as unknown as Stub;
+  const stub = new mainModule.PublicHolidaysAdapter() as unknown as Stub;
   stub.config = config;
   stub.objects.set("system.adapter.public-holidays.0", { type: "instance", ...instance });
   const ready = stub.handlers.get("ready");
-  expect(ready).toBeTypeOf("function");
+  need(typeof ready === "function", "the adapter registers its ready handler");
   await (ready as () => Promise<void>)();
   return stub;
 }
@@ -160,7 +182,7 @@ describe("K16 the server clock decides the day", () => {
   });
 
   it("K16: a server zone outside the country's zones shows in the debug log only", async () => {
-    const stub = await inZone(() => start({ country: "JP" }));
+    const stub = await inZone(() => start(oneCalendar({ country: "JP" })));
     const zoneLines = stub.logs.filter(l => l.msg.includes(ZONE));
     expect(zoneLines.length).toBeGreaterThan(0);
     expect(zoneLines.every(l => l.level === "debug")).toBe(true);

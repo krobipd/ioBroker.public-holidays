@@ -5,6 +5,7 @@
 // js-controller has no `extendObjectChanged`: `extendObject` always writes, stamps `ts` anew and sends an
 // `objectChange` to every subscriber (7.2.2) — on every start of a real installation, also when nothing changed.
 // Read the own tree once, compare every write against it, write only on a difference, hold what the write left.
+import { removeObject, type RemovalAdapter } from "./object-removal";
 
 /**
  * A plain object — what the merge descends into (`is.hash` in node.extend), as opposed to an array, null or a value.
@@ -52,6 +53,39 @@ export function mergedWith(stored: unknown, patch: unknown): unknown {
   return base;
 }
 
+/** The lists the adapter layer empties before the merge when the write names them — a list written there replaces. */
+const REPLACED_LISTS = [
+  ["native", "repositories"],
+  ["native", "certificates"],
+  ["native", "devices"],
+  ["common", "members"],
+] as const;
+
+/**
+ * What `extendObject(patch)` and `extendForeignObject(id, patch)` leave of the whole object `stored`: the adapter layer
+ * first empties a stored `native.repositories`, `native.certificates`, `native.devices` or `common.members` the patch
+ * names (js-controller 7.2.2 `adapter.ts`, both methods), then the database merges ({@link mergedWith}). `stored` is
+ * not changed.
+ *
+ * @param stored the whole object before the write
+ * @param patch what was written
+ * @returns the whole object after the write
+ */
+export function extendedWith(stored: unknown, patch: unknown): unknown {
+  if (!isPlain(stored) || !isPlain(patch)) {
+    return mergedWith(stored, patch);
+  }
+  let base = stored;
+  for (const [part, key] of REPLACED_LISTS) {
+    const named = patch[part];
+    const held = base[part];
+    if (isPlain(named) && key in named && isPlain(held) && held[key]) {
+      base = { ...base, [part]: { ...held, [key]: [] } };
+    }
+  }
+  return mergedWith(base, patch);
+}
+
 /**
  * Structural equality: plain objects key by key in any order, arrays element by element, values by `Object.is`.
  *
@@ -79,14 +113,14 @@ export function sameStructure(a: unknown, b: unknown): boolean {
 }
 
 /**
- * True when `extendObject(patch)` would change nothing of `stored` — merging the patch leaves the same structure.
+ * True when `extendObject(patch)` would change nothing of `stored` — the write leaves the same structure.
  *
  * @param patch what the adapter would write
- * @param stored the object as it is in the database (undefined when unknown)
+ * @param stored the whole object as it is in the database (undefined when unknown)
  * @returns whether the write can be left out
  */
 export function coveredBy(patch: unknown, stored: unknown): boolean {
-  return sameStructure(mergedWith(stored, patch), stored);
+  return sameStructure(extendedWith(stored, patch), stored);
 }
 
 /** Stamped by the adapter layer on every write (`from`, `user`, `ts`) — never the adapter's own content. */
@@ -168,30 +202,30 @@ export function storedAfterSet(id: string, stored: unknown, obj: unknown): unkno
   return result;
 }
 
-/** The adapter methods the store needs — an `ioBroker.Adapter` carries all of them. */
-export interface KnownObjectsAdapter {
-  /** e.g. "demo.0" */
-  namespace: string;
+/**
+ * The adapter methods the store needs — an `ioBroker.Adapter` carries all of them; a remove goes through the fleet's
+ * removal (`object-removal.ts`), which reads and deletes the objects itself.
+ */
+export interface KnownObjectsAdapter extends RemovalAdapter {
   /** Merges into an object of the own namespace (relative or full id). */
   extendObject(id: string, obj: ioBroker.PartialObject): Promise<unknown>;
   /** Replaces an object completely. */
   setForeignObject(id: string, obj: ioBroker.SettableObject): Promise<unknown>;
-  /** Deletes an object (with `recursive` its children too). */
-  delObjectAsync(id: string, options?: { recursive?: boolean }): Promise<unknown>;
-  /** Reads the objects between two ids. */
-  getObjectListAsync(params: {
-    startkey: string;
-    endkey: string;
-  }): Promise<{ rows: Array<{ id: string; value: unknown }> }>;
 }
 
 /**
  * The adapter's own object tree, read once at start: every object write goes through here and reaches the database
- * only when it changes something; afterwards the store holds what the write left behind.
+ * only when it changes something; afterwards the store holds what the write left behind. Operations that overlap — the
+ * same id, an id below a recursive remove, anything during the load — run one after the other, so each compares against
+ * what the one before it left; operations on different ids run side by side.
  */
 export class KnownObjects {
   private readonly adapter: KnownObjectsAdapter;
   private readonly objects = new Map<string, unknown>();
+  /** The last running operation per id — a later one on the same id starts after it. */
+  private readonly running = new Map<string, Promise<void>>();
+  /** The running operations that cover a whole subtree (a recursive remove, the load of the own tree). */
+  private readonly subtrees = new Map<string, Promise<void>>();
 
   /** @param adapter the adapter */
   public constructor(adapter: KnownObjectsAdapter) {
@@ -209,16 +243,69 @@ export class KnownObjects {
     return id.startsWith(ns) ? id : `${ns}${id}`;
   }
 
+  /**
+   * Runs one operation after every running one it overlaps: the same id, an id below a running subtree operation, or —
+   * for a subtree operation — any running id below it. Each compares against and merges onto what the one before it
+   * left; two that overlapped both read the object as it stood before them, and the later one wrote its picture over
+   * the earlier patch in the store, so a write back to the old value was judged "already there" and left out. A failed
+   * operation does not block the ones after it.
+   *
+   * @param key the full id
+   * @param subtree whether the operation covers everything below the id
+   * @param operation the read-compare-write
+   * @returns what the operation returns
+   */
+  private serialized<T>(key: string, subtree: boolean, operation: () => Promise<T>): Promise<T> {
+    const below = `${key}.`;
+    const before: Array<Promise<void>> = [];
+    const same = this.running.get(key);
+    if (same) {
+      before.push(same);
+    }
+    if (subtree) {
+      for (const [other, done] of this.running) {
+        if (other.startsWith(below)) {
+          before.push(done);
+        }
+      }
+    }
+    for (const [root, done] of this.subtrees) {
+      if (key.startsWith(`${root}.`)) {
+        before.push(done);
+      }
+    }
+    const result = Promise.all(before).then(operation);
+    const done = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.running.set(key, done);
+    if (subtree) {
+      this.subtrees.set(key, done);
+    }
+    void done.then(() => {
+      if (this.running.get(key) === done) {
+        this.running.delete(key);
+      }
+      if (this.subtrees.get(key) === done) {
+        this.subtrees.delete(key);
+      }
+    });
+    return result;
+  }
+
   /** Reads the whole own tree with one call. Before it, only what this instance wrote itself is known. */
   public async load(): Promise<void> {
     const ns = `${this.adapter.namespace}.`;
-    const list = await this.adapter.getObjectListAsync({ startkey: ns, endkey: `${ns}香` });
-    this.objects.clear();
-    for (const row of list.rows) {
-      if (row.value) {
-        this.objects.set(row.id, row.value);
+    return await this.serialized(this.adapter.namespace, true, async () => {
+      const list = await this.adapter.getObjectListAsync({ startkey: ns, endkey: `${ns}香` });
+      this.objects.clear();
+      for (const row of list.rows) {
+        if (row.value) {
+          this.objects.set(row.id, row.value);
+        }
       }
-    }
+    });
   }
 
   /**
@@ -232,6 +319,21 @@ export class KnownObjects {
   }
 
   /**
+   * The full ids of the known objects — after `load()` the whole own tree, so nobody reads it a second time.
+   *
+   * @param below relative or full id; when given, only the ids below it (without the id itself)
+   * @returns the full ids in the order they were read or first written
+   */
+  public ids(below?: string): string[] {
+    const all = [...this.objects.keys()];
+    if (below === undefined) {
+      return all;
+    }
+    const root = `${this.full(below)}.`;
+    return all.filter(id => id.startsWith(root));
+  }
+
+  /**
    * `extendObject`, left out when the stored object already carries the patch.
    *
    * @param id relative or full id
@@ -240,13 +342,15 @@ export class KnownObjects {
    */
   public async extend(id: string, patch: ioBroker.PartialObject): Promise<boolean> {
     const key = this.full(id);
-    const stored = this.objects.get(key);
-    if (coveredBy(patch, stored)) {
-      return false;
-    }
-    await this.adapter.extendObject(id, patch);
-    this.objects.set(key, mergedWith(stored, patch));
-    return true;
+    return await this.serialized(key, false, async () => {
+      const stored = this.objects.get(key);
+      if (coveredBy(patch, stored)) {
+        return false;
+      }
+      await this.adapter.extendObject(id, patch);
+      this.objects.set(key, extendedWith(stored, patch));
+      return true;
+    });
   }
 
   /**
@@ -257,18 +361,21 @@ export class KnownObjects {
    * @returns whether the database was written
    */
   public async replace(id: string, obj: ioBroker.SettableObject): Promise<boolean> {
-    const stored = this.objects.get(id);
-    const after = storedAfterSet(id, stored, obj);
-    if (sameStructure(after, stored)) {
-      return false;
-    }
-    await this.adapter.setForeignObject(id, obj);
-    this.objects.set(id, after);
-    return true;
+    return await this.serialized(this.full(id), false, async () => {
+      const stored = this.objects.get(id);
+      const after = storedAfterSet(id, stored, obj);
+      if (sameStructure(after, stored)) {
+        return false;
+      }
+      await this.adapter.setForeignObject(id, obj);
+      this.objects.set(id, after);
+      return true;
+    });
   }
 
   /**
-   * `delObject` — the object (with `recursive` its children too) is forgotten, so an id used again is written anew.
+   * `removeObject` of the fleet's removal — what it deletes (with `recursive` the children too) is forgotten, so an id
+   * used again is written anew; a datapoint the user's deletion options keep, and every object above it, stays known.
    *
    * @param id relative or full id
    * @param options delete the children too
@@ -276,11 +383,35 @@ export class KnownObjects {
    */
   public async remove(id: string, options: { recursive: boolean } = { recursive: false }): Promise<void> {
     const key = this.full(id);
-    await this.adapter.delObjectAsync(id, options);
-    for (const known of [...this.objects.keys()]) {
-      if (known === key || (options.recursive && known.startsWith(`${key}.`))) {
-        this.objects.delete(known);
+    await this.serialized(key, options.recursive, async () => {
+      const kept = new Set((await removeObject(this.adapter, id, options)).kept);
+      for (const known of [...this.objects.keys()]) {
+        if ((known === key || (options.recursive && known.startsWith(`${key}.`))) && !kept.has(known)) {
+          this.objects.delete(known);
+        }
       }
-    }
+    });
+  }
+
+  /**
+   * The delete of a move — the `remove` a caller hands to `moveWithEnums`/`moveAllWithEnums` (`enum-carry.ts`): the old
+   * id goes with `delObjectAsync`, never through the user's deletion options, because the datapoint lives on under its
+   * new id ("A move is no removal", `object-removal.ts`); it is forgotten, with `recursive` its children too, so the
+   * store never holds an id the move took away. The release run (consistency level 2) reports a call outside a move.
+   *
+   * @param id relative or full id
+   * @param options delete the children too
+   * @param options.recursive whether the children go as well
+   */
+  public async deleteMoved(id: string, options: { recursive: boolean } = { recursive: false }): Promise<void> {
+    const key = this.full(id);
+    await this.serialized(key, options.recursive, async () => {
+      await this.adapter.delObjectAsync(id, options);
+      for (const known of [...this.objects.keys()]) {
+        if (known === key || (options.recursive && known.startsWith(`${key}.`))) {
+          this.objects.delete(known);
+        }
+      }
+    });
   }
 }

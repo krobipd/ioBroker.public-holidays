@@ -21,6 +21,7 @@ Holiday data provided by [date-holidays](https://github.com/commenthol/date-holi
 
 - **207 countries** with state/province and region support
 - **Fully offline** — all holiday data is bundled, no internet required
+- **Several calendars per instance** — each with its own country, state, region and holiday types, each in its own folder
 - **5 holiday types** — public, bank, school, optional, observance (configurable)
 - **Bridge day detection** — detects working days between holidays and weekends
 - **Exclude individual holidays** — select holidays to exclude via dropdown
@@ -41,7 +42,12 @@ For details and how to disable it, see the [Sentry plugin documentation](https:/
 
 ## Configuration
 
-All settings live on a single guided card. Work through it from top to bottom:
+The settings hold a **list of calendars**. Each calendar has the settings the whole instance had
+before, computes on its own and gets its own folder in the object tree — for example Germany Bavaria
+schools, Austria banks and Germany North Rhine-Westphalia public holidays side by side in one instance.
+
+Open a calendar to edit it. Its **name** and its **folder in the object tree** stand on top, below them the
+guided card, worked through from top to bottom:
 
 | Step              | Description                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -51,32 +57,70 @@ All settings live on a single guided card. Work through it from top to bottom:
 | Excluded holidays | Pick individual holidays to exclude from detection.                                                                                                      |
 | Detected holidays | A live preview of the holidays the adapter will detect for the current selection.                                                                        |
 
+| Calendar list        | Description                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name                 | Shown on the folder. Empty means automatic: country · state · region, as far as chosen (e.g. "Germany · North Rhine-Westphalia").                        |
+| Folder               | The folder's ID in the object tree, shown read-only — the adapter builds it from location and holiday types, see [Calendar IDs](#calendar-ids).              |
+| Add calendar        | A new calendar at the end of the list, starting like a new instance: no country (the system country applies), public holidays only.                          |
+| Copy / Delete / ↑ ↓  | Copy takes every setting (name with "(copy)", ID with the next free number); delete takes effect on saving; the arrows change the order only.                |
+
+Before you save, a folder that would move shows in yellow under it and below the list, and a red box
+right above the Save button lists every folder that moves or is deleted.
+
+**Deleting datapoints:** a deleted calendar takes its folder with everything below it. Two options decide
+what happens to a datapoint you record (history, sql, influxdb):
+
+| Setting                          | Description                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Delete datapoints with recording | On (default): it is deleted too. Off: it stays and is counted in the log — check it manually.   |
+| Delete the recorded data too     | Shown when the option above is on: each recording instance deletes the datapoint's data first. |
+
 > The settings card is an Admin-8 component, so this adapter requires Admin 8.
+
+## Calendar IDs
+
+The ID says where a calendar applies and which holidays it holds: `<country>[-<state>][-<region>]-<types>`,
+lower case, the types in the order public, bank, school, optional, observance — `de-by-school`, `at-bank`,
+`de-nw-public`. A calendar that follows the system country starts with `system`. Where a state or region
+code is only a number, its name stands instead: Styria (code 6) gives `at-steiermark-public`. Two calendars
+with the same standard ID get `-2`, `-3` ….
+
+The ID is never typed. Changing the country, state, region or holiday types moves the folder on saving, with
+its values, rooms, functions, aliases and recording; bridge days, exclusions and the name never move it, and a
+`-2` stays even when its twin is deleted. Fixed paths in scripts you have to adjust yourself. Only a list
+edited by hand in the instance object can hold an empty ID or one used twice — the calendar turns red, Save
+stays locked, and **Build a new ID** fixes it.
 
 ## State Tree
 
 ```
 public-holidays.0.
-├── today.
-│   ├── name         string    "Karfreitag" / "Good Friday"
-│   └── isHoliday    boolean   true / false
-├── yesterday.
-│   ├── name         string
-│   └── isHoliday    boolean
-├── tomorrow.
-│   ├── name         string
-│   └── isHoliday    boolean
-├── dayAfterTomorrow.
-│   ├── name         string
-│   └── isHoliday    boolean
-└── next.
-    ├── name         string    next holiday name (localized)
-    ├── isHoliday    boolean   true when an upcoming holiday exists
-    ├── date         string    "2026-12-25" (ISO date)
-    └── daysUntil    number    days until holiday
+└── <calendar ID>.       one folder per calendar, e.g. de-by-public
+    ├── today.
+    │   ├── name         string    "Karfreitag" / "Good Friday"
+    │   └── isHoliday    boolean   true / false
+    ├── yesterday.
+    │   ├── name         string
+    │   └── isHoliday    boolean
+    ├── tomorrow.
+    │   ├── name         string
+    │   └── isHoliday    boolean
+    ├── dayAfterTomorrow.
+    │   ├── name         string
+    │   └── isHoliday    boolean
+    └── next.
+        ├── name         string    next holiday name (localized)
+        ├── isHoliday    boolean   true when an upcoming holiday exists
+        ├── date         string    "2026-12-25" (ISO date)
+        └── daysUntil    number    days until holiday
 ```
 
 When no holiday applies (e.g. today is not a holiday), the channel states are empty strings / false / 0.
+
+**Update from 0.20.x:** the first start after the update takes the previous settings into the first
+calendar, and the datapoints move into its folder — for example
+`public-holidays.0.today.isHoliday` → `public-holidays.0.de-by-public.today.isHoliday`. Adjust the paths in
+scripts and VIS.
 
 ## Bridge Day Algorithm
 
@@ -106,6 +150,12 @@ Holidays that last several days (New Year holidays in Russia, Chuseok, Tết, Ei
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- New: Several calendars in one instance, each with its own country, state, region and holiday types — e.g. Germany Bavaria schools beside Austria banks.
+- Changed: Each calendar has its own folder now. Example: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Adjust paths in scripts and VIS.
+- New: Two settings decide what happens to a recorded datapoint when its calendar is deleted.
 
 ### 0.20.0 (2026-10-02)
 

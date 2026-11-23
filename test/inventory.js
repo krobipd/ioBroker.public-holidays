@@ -153,20 +153,27 @@ async function watchObjectWrites(harness) {
   return watch;
 }
 
-/** The adapter's twelve states — every run publishes each of them (setStateChanged on a fresh tree). */
+/** The folder the fixture's calendar publishes under — the standard id of DE/BY, public holidays. */
+const CALENDAR_ID = "de-by-public";
+
+/**
+ * The twelve states every calendar folder holds, relative to the folder. Written out here: the build's
+ * table cannot be required — it loads adapter-core, which ends a process that has no js-controller.
+ */
+const CALENDAR_STATES = ["today", "yesterday", "tomorrow", "dayAfterTomorrow", "next"].flatMap(ch =>
+  (ch === "next" ? ["name", "isHoliday", "date", "daysUntil"] : ["name", "isHoliday"]).map(field => `${ch}.${field}`),
+);
+
+/** The states of the fixture's calendar — every run publishes each of them. */
 function stateIds() {
-  return require(path.join(ADAPTER_DIR, "io-package.json"))
-    .instanceObjects.filter(o => o.type === "state")
-    .map(o => `${NS}${o._id}`);
+  return CALENDAR_STATES.map(rel => `${NS}${CALENDAR_ID}.${rel}`);
 }
 
 /**
  * Adapter-specific: make the adapter create every object it can create.
- * This adapter is catalog-driven — no device, no cloud, no message: the same 17 objects appear for
- * every configuration. They come from `instanceObjects`, which js-controller creates BEFORE `ready`
- * fires, so waiting for objects proves nothing about the adapter (measured 2026-09-25: with the
- * ready handler never registered, the object wait stayed green). What the adapter itself writes are
- * the twelve state VALUES — suite 1 waits for them, exactly like suite 2.
+ * This adapter is catalog-driven — no device, no cloud, no message: every calendar of the settings
+ * gets the same folder of 17 objects, written by the run itself. Suite 1 waits for the twelve state
+ * VALUES of the fixture's calendar, exactly like suite 2 — the folder and its objects come before them.
  *
  * @param {import("@iobroker/testing").IntegrationTestHarness} harness
  */
@@ -211,14 +218,14 @@ async function feedFixtures(harness) {
  * @param {import("@iobroker/testing").IntegrationTestHarness} harness
  */
 async function waitForAdapterWork(harness) {
-  // Adapter-specific id set: all twelve states — publishStates writes every one of them on every run,
-  // `next.daysUntil` last. Existence alone is not enough here: the harness's own start test runs the
+  // Adapter-specific id set: all twelve states of the fixture's calendar — publishCalendarStates writes
+  // every one of them on every run, `next.daysUntil` last. Existence alone is not enough here: the harness's own start test runs the
   // adapter WITHOUT a country first, which publishes the empty result into the same states database
   // (measured 2026-09-25 — the dump ran before this run had published anything). With the fixture's
   // DE/BY a next holiday always exists, so `next.daysUntil > 0` is the one value only a completed run
   // with a country writes.
   const wanted = stateIds();
-  const last = `${NS}next.daysUntil`;
+  const last = `${NS}${CALENDAR_ID}.next.daysUntil`;
   const deadline = Date.now() + 60000;
   for (;;) {
     const missing = [];
@@ -239,28 +246,40 @@ async function waitForAdapterWork(harness) {
 }
 
 /**
- * Adapter-specific config the fixtures need. A country is required — without one the adapter
- * publishes an empty result and stops. DE/BY exercises the state level as well; the object catalog
- * itself does not depend on it, which is what keeps two runs byte-identical.
+ * Adapter-specific config the fixtures need: one calendar with a country — without one the adapter
+ * publishes an empty result. DE/BY exercises the state level as well; the object catalog itself does
+ * not depend on it, which is what keeps two runs byte-identical. Name and id are the automatic ones,
+ * exactly what the update builds from the same settings of 0.20.x.
  */
 const FIXTURE_NATIVE = {
-  country: "DE",
-  state: "BY",
-  region: "",
-  typePublic: true,
-  typeBank: false,
-  typeSchool: false,
-  typeOptional: false,
-  typeObservance: false,
-  excludeHolidays: [],
-  includeBridgeDays: true,
+  calendars: [
+    {
+      uid: "c1",
+      name: "",
+      nameAuto: true,
+      id: CALENDAR_ID,
+      country: "DE",
+      state: "BY",
+      region: "",
+      typePublic: true,
+      typeBank: false,
+      typeSchool: false,
+      typeOptional: false,
+      typeObservance: false,
+      excludeHolidays: [],
+      includeBridgeDays: true,
+    },
+  ],
+  deleteRecordedStates: true,
+  deleteRecordedHistory: false,
 };
+
 /**
  * Round 66 (reported by dl-manager): every datapoint of the previous release this release moves under a new id —
  * previous full id → current full id (adapter-specific like FIXTURE_NATIVE, may be computed). The recording is the
  * user's and goes on with the moved datapoint (krobi 2026-09-02); the upgrade suite checks that it arrived there.
  */
-const MOVES = {};
+const MOVES = Object.fromEntries(CALENDAR_STATES.map(rel => [`${NS}${rel}`, `${NS}${CALENDAR_ID}.${rel}`]));
 
 async function dumpObjects(harness) {
   // The range starts at "<adapter>.0." — the instance root object itself is not part of the tree.

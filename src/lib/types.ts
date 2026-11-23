@@ -45,3 +45,13 @@ export interface ComputedHolidays {
   /** Configured exclude IDs that matched no holiday in the data (likely stale after a date-holidays update). */
   unmatchedExcludes: string[];
 }
+
+/** One calendar of a run: a usable entry of the settings' calendar list. */
+export interface Calendar {
+  /** The uid the card gave it; its folder carries it, so a folder whose id changed is found again ("" when missing). */
+  uid: string;
+  /** The folder id below the instance. */
+  id: string;
+  /** Its settings record — the location and holiday fields of 0.20.x, plus name and id. */
+  settings: Record<string, unknown>;
+}

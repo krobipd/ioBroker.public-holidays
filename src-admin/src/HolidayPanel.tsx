@@ -18,13 +18,13 @@ import { resolveCountryName } from "../../src/lib/country-codes.js";
 import { BridgeTier, ExcludeTier, LocationTier, PreviewTier, TypesTier } from "./Tiers";
 
 /**
- * Props for the guided holiday-config card. It owns the flat `native.*` fields directly — the thin
- * {@link HolidayConfig} mount passes `props.data` in and persists each change through
- * `ConfigGeneric.onChange`. No draft buffer: every input here is a discrete select / checkbox /
- * chip (no free typing), so the async `props.data` echo can't fight a cursor.
+ * Props for the guided holiday card of ONE calendar. It reads the calendar's record — the
+ * {@link CalendarList} passes it in and writes each change back as part of the whole list. No draft
+ * buffer: every input here is a discrete select / checkbox / chip (no free typing), so the async
+ * `props.data` echo can't fight a cursor.
  */
 export interface HolidayPanelProps {
-  /** The jsonConfig `native` record (flat fields). */
+  /** The calendar's record (location, types, excludes, bridge days). */
   data: Record<string, unknown>;
   /** `system.config.common.country` — a country NAME from one of the two admin lists. */
   systemCountry: string;
@@ -32,10 +32,10 @@ export interface HolidayPanelProps {
   systemLanguage: string;
   /** `system.config.common.dateFormat` — how the runtime prints dates ("" = default). */
   dateFormat: string;
-  /** Persist one native attribute (wires the admin Save button). Must be referentially stable. */
+  /** Persist one attribute of the calendar (wires the admin Save button). */
   onChange: (attr: string, value: unknown) => void;
   /**
-   * Persist several native attributes in ONE write. Needed wherever a user action changes more
+   * Persist several attributes of the calendar in ONE write. Needed wherever a user action changes more
    * than one field at once (a country change clears state and region): two `onChange` calls in
    * the same tick each snapshot the still-unchanged record, and the second write wins over the
    * first (measured against `@iobroker/json-config` 9.0.16 — audit finding B1, v0.16.0).

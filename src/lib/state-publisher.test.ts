@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 vi.mock("@iobroker/adapter-core", () => ({
@@ -9,18 +7,26 @@ vi.mock("@iobroker/adapter-core", () => ({
 }));
 
 import { KnownObjects } from "./known-objects";
-import { cleanupDeprecatedStates, ensureObjects, publishStates } from "./state-publisher";
+import {
+  CALENDAR_OBJECTS,
+  cleanupDeprecatedStates,
+  ensureCalendarObjects,
+  publishCalendarStates,
+  type StoredStates,
+} from "./state-publisher";
 import type { ComputedHolidays } from "./types";
 
 const NS = "public-holidays.0.";
 
-const ioPkg = JSON.parse(readFileSync(join(__dirname, "../../io-package.json"), "utf8")) as {
-  instanceObjects: { _id: string; type: string }[];
-};
-const manifestIds = ioPkg.instanceObjects.map(o => o._id).sort();
-const manifestStates = ioPkg.instanceObjects
-  .filter(o => o.type === "state")
-  .map(o => o._id)
+/** The calendar folder the tests write. */
+const FOLDER = { id: "de-by-public", name: "Germany · Bavaria", uid: "c1" };
+
+/** Every id a calendar's tree holds, the folder first. */
+const treeIds = [FOLDER.id, ...CALENDAR_OBJECTS.map(o => `${FOLDER.id}.${o.rel}`)].sort();
+
+/** Every state id below the folder. */
+const stateIds = CALENDAR_OBJECTS.filter(o => o.type === "state")
+  .map(o => `${FOLDER.id}.${o.rel}`)
   .sort();
 
 /**
@@ -35,13 +41,17 @@ function makeMockAdapter(
   failDelete?: string,
 ): {
   namespace: string;
+  config: { deleteRecordedStates: boolean; deleteRecordedHistory: boolean };
+  sendToAsync: Mock;
+  setTimeout: () => undefined;
+  clearTimeout: () => undefined;
   extendObject: Mock;
   setForeignObject: Mock;
   delObjectAsync: Mock;
   getObjectListAsync: Mock;
   getStatesAsync: Mock;
   setState: Mock;
-  log: { debug: Mock };
+  log: { debug: Mock; info: Mock };
   states: Record<string, { val: unknown; ack: boolean }>;
   objects: Record<string, unknown>;
   deleted: string[];
@@ -52,6 +62,12 @@ function makeMockAdapter(
   const deleted: string[] = [];
   const adapter = {
     namespace: NS.slice(0, -1),
+    config: { deleteRecordedStates: true, deleteRecordedHistory: false },
+    // no recording instance runs here, so nobody answers the removal's question
+    sendToAsync: vi.fn((): Promise<unknown> => Promise.reject(new Error("no recording instance"))),
+    // no report timer — what the removal keeps is not this suite's question (as in the master's own tests)
+    setTimeout: () => undefined,
+    clearTimeout: () => undefined,
     extendObject: vi.fn((id: string, obj: { common?: Record<string, unknown> }) => {
       const prev = (objects[id] ?? {}) as { common?: Record<string, unknown> };
       objects[id] = { ...prev, ...structuredClone(obj), common: { ...prev.common, ...structuredClone(obj.common) } };
@@ -79,7 +95,7 @@ function makeMockAdapter(
       states[id] = { ...state };
       return Promise.resolve();
     }),
-    log: { debug: vi.fn() },
+    log: { debug: vi.fn(), info: vi.fn() },
     states,
     objects,
     deleted,
@@ -103,42 +119,50 @@ function makeComputed(): ComputedHolidays {
   };
 }
 
-describe("ensureObjects", () => {
+describe("ensureCalendarObjects", () => {
   let adapter: ReturnType<typeof makeMockAdapter>;
 
   beforeEach(() => {
     adapter = makeMockAdapter();
   });
 
-  it("refreshes exactly the manifest objects, each with the manifest's object type", async () => {
-    // The manifest (install + every start) and the runtime refresh describe the same objects.
-    await ensureObjects(adapter as any, await adapter.known());
-    expect(Object.keys(adapter.objects).sort()).toEqual(manifestIds);
-    for (const o of ioPkg.instanceObjects) {
-      expect((adapter.objects[o._id] as { type: string }).type, `${o._id} object type`).toBe(o.type);
+  it("creates the folder and its 17 objects, each with its object type", async () => {
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
+    expect(Object.keys(adapter.objects).sort()).toEqual(treeIds);
+    expect(adapter.objects[FOLDER.id]).toEqual({
+      type: "folder",
+      common: { name: FOLDER.name },
+      native: { uid: "c1" },
+    });
+    for (const o of CALENDAR_OBJECTS) {
+      expect((adapter.objects[`${FOLDER.id}.${o.rel}`] as { type: string }).type, `${o.rel} object type`).toBe(o.type);
     }
   });
 
-  it("refreshes name and explanation only — the object shape lives in the manifest alone", async () => {
-    // js-controller applies the manifest on every start and preserves just `common.name`; a
-    // second copy of type/role/unit/def here would be one more place for the shape to drift.
-    await ensureObjects(adapter as any, await adapter.known());
-    for (const [id, obj] of Object.entries(adapter.objects)) {
-      const common = (obj as { common: Record<string, unknown> }).common;
-      expect(Object.keys(common).sort(), `${id} writes more than name/desc`).toEqual(
-        Object.keys(common).includes("desc") ? ["desc", "name"] : ["name"],
-      );
+  it("gives every state its full shape — the runtime is the only source of a calendar's objects", async () => {
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
+    const daysUntil = adapter.objects[`${FOLDER.id}.next.daysUntil`] as { common: Record<string, unknown> };
+    expect(daysUntil.common).toMatchObject({
+      type: "number",
+      role: "value.interval",
+      read: true,
+      write: false,
+      unit: "d",
+      def: 0,
+    });
+    for (const id of stateIds) {
+      expect((adapter.objects[id] as { common: { write: unknown } }).common.write, id).toBe(false);
     }
   });
 
   it("names a channel from its own i18n key and a state from its field's key, explained from its desc key", async () => {
     // The mock translates a key to { en: key, de: key_de } — so this reads WHICH key was used.
-    await ensureObjects(adapter as any, await adapter.known());
-    expect((adapter.objects.dayAfterTomorrow as any).common.name).toEqual({
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
+    expect((adapter.objects[`${FOLDER.id}.dayAfterTomorrow`] as any).common.name).toEqual({
       en: "dayAfterTomorrow",
       de: "dayAfterTomorrow_de",
     });
-    const st = adapter.objects["next.daysUntil"] as any;
+    const st = adapter.objects[`${FOLDER.id}.next.daysUntil`] as any;
     expect(st.common.name).toEqual({ en: "daysUntil", de: "daysUntil_de" });
     expect(st.common.desc).toEqual({ en: "descNextDaysUntil", de: "descNextDaysUntil_de" });
   });
@@ -146,35 +170,38 @@ describe("ensureObjects", () => {
   it("writes nothing on a second run when every object is already current", async () => {
     // js-controller writes an extendObject without comparing: an unconditional refresh wrote 17
     // unchanged objects (and sent 17 object-change events) on every daily run.
-    await ensureObjects(adapter as any, await adapter.known());
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
     adapter.extendObject.mockClear();
-    await ensureObjects(adapter as any, await adapter.known());
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
     expect(adapter.extendObject).not.toHaveBeenCalled();
   });
 
-  it("rewrites exactly the object whose name or explanation differs", async () => {
-    await ensureObjects(adapter as any, await adapter.known());
-    (adapter.objects["today.name"] as any).common.name = "Holiday name"; // a pre-translation string
-    (adapter.objects.next as any).common.desc = { en: "old text" };
+  it("rewrites exactly the object whose name or explanation differs — and the folder for a new name", async () => {
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
+    (adapter.objects[`${FOLDER.id}.today.name`] as any).common.name = "Holiday name"; // a pre-translation string
+    (adapter.objects[`${FOLDER.id}.next`] as any).common.desc = { en: "old text" };
     adapter.extendObject.mockClear();
-    await ensureObjects(adapter as any, await adapter.known());
-    expect(adapter.extendObject.mock.calls.map(c => c[0] as string).sort()).toEqual(["next", "today.name"]);
+    await ensureCalendarObjects(await adapter.known(), { ...FOLDER, name: "Bavaria" });
+    expect(adapter.extendObject.mock.calls.map(c => c[0] as string).sort()).toEqual(
+      [FOLDER.id, `${FOLDER.id}.next`, `${FOLDER.id}.today.name`].sort(),
+    );
+    expect((adapter.objects[FOLDER.id] as any).common.name).toBe("Bavaria");
   });
 
-  it("the same texts in another key order count as current", async () => {
-    await ensureObjects(adapter as any, await adapter.known());
-    const st = adapter.objects["next.date"] as any;
-    st.common.name = { de: st.common.name.de, en: st.common.name.en };
-    adapter.extendObject.mockClear();
-    await ensureObjects(adapter as any, await adapter.known());
-    expect(adapter.extendObject).not.toHaveBeenCalled();
+  it("keeps the user's recording settings on an object it brings up to date", async () => {
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
+    const id = `${FOLDER.id}.today.isHoliday`;
+    (adapter.objects[id] as any).common.custom = { "history.0": { enabled: true } };
+    (adapter.objects[id] as any).common.name = "old";
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
+    expect((adapter.objects[id] as any).common.custom).toEqual({ "history.0": { enabled: true } });
   });
 
   it("never preserves a name — the adapter owns these names, so a rename must reach existing installs", async () => {
     // `preserve: { common: ["name"] }` tells js-controller to keep whatever name is already
     // there. These names are the adapter's own (translated from admin/i18n), so preserving them
     // would mean a renamed channel/state only ever reaches FRESH installs.
-    await ensureObjects(adapter as any, await adapter.known());
+    await ensureCalendarObjects(await adapter.known(), FOLDER);
     const withPreserve = adapter.extendObject.mock.calls.filter(
       call => (call[2] as { preserve?: unknown } | undefined)?.preserve !== undefined,
     );
@@ -210,6 +237,12 @@ describe("cleanupDeprecatedStates", () => {
     expect(adapter.deleted.indexOf("info.lastSettings")).toBeLessThan(adapter.deleted.indexOf("info"));
   });
 
+  it("never touches a calendar folder that carries one of the old names", async () => {
+    const adapter = makeMockAdapter({ info: { type: "folder", native: { uid: "c2" } } });
+    await cleanupDeprecatedStates(adapter as any, await adapter.known());
+    expect(adapter.deleted).toEqual([]);
+  });
+
   it("logs a failed delete and carries on with the remaining deprecated states", async () => {
     // A leftover object is cosmetic, losing today's holiday over it is not (audit F8, v0.15.1):
     // one refused delete must neither throw out of the cleanup nor stop the loop.
@@ -222,50 +255,67 @@ describe("cleanupDeprecatedStates", () => {
   });
 });
 
-describe("publishStates", () => {
-  it("writes every manifest state, acknowledged, with the computed value", async () => {
-    // Nothing structural ties the published fields to the manifest — the two sets are held equal here.
+describe("publishCalendarStates", () => {
+  /**
+   * The run's bulk read, as main takes it once per run.
+   *
+   * @param adapter the mock adapter
+   * @returns the stored states
+   */
+  async function bulk(adapter: ReturnType<typeof makeMockAdapter>): Promise<StoredStates> {
+    return (await adapter.getStatesAsync("public-holidays.0.*")) as StoredStates;
+  }
+
+  it("writes every state of the calendar below its folder, acknowledged, with the computed value", async () => {
     const adapter = makeMockAdapter();
-    await publishStates(adapter as any, makeComputed());
-    expect(Object.keys(adapter.states).sort()).toEqual(manifestStates);
+    await publishCalendarStates(adapter as any, await bulk(adapter), FOLDER.id, makeComputed());
+    expect(Object.keys(adapter.states).sort()).toEqual(stateIds);
+    const f = FOLDER.id;
     expect(adapter.states).toEqual({
-      "today.name": { val: "Neujahr", ack: true },
-      "today.isHoliday": { val: true, ack: true },
-      "yesterday.name": { val: "", ack: true },
-      "yesterday.isHoliday": { val: false, ack: true },
-      "tomorrow.name": { val: "", ack: true },
-      "tomorrow.isHoliday": { val: false, ack: true },
-      "dayAfterTomorrow.name": { val: "", ack: true },
-      "dayAfterTomorrow.isHoliday": { val: false, ack: true },
-      "next.name": { val: "Karfreitag", ack: true },
-      "next.isHoliday": { val: true, ack: true },
-      "next.date": { val: "2026-04-03", ack: true },
-      "next.daysUntil": { val: 92, ack: true },
+      [`${f}.today.name`]: { val: "Neujahr", ack: true },
+      [`${f}.today.isHoliday`]: { val: true, ack: true },
+      [`${f}.yesterday.name`]: { val: "", ack: true },
+      [`${f}.yesterday.isHoliday`]: { val: false, ack: true },
+      [`${f}.tomorrow.name`]: { val: "", ack: true },
+      [`${f}.tomorrow.isHoliday`]: { val: false, ack: true },
+      [`${f}.dayAfterTomorrow.name`]: { val: "", ack: true },
+      [`${f}.dayAfterTomorrow.isHoliday`]: { val: false, ack: true },
+      [`${f}.next.name`]: { val: "Karfreitag", ack: true },
+      [`${f}.next.isHoliday`]: { val: true, ack: true },
+      [`${f}.next.date`]: { val: "2026-04-03", ack: true },
+      [`${f}.next.daysUntil`]: { val: 92, ack: true },
     });
   });
 
-  it("reads the namespace once and writes only the values that changed", async () => {
+  it("compares against the run's one bulk read and writes only the values that changed", async () => {
     // All twelve are read-only: compared in memory against one bulk read, never per state against the
     // database (fleet rule, checked by the inventory's resource probe).
     const adapter = makeMockAdapter();
-    await publishStates(adapter as any, makeComputed());
+    await publishCalendarStates(adapter as any, await bulk(adapter), FOLDER.id, makeComputed());
     adapter.setState.mockClear();
-    adapter.getStatesAsync.mockClear();
     const changed = makeComputed();
     changed.next.daysUntil = 91;
-    await publishStates(adapter as any, changed);
-    expect(adapter.getStatesAsync).toHaveBeenCalledTimes(1);
-    expect(adapter.getStatesAsync).toHaveBeenCalledWith("public-holidays.0.*");
-    expect(adapter.setState.mock.calls.map(c => c[0] as string)).toEqual(["next.daysUntil"]);
+    await publishCalendarStates(adapter as any, await bulk(adapter), FOLDER.id, changed);
+    expect(adapter.setState.mock.calls.map(c => c[0] as string)).toEqual([`${FOLDER.id}.next.daysUntil`]);
   });
 
   it("rewrites a value that is the same but unacknowledged or carries a quality code", async () => {
     const adapter = makeMockAdapter();
-    await publishStates(adapter as any, makeComputed());
-    adapter.states["today.name"] = { val: "Neujahr", ack: false };
-    (adapter.states["next.date"] as Record<string, unknown>).q = 0x01;
+    await publishCalendarStates(adapter as any, await bulk(adapter), FOLDER.id, makeComputed());
+    adapter.states[`${FOLDER.id}.today.name`] = { val: "Neujahr", ack: false };
+    (adapter.states[`${FOLDER.id}.next.date`] as Record<string, unknown>).q = 0x01;
     adapter.setState.mockClear();
-    await publishStates(adapter as any, makeComputed());
-    expect(adapter.setState.mock.calls.map(c => c[0] as string).sort()).toEqual(["next.date", "today.name"]);
+    await publishCalendarStates(adapter as any, await bulk(adapter), FOLDER.id, makeComputed());
+    expect(adapter.setState.mock.calls.map(c => c[0] as string).sort()).toEqual(
+      [`${FOLDER.id}.next.date`, `${FOLDER.id}.today.name`].sort(),
+    );
+  });
+
+  it("another calendar's states are its own — the same values under another folder are written", async () => {
+    const adapter = makeMockAdapter();
+    await publishCalendarStates(adapter as any, await bulk(adapter), FOLDER.id, makeComputed());
+    adapter.setState.mockClear();
+    await publishCalendarStates(adapter as any, await bulk(adapter), "at-bank", makeComputed());
+    expect(adapter.setState).toHaveBeenCalledTimes(12);
   });
 });
