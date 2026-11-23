@@ -79,7 +79,7 @@ scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-hol
 9. **Leere Typ-Auswahl heißt überall „keine Feiertage"** — nie still „alle".
 10. **Landeserkennung kennt beide Admin-Namenslisten und nennt den Grund, wenn sie scheitert** — der Einrichtungsassistent bis Admin 8.0.14 speichert eigene Namen.
 11. **`I18n.init` zuerst, dann räumt der Flotten-Helfer `migrateNativeKeys` obsolete Einstellungsschlüssel, `repairInstanceObject` nur noch `mode` + `supportedMessages` (auf `null`)** — jede Instanz-Schreibung ist ein Neustart, danach `stop()` + return.
-12. **`supportedMessages.stopInstance` nie ins Manifest** — der Host tötet sonst den laufenden Durchgang; `onUnload` bleibt leer, es gibt nichts abzuwarten.
+12. **`supportedMessages.stopInstance` nie ins Manifest** — der Host tötet sonst den laufenden Durchgang; `onUnload` setzt nur den Stopp-Merker (ein Stopp während des Starts ist kein Startfehler, `failStart`) und ruft sofort `callback()`, es gibt nichts abzuwarten.
 13. **Die Objekte jedes Kalenderordners schreibt der Lauf selbst (Manifest ohne `instanceObjects`), und nur wenn der einmal gelesene Baum (`KnownObjects`) sie nicht schon trägt** — die Ordner hängen an den Einstellungen.
 14. **Die Karte schreibt die ganze Kalenderliste in EINER Ganzschreibung (`writeList`)** — `ConfigGeneric.onChange` kopiert `props.data` je Aufruf.
 15. **Ein beim Öffnen verwaister Wert wird gezeigt, nie automatisch geschrieben** — sonst bewaffnet das bloße Öffnen den Speichern-Knopf.
