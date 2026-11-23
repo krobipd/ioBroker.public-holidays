@@ -258,5 +258,70 @@
     "deleteRecordedStates": true,
     "deleteRecordedHistory": false
   },
-  "instanceObjects": []
+  "instanceObjects": [],
+  "notifications": [
+    {
+      "scope": "public-holidays",
+      "name": {
+        "en": "Public Holidays",
+        "de": "Feiertage",
+        "ru": "Государственные праздники",
+        "pt": "Feriados",
+        "nl": "Feestdagen",
+        "fr": "Jours fériés",
+        "it": "Giorni festivi",
+        "es": "Días festivos",
+        "pl": "Święta",
+        "uk": "Святкові дні",
+        "zh-cn": "公共假日"
+      },
+      "description": {
+        "en": "Problems of the Public Holidays adapter that only you can fix.",
+        "de": "Probleme des Feiertage-Adapters, die nur du beheben kannst.",
+        "ru": "Проблемы адаптера праздников, которые можете устранить только вы.",
+        "pt": "Problemas do adaptador de feriados que só você pode resolver.",
+        "nl": "Problemen van de feestdagen-adapter die alleen jij kunt oplossen.",
+        "fr": "Problèmes de l'adaptateur de jours fériés que vous seul pouvez résoudre.",
+        "it": "Problemi dell'adattatore dei giorni festivi che solo tu puoi risolvere.",
+        "es": "Problemas del adaptador de días festivos que solo tú puedes resolver.",
+        "pl": "Problemy adaptera świąt, które tylko ty możesz rozwiązać.",
+        "uk": "Проблеми адаптера свят, які можете усунути лише ви.",
+        "zh-cn": "只有您才能解决的公共假日适配器问题。"
+      },
+      "categories": [
+        {
+          "category": "userActionRequired",
+          "name": {
+            "en": "A setting stops the instance",
+            "de": "Eine Einstellung hält die Instanz an",
+            "ru": "Настройка останавливает экземпляр",
+            "pt": "Uma configuração interrompe a instância",
+            "nl": "Een instelling stopt de instantie",
+            "fr": "Un paramètre arrête l'instance",
+            "it": "Un'impostazione arresta l'istanza",
+            "es": "Un ajuste detiene la instancia",
+            "pl": "Ustawienie zatrzymuje instancję",
+            "uk": "Налаштування зупиняє екземпляр",
+            "zh-cn": "某项设置使实例停止"
+          },
+          "description": {
+            "en": "The instance stopped because one of its settings is wrong. Correct it in the instance settings and save — the instance then starts again.",
+            "de": "Die Instanz wurde angehalten, weil eine ihrer Einstellungen falsch ist. Korrigiere sie in den Instanz-Einstellungen und speichere — die Instanz startet dann wieder.",
+            "ru": "Экземпляр остановлен, потому что одна из его настроек неверна. Исправьте её в настройках экземпляра и сохраните — после этого экземпляр снова запустится.",
+            "pt": "A instância parou porque uma das suas configurações está errada. Corrija-a nas configurações da instância e salve — a instância inicia novamente.",
+            "nl": "De instantie is gestopt omdat een van haar instellingen onjuist is. Corrigeer deze in de instellingen van de instantie en sla op — de instantie start dan opnieuw.",
+            "fr": "L'instance s'est arrêtée car l'un de ses paramètres est incorrect. Corrigez-le dans les paramètres de l'instance et enregistrez — l'instance redémarre alors.",
+            "it": "L'istanza si è fermata perché una delle sue impostazioni è errata. Correggila nelle impostazioni dell'istanza e salva — l'istanza si riavvia.",
+            "es": "La instancia se detuvo porque uno de sus ajustes es incorrecto. Corrígelo en los ajustes de la instancia y guarda — la instancia se inicia de nuevo.",
+            "pl": "Instancja została zatrzymana, ponieważ jedno z jej ustawień jest błędne. Popraw je w ustawieniach instancji i zapisz — instancja uruchomi się ponownie.",
+            "uk": "Екземпляр зупинено, бо одне з його налаштувань неправильне. Виправте його в налаштуваннях екземпляра та збережіть — після цього екземпляр запуститься знову.",
+            "zh-cn": "实例已停止，因为其某项设置有误。请在实例设置中更正并保存，实例随后会重新启动。"
+          },
+          "severity": "alert",
+          "regex": [],
+          "limit": 1
+        }
+      ]
+    }
+  ]
 }

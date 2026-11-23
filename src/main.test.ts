@@ -17,6 +17,16 @@ vi.mock("@iobroker/adapter-core", () => {
     states = new Map<string, { val: unknown; ack: boolean }>();
     logs: { level: string; msg: string }[] = [];
     stop = vi.fn();
+    /** The adapter's name — the scope of its notifications (failStart). */
+    name = "public-holidays";
+    /** How the process would end — recorded, not ended: the real one never returns (failStart). */
+    terminate = vi.fn((_reason?: string, _exitCode?: number): void => undefined);
+    /** The notifications the adapter registered in the admin. */
+    notifications: { scope: string; category: string | null; message: string }[] = [];
+    registerNotification(scope: string, category: string | null, message: string): Promise<void> {
+      this.notifications.push({ scope, category, message });
+      return Promise.resolve();
+    }
     /** Like a real install without the plugin system — overridden where a test hands an error to Sentry. */
     supportsFeature = vi.fn((_feature: string) => false);
     /** How often the instance's OWN object was written — every write costs a restart. */
@@ -201,6 +211,8 @@ interface StubSurface {
   logs: { level: string; msg: string }[];
   log: { level: string; info: (m: string) => void };
   stop: ReturnType<typeof vi.fn>;
+  terminate: ReturnType<typeof vi.fn>;
+  notifications: { scope: string; category: string | null; message: string }[];
   handlers: Map<string, (...args: unknown[]) => unknown>;
   instanceObjectWrites: number;
   objectWrites: number;
@@ -743,7 +755,9 @@ describe("onReady — country detection chain", () => {
 });
 
 describe("onReady — error handling", () => {
-  it("catches errors, logs onReady failed and STILL stops", async () => {
+  // Fleet start-failure standard (src/lib/start-failure.ts): a start that fails ends the process with
+  // one error line and exit code 6 — the controller tries again — and never runs on as an empty shell.
+  it("ends a failed start with one error line and exit code 6", async () => {
     const { internal, stub } = setup({ country: "DE" });
     stub.extendObject = () => {
       return Promise.reject(new Error("broker write refused"));
@@ -751,8 +765,27 @@ describe("onReady — error handling", () => {
 
     await internal.onReady();
 
-    expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
-    expect(stub.stop).toHaveBeenCalledTimes(1);
+    expect(logsOf(stub, "error")).toEqual(["Start failed: broker write refused"]);
+    expect(stub.terminate).toHaveBeenCalledTimes(1);
+    expect(stub.terminate).toHaveBeenCalledWith("broker write refused", 6);
+    expect(stub.notifications).toEqual([]);
+    expect(stub.stop).not.toHaveBeenCalled();
+  });
+
+  it("a stop during the start is no start failure — one debug line, no error, no end of its own", async () => {
+    const { internal, stub } = setup({ country: "DE" });
+    stub.extendObject = () => Promise.reject(new Error("instance closing"));
+    stub.supportsFeature = vi.fn(() => true);
+    stub.getPluginInstance = vi.fn(() => null);
+    internal.onUnload(vi.fn());
+
+    await internal.onReady();
+
+    expect(logsOf(stub, "error")).toEqual([]);
+    expect(logsOf(stub, "debug")).toContain("Start ended by the stop: instance closing");
+    expect(stub.terminate).not.toHaveBeenCalled();
+    expect(stub.getPluginInstance).not.toHaveBeenCalled();
+    expect(stub.stop).not.toHaveBeenCalled();
   });
 
   // The Sentry plugin only hooks uncaught exceptions; a caught one reaches it only when handed
@@ -767,7 +800,7 @@ describe("onReady — error handling", () => {
       order.push("flush");
       return Promise.resolve(true);
     });
-    stub.stop.mockImplementation(() => void order.push("stop"));
+    stub.terminate.mockImplementation(() => void order.push("terminate"));
     stub.supportsFeature = vi.fn((feature: string) => feature === "PLUGINS");
     stub.getPluginInstance = vi.fn((name: string) =>
       name === "sentry" ? { getSentryObject: () => ({ captureException, flush }) } : null,
@@ -777,12 +810,12 @@ describe("onReady — error handling", () => {
 
     expect(captureException).toHaveBeenCalledTimes(1);
     expect(captureException).toHaveBeenCalledWith(failure);
-    // The process exits about 500 ms after stop() — the event has to be out before (flush).
+    // failStart ends the process right after — the event has to be out before (flush).
     expect(flush).toHaveBeenCalledWith(2000);
-    expect(order).toEqual(["capture", "flush", "stop"]);
+    expect(order).toEqual(["capture", "flush", "terminate"]);
   });
 
-  it("a Sentry hand-over that throws neither escapes nor keeps the instance from stopping", async () => {
+  it("a Sentry hand-over that throws neither escapes nor keeps the start from ending", async () => {
     const { internal, stub } = setup({ country: "DE" });
     stub.extendObject = () => Promise.reject(new Error("broker write refused"));
     stub.supportsFeature = vi.fn(() => true);
@@ -797,10 +830,10 @@ describe("onReady — error handling", () => {
     await expect(internal.onReady()).resolves.toBeUndefined();
 
     expect(logsOf(stub, "debug")).toContain("Could not hand the error to Sentry: sentry down");
-    expect(stub.stop).toHaveBeenCalledTimes(1);
+    expect(stub.terminate).toHaveBeenCalledWith("broker write refused", 6);
   });
 
-  it("logs and stops as before when no Sentry plugin is loaded", async () => {
+  it("logs and ends as before when no Sentry plugin is loaded", async () => {
     const { internal, stub } = setup({ country: "DE" });
     stub.extendObject = () => Promise.reject(new Error("broker write refused"));
     stub.supportsFeature = vi.fn(() => true);
@@ -809,8 +842,8 @@ describe("onReady — error handling", () => {
     await internal.onReady();
 
     expect(stub.getPluginInstance).toHaveBeenCalledWith("sentry");
-    expect(logsOf(stub, "error").some(m => m.includes("onReady failed: broker write refused"))).toBe(true);
-    expect(stub.stop).toHaveBeenCalledTimes(1);
+    expect(logsOf(stub, "error")).toEqual(["Start failed: broker write refused"]);
+    expect(stub.terminate).toHaveBeenCalledWith("broker write refused", 6);
   });
 });
 
@@ -1105,19 +1138,27 @@ describe("onReady — several calendars (multi-calendar)", () => {
     expect(stub.delays).toHaveLength(0);
   });
 
-  it("a damaged calendar list changes nothing", async () => {
+  it("a damaged calendar list changes nothing and ends the start as a settings error", async () => {
     const { internal, stub } = setup({}, { calendars: "broken" });
     stub.objects.set("public-holidays.0.cal", { type: "folder", common: { name: "Test" }, native: { uid: "c1" } });
+    stub.supportsFeature = vi.fn(() => true);
+    stub.getPluginInstance = vi.fn(() => null);
+    const text =
+      "The calendar list in the settings is damaged — nothing was changed; open the adapter settings and save them";
 
     await internal.onReady();
 
-    expect(logsOf(stub, "warn")).toEqual([
-      "The calendar list in the settings is damaged — nothing was changed; open the adapter settings and save them",
-    ]);
+    expect(logsOf(stub, "warn")).toEqual([]);
+    expect(logsOf(stub, "error")).toEqual([`Settings: ${text}`]);
+    expect(stub.notifications).toEqual([{ scope: "public-holidays", category: "userActionRequired", message: text }]);
+    expect(stub.terminate).toHaveBeenCalledTimes(1);
+    expect(stub.terminate).toHaveBeenCalledWith(text, 11);
+    // the user's settings, not an adapter defect — nothing goes to Sentry
+    expect(stub.getPluginInstance).not.toHaveBeenCalled();
     expect(stub.objects.has("public-holidays.0.cal")).toBe(true);
     expect(stub.objectWrites).toBe(0);
     expect(stub.states.size).toBe(0);
-    expect(stub.stop).toHaveBeenCalledTimes(1);
+    expect(stub.stop).not.toHaveBeenCalled();
   });
 
   it("skips a calendar without a valid id and the second of an id held twice, and runs the others", async () => {

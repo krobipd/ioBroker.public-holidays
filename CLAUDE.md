@@ -28,7 +28,8 @@ Config-Änderung, js-controller triggert täglich um Mitternacht per Cron, danac
 src/main.ts                   → onReady: Übersetzungen → Einstellungs-Migration (die Schlüssel von 0.20.x als erster
                                 Kalender) → Instanz-Reparatur → eigenen Baum lesen (KnownObjects) → Kalenderliste lesen →
                                 Ordner abgleichen → je Kalender rechnen, Ordner auffrischen, States publizieren → EINE
-                                Zusammenfassung → stop(); nur Ablauf, die Texte liefert run-messages
+                                Zusammenfassung → stop(); ein gescheiterter Start endet über failStart (Code 11 mit
+                                Meldung bei falschen Einstellungen, sonst 6); nur Ablauf, die Texte liefert run-messages
 src/lib/holiday-shared.ts     → EINZIGE Quelle für alles, was Runtime UND Karte gleich sehen müssen: native-Leser (Trim),
                                 Typen, Scope-Code-Regeln (sameCode, isLoadableScopeKey), toHolidayId, beats, Brückentag-
                                 Namen, Sprachregel, Tagesliste über das Drei-Jahres-Fenster (buildScopeDays → buildDayMap →
@@ -49,7 +50,7 @@ src/lib/system-config.ts      → system.config (Land, Sprache, Datumsformat) mi
 src/lib/state-publisher.ts    → je Kalender Ordner + 17 Objekte (Tabelle CALENDAR_OBJECTS) schreiben, nur wenn der gelesene
                                 Baum sie nicht schon trägt; Altbestand räumen; 12 States je Kalender gegen EIN Sammel-Lesen
                                 vergleichen und nur Änderungen schreiben
-src/lib/err-text.ts · known-objects.ts · native-key-migration.ts · object-removal.ts · enum-carry.ts (+ Tests)
+src/lib/err-text.ts · known-objects.ts · native-key-migration.ts · object-removal.ts · enum-carry.ts · start-failure.ts (+ Tests)
                               → Flotten-Master byte-gleich, nie hier ändern
 src/lib/log-text.ts           → oneLine / errLine (Fehlertext auf einer Logzeile)
 src/lib/i18n.ts · types.ts
@@ -90,7 +91,7 @@ scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-hol
 21. **Die Kennung bildet immer der Adapter aus Standort und Arten (`<land|system>[-<gebiet>][-<region>]-<arten>`, ein reiner Zahlen-Code wird zum Gebietsnamen, Gleichstand `-2`) und nur, wenn sich Land, Bundesland, Region oder Arten ändern; der Name ist frei, leer heißt automatisch: nur Land · Bundesland · Region** — Konzept 22:43, Karte krobi 2026-11-21 02:32–02:47.
 22. **Ein Ordner ohne Kalender geht über die Flotten-Löschung mit den zwei Löschoptionen; ein Ordner mit neuer Kennung und der Baum von 0.20.x an der Wurzel ziehen nur mit dem Flotten-Umzugs-Master um, nie mit eigenem Code** — Werkbank Antwort 99eb2a0a9bce, krobi 23:08.
 23. **Die Einstellungen von 0.20.x werden beim ersten Start zum ersten Kalender (`migrateNativeKeys`, eine Schreibung, Neustart); das Update warnt per `common.messages`** — krobi 22:5x „aktuelle datenbäume werde beim update auf ihre settings umgezogen dazu gibs dann auch eine warnung beim update“.
-24. **Eine unlesbare Kalenderliste ändert nichts am Baum (Warnung, `stop()`), eine ungültige oder doppelte Kennung überspringt nur ihren Kalender** — sonst löschte ein kaputter Eintrag fremde Ordner.
+24. **Eine unlesbare Kalenderliste ändert nichts am Baum und beendet den Start als Einstellungsfehler (`SettingsError` → `failStart`: eine error-Zeile, Meldung `userActionRequired`, Code 11), eine ungültige oder doppelte Kennung überspringt nur ihren Kalender** — sonst löschte ein kaputter Eintrag fremde Ordner; der Abschluss folgt dem Flotten-Startfehler-Standard (krobi 2026-11-11 23:32).
 
 <!-- core-decisions:begin (generated from the sealed register — change only through the Werkbank) -->
 

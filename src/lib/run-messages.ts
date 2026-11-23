@@ -106,7 +106,10 @@ export function forCalendar(id: string, text: string): string {
   return `${id}: ${text}`;
 }
 
-/** The warning when the settings hold no calendar list at all — nothing is created, moved or deleted. */
+/**
+ * The settings error when the settings hold no calendar list at all — nothing is created, moved or
+ * deleted, and the start ends (failStart: error line, notification, exit code 11).
+ */
 export const DAMAGED_LIST_TEXT =
   "The calendar list in the settings is damaged — nothing was changed; open the adapter settings and save them";
 

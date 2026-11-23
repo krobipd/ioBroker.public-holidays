@@ -29,6 +29,7 @@ import {
   staleExcludesText,
   systemCountryProblemText,
 } from "./lib/run-messages";
+import { failStart, SettingsError } from "./lib/start-failure";
 import { cleanupDeprecatedStates, ensureCalendarObjects, publishCalendarStates } from "./lib/state-publisher";
 import { getSystemConfig, type SystemConfig } from "./lib/system-config";
 import type { Calendar, ComputedHolidays } from "./lib/types";
@@ -44,6 +45,9 @@ const MIGRATIONS: NativeKeyMigration[] = [{ drop: "excludePublic" }, { drop: "ho
 
 /** The adapter: one holiday run per start, then it stops (schedule mode). */
 export class PublicHolidaysAdapter extends utils.Adapter {
+  /** Set once the instance is stopping (onUnload began): a stop during the start is no start failure. */
+  private stopping = false;
+
   /** @param options the adapter options js-controller passes in */
   public constructor(options: Partial<utils.AdapterOptions> = {}) {
     super({ ...options, name: "public-holidays" });
@@ -153,12 +157,12 @@ export class PublicHolidaysAdapter extends utils.Adapter {
       const sysConfig = await getSystemConfig(this);
 
       // A setting that holds no list at all is damaged: creating, moving or deleting folders from it
-      // could take a user's tree away, so the run changes nothing.
+      // could take a user's tree away, so the run changes nothing — and ends as a settings error
+      // (fleet start-failure standard): one error line, a notification, and the instance waits for
+      // the user to save the settings.
       const list = readCalendarList(this.config as Record<string, unknown>);
       if (!list) {
-        this.log.warn(DAMAGED_LIST_TEXT);
-        void this.stop?.();
-        return;
+        throw new SettingsError(DAMAGED_LIST_TEXT);
       }
       if (list.length === 0) {
         this.log.warn(NO_CALENDAR_TEXT);
@@ -212,14 +216,20 @@ export class PublicHolidaysAdapter extends utils.Adapter {
         await this.delay(REPORT_MS + 100);
       }
     } catch (err: unknown) {
-      this.log.error(`onReady failed: ${errLine(err)}`);
       // The Sentry plugin only hooks uncaught exceptions — a caught error has to be handed over
-      // (plugin README, "Send specific errors to Sentry"). The two other catches (instance-object
-      // repair, deprecated-state cleanup) stay quiet on purpose: expected broker hiccups with a
-      // local fallback, not adapter defects.
-      if (this.supportsFeature("PLUGINS")) {
+      // (plugin README, "Send specific errors to Sentry"), and before failStart, which ends the
+      // process. A settings error is the user's to fix, not an adapter defect, and a stop during
+      // the start is no failure at all. The two other catches (instance-object repair,
+      // deprecated-state cleanup) stay quiet on purpose: expected broker hiccups with a local
+      // fallback, not adapter defects.
+      if (!this.stopping && !(err instanceof SettingsError) && this.supportsFeature("PLUGINS")) {
         await this.reportToSentry(err);
       }
+      // src/lib/start-failure.ts (fleet master): one error line, then exit code 11 with a
+      // notification for a settings error, 6 for anything else; a stop during the start one
+      // debug line. Nothing to clean up: the run holds no connection, timer or server.
+      await failStart(this, err, { stopping: this.stopping });
+      return;
     }
     void this.stop?.();
   }
@@ -316,15 +326,17 @@ export class PublicHolidaysAdapter extends utils.Adapter {
   }
 
   /**
-   * Deliberately empty apart from the callback: this adapter holds no connection, no timer and
-   * no device marker — it computes, publishes and stops itself. There is nothing that would have
-   * to be written on the way out, so nothing has to be awaited before reporting done. What DID
-   * matter is that `onUnload` runs at all, which is why the manifest no longer declares
+   * Only the stop marker and the callback: this adapter holds no connection, no timer and no
+   * device marker — it computes, publishes and stops itself. There is nothing that would have to
+   * be written on the way out, so nothing has to be awaited before reporting done. The marker
+   * tells a start that fails because the instance closes from a start failure (failStart). What
+   * DID matter is that `onUnload` runs at all, which is why the manifest no longer declares
    * `supportedMessages.stopInstance` (see {@link repairInstanceObject}).
    *
    * @param callback js-controller's "shutdown finished" signal
    */
   private onUnload(callback: () => void): void {
+    this.stopping = true;
     callback();
   }
 }
