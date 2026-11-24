@@ -6,7 +6,7 @@ vi.mock("@iobroker/adapter-core", () => ({
 }));
 
 import { summaryLine } from "../lib/run-messages";
-import { publishStates } from "../lib/state-publisher";
+import { publishCalendarStates } from "../lib/state-publisher";
 import type { ComputedHolidays } from "../lib/types";
 
 const COMPUTED: ComputedHolidays = {
@@ -29,13 +29,17 @@ describe("P-03 date in the log, ISO in the datapoint", () => {
     const written = new Map<string, unknown>();
     const adapter = {
       namespace: "public-holidays.0",
-      getStatesAsync: () => Promise.resolve({}),
       setState: (id: string, state: { val: unknown }) => {
         written.set(id, state.val);
         return Promise.resolve();
       },
     };
-    await publishStates(adapter as unknown as Parameters<typeof publishStates>[0], COMPUTED);
-    expect(written.get("next.date")).toBe("2026-10-26");
+    await publishCalendarStates(
+      adapter as unknown as Parameters<typeof publishCalendarStates>[0],
+      {},
+      "cal-a",
+      COMPUTED,
+    );
+    expect(written.get("cal-a.next.date")).toBe("2026-10-26");
   });
 });

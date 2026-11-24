@@ -17,10 +17,47 @@ covers 207 countries including their states, provinces and regions.
 
 1. Install the adapter from the ioBroker repository (stable or latest) and create an instance.
    Installing from a GitHub URL is not supported.
-2. Open the instance settings. All settings live on one guided card, worked through from top to
-   bottom.
+2. Open the instance settings. They hold a list of calendars; a new instance has one. Open a calendar:
+   its **name** and its **folder in the object tree** stand on top, below them one guided card, worked
+   through from top to bottom.
 3. Save, then switch the instance on — a new instance starts switched off until it is set up. The
    adapter calculates immediately and writes its data points.
+
+### Calendars
+
+Each calendar has its own location, holiday types, bridge days and exclusions, computes on its own and
+writes its data points into its own folder — for example Germany Bavaria schools, Austria banks and
+Germany North Rhine-Westphalia public holidays side by side in one instance.
+
+- **Add calendar** puts a new calendar at the end of the list. It starts like a new instance: no
+  country (the system country applies), public holidays only.
+- **Copy** takes every setting; the name gets "(copy)", the ID the next free number. **Delete** removes the calendar
+  from the list at once, without asking — it takes effect only when you save. The **arrows** change the
+  order of the list only.
+- **Name** is shown on the folder in the object tree. Left empty it is automatic: country · state ·
+  region, as far as chosen — "Germany · North Rhine-Westphalia", "System country · Bavaria". Holiday types,
+  bridge days and exclusions never go in. A name you type stays.
+- **The folder** is shown read-only below the name: the adapter builds its ID, you never type it.
+- **The ID** says where a calendar applies and which holidays it holds:
+  `<country>[-<state>][-<region>]-<types>`, lower case, the types in the order public, bank, school,
+  optional, observance — `de-by-school`, `at-bank`, `de-nw-public`. A calendar that follows the system
+  country starts with `system`. Where a state or region code is only a number, its name stands instead:
+  Styria (code 6) gives `at-steiermark-public`. Two calendars with the same standard ID get `-2`, `-3` ….
+  Only a list edited by hand in the instance object can hold an empty ID or one used twice: the calendar
+  turns red, Save stays locked, and **Build a new ID** fixes it.
+- **When country, state, region or holiday types change**, the folder moves on saving, with its values,
+  rooms, functions, aliases and recording. Bridge days, exclusions and the name never move it, and a `-2`
+  stays even when its twin is deleted; changing a setting back gives the saved folder back. Before you
+  save, the move shows in yellow under the folder and below the list, and a red box right above the Save
+  button lists every folder that moves or is deleted. Fixed paths in scripts you have to adjust yourself.
+- **A deleted calendar** takes its folder with everything below it. The two options under **Deleting
+  datapoints** decide what happens to a datapoint you record (history, sql, influxdb): with **Delete
+  datapoints with recording** on (the default) it is deleted too, with it off it stays and is counted in
+  the log; **Delete the recorded data too** also deletes its recorded data first.
+
+**Update from 0.20.x:** the first start after the update takes the previous settings into the first
+calendar, and the data points move into its folder — for example `public-holidays.0.today.isHoliday` →
+`public-holidays.0.de-by-public.today.isHoliday`. Adjust the paths in scripts and VIS.
 
 ### Location
 
@@ -117,6 +154,8 @@ the adapter uses and names holidays in the ioBroker system language like the dat
 you see is what you get. With no country chosen it shows the detected system country.
 
 ## Data points
+
+Every calendar writes the same data points below its folder, `public-holidays.0.<calendar ID>.`:
 
 | Data point                                             | Type             | Meaning                                                                        |
 | ------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------ |

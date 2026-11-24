@@ -1,3 +1,4 @@
-import HolidayConfig from "./HolidayConfig";
+import CalendarsConfig from "./CalendarsConfig";
+import TreeChanges from "./TreeChanges";
 
-export default { HolidayConfig };
+export default { CalendarsConfig, TreeChanges };

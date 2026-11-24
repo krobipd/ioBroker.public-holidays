@@ -18,5 +18,11 @@
   "descNextName": "Vide tant qu'aucun jour férié à venir n'a été trouvé.",
   "descNextIsHoliday": "Faux lorsqu'aucun jour férié à venir n'a été trouvé.",
   "descNextDate": "Toujours au format ISO (AAAA-MM-JJ), indépendamment du format de date configuré dans ioBroker.",
-  "descNextDaysUntil": "0 signifie qu'aucun jour férié à venir n'a été trouvé — un vrai est toujours à au moins un jour."
+  "descNextDaysUntil": "0 signifie qu'aucun jour férié à venir n'a été trouvé — un vrai est toujours à au moins un jour.",
+  "removalHeader": "Suppression des points de données",
+  "removalInfo": "Lorsque l'adaptateur ne fournit plus un point de données, il le supprime. Ces deux options déterminent ce qui arrive à un point de données que vous enregistrez (history, sql, influxdb). Le journal compte les points de données conservés.",
+  "deleteRecordedStates": "Supprimer les points de données enregistrés",
+  "deleteRecordedStatesHelp": "Désactivé : un point de données enregistré est conservé et compté dans le journal — vérifiez-le manuellement",
+  "deleteRecordedHistory": "Supprimer aussi les données enregistrées",
+  "deleteRecordedHistoryHelp": "Chaque instance d'enregistrement supprime d'abord les données du point de données"
 }

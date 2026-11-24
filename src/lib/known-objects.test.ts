@@ -2,6 +2,7 @@
 // Entwicklung/.consistency-master, never in an adapter.
 import {
   coveredBy,
+  extendedWith,
   KnownObjects,
   type KnownObjectsAdapter,
   mergedWith,
@@ -40,6 +41,46 @@ describe("mergedWith — the merge of extendObject (node.extend, deep)", () => {
     expect(mergedWith([1, 2], [undefined, 3])).toEqual([1, 3]);
     const bare = Object.assign(Object.create(null) as Record<string, unknown>, { a: 1 });
     expect(mergedWith(bare, { b: 2 })).toEqual({ a: 1, b: 2 });
+  });
+});
+
+describe("extendedWith — what extendObject leaves of the whole object (js-controller 7.2.2)", () => {
+  it("replaces the four lists the adapter layer empties first, and merges every other list index by index", () => {
+    const stored = {
+      native: { devices: [1, 2, 3], repositories: ["a", "b"], certificates: [{ c: 1 }, { c: 2 }], other: [1, 2, 3] },
+      common: { members: ["x", "y"], name: "n" },
+    };
+    const patch = {
+      native: { devices: [9], repositories: ["z"], certificates: [{ d: 1 }], other: [9] },
+      common: { members: ["w"] },
+    };
+    expect(extendedWith(stored, patch)).toEqual({
+      native: { devices: [9], repositories: ["z"], certificates: [{ d: 1 }], other: [9, 2, 3] },
+      common: { members: ["w"], name: "n" },
+    });
+    expect(stored.native.devices).toEqual([1, 2, 3]);
+  });
+
+  it("empties a named list even when the patch holds undefined there, and leaves a list the patch does not name", () => {
+    expect(extendedWith({ native: { devices: [1, 2] } }, { native: { devices: undefined } })).toEqual({
+      native: { devices: [] },
+    });
+    expect(extendedWith({ native: { devices: [1, 2] } }, { native: { other: 1 } })).toEqual({
+      native: { devices: [1, 2], other: 1 },
+    });
+    expect(extendedWith({ native: { devices: null } }, { native: { devices: [1] } })).toEqual({
+      native: { devices: [1] },
+    });
+    // only a stored list is emptied — a stored null stays when the patch holds undefined there
+    expect(extendedWith({ native: { devices: null } }, { native: { devices: undefined } })).toEqual({
+      native: { devices: null },
+    });
+  });
+
+  it("merges like mergedWith where nothing or no object is stored", () => {
+    expect(extendedWith(undefined, { native: { devices: [1] } })).toEqual({ native: { devices: [1] } });
+    expect(extendedWith({ native: [1, 2] }, { native: { devices: [3] } })).toEqual({ native: { devices: [3] } });
+    expect(extendedWith({ a: 1 }, "x")).toBe("x");
   });
 });
 
@@ -126,6 +167,12 @@ describe("coveredBy — the write would change nothing", () => {
     expect(coveredBy({ common: { min: 0 } }, undefined)).toBe(false);
   });
 
+  it("is not covered by a shorter list the adapter layer replaces, and covered by the same one", () => {
+    expect(coveredBy({ native: { devices: [1] } }, { native: { devices: [1, 2] } })).toBe(false);
+    expect(coveredBy({ common: { members: ["a"] } }, { common: { members: ["a", "b"] } })).toBe(false);
+    expect(coveredBy({ native: { devices: [1, 2] } }, { native: { devices: [1, 2] } })).toBe(true);
+  });
+
   it("compares structures, not their text", () => {
     expect(sameStructure({ a: 1, b: [1, { c: 2 }] }, { b: [1, { c: 2 }], a: 1 })).toBe(true);
     expect(sameStructure([1, 2], { 0: 1, 1: 2 })).toBe(false);
@@ -133,12 +180,22 @@ describe("coveredBy — the write would change nothing", () => {
   });
 });
 
+/** What the fleet's removal needs beside the database: the default options, a silent log, no timer (a stopping adapter). */
+const removalDefaults: Pick<KnownObjectsAdapter, "config" | "log" | "sendToAsync" | "setTimeout" | "clearTimeout"> = {
+  config: {},
+  log: { info: () => undefined, debug: () => undefined },
+  sendToAsync: () => Promise.resolve(undefined),
+  setTimeout: () => undefined,
+  clearTimeout: () => undefined,
+};
+
 describe("KnownObjects — read once, write only on a difference", () => {
   type Call = [string, string, unknown?];
 
   function fakeAdapter(rows: Array<{ id: string; value: unknown }>): { adapter: KnownObjectsAdapter; calls: Call[] } {
     const calls: Call[] = [];
     const adapter: KnownObjectsAdapter = {
+      ...removalDefaults,
       namespace: "demo.0",
       extendObject: (id, obj) => {
         calls.push(["extend", id, obj]);
@@ -185,6 +242,15 @@ describe("KnownObjects — read once, write only on a difference", () => {
     expect(writes.map(c => c[2])).toEqual([{ common: { name: "New" } }]);
   });
 
+  it("writes a shorter device list and holds it whole, as the adapter layer replaces it", async () => {
+    const { adapter, calls } = fakeAdapter([{ id: "demo.0.hub", value: { native: { devices: ["a", "b"], x: 1 } } }]);
+    const known = new KnownObjects(adapter);
+    await known.load();
+    expect(await known.extend("hub", { native: { devices: ["a"] } })).toBe(true);
+    expect(known.get("hub")).toEqual({ native: { devices: ["a"], x: 1 } });
+    expect(calls.filter(c => c[0] === "extend")).toHaveLength(1);
+  });
+
   it("replaces a whole object only when it differs, and forgets removed objects with their children", async () => {
     const { adapter, calls } = fakeAdapter([
       { id: "demo.0.dev", value: { type: "device", common: { name: "Dev" } } },
@@ -201,6 +267,70 @@ describe("KnownObjects — read once, write only on a difference", () => {
     expect(known.get("dev.on")).toBeUndefined();
     expect(known.get("other")).toEqual({ type: "state", common: { name: "Other" } });
     expect(calls.filter(c => c[0] !== "list").map(c => `${c[0]} ${c[1]}`)).toEqual(["set demo.0.dev", "del dev"]);
+  });
+
+  it("lists the known ids, all or below one id, so nobody reads the own tree a second time", async () => {
+    // fakeroku audit 2026-10-22: without a listing the adapter read its tree three times at start (load + two reads)
+    const { adapter, calls } = fakeAdapter([
+      { id: "demo.0.dev", value: { type: "device", common: { name: "Dev" } } },
+      { id: "demo.0.dev.on", value: { type: "state", common: { name: "On" } } },
+      { id: "demo.0.device", value: { type: "device", common: { name: "Other" } } },
+    ]);
+    const known = new KnownObjects(adapter);
+    await known.load();
+    expect(known.ids()).toEqual(["demo.0.dev", "demo.0.dev.on", "demo.0.device"]);
+    expect(known.ids("dev")).toEqual(["demo.0.dev.on"]);
+    expect(known.ids("demo.0.dev")).toEqual(["demo.0.dev.on"]);
+    await known.extend("dev.off", { type: "state", common: { name: "Off" } });
+    await known.remove("dev.on");
+    expect(known.ids("dev")).toEqual(["demo.0.dev.off"]);
+    // the tree once; the removal reads what it removes at that moment — a user switches a recording on at any time
+    expect(calls.filter(c => c[0] === "list").map(c => c[1])).toEqual(["demo.0.", "demo.0.dev.on"]);
+  });
+
+  it("keeps a datapoint known that the user's deletion options leave in place, with every object above it", async () => {
+    const recorded = { type: "state", common: { name: "On", custom: { "history.0": { enabled: true } } } };
+    const { adapter, calls } = fakeAdapter([
+      { id: "demo.0.dev", value: { type: "device", common: { name: "Dev" } } },
+      { id: "demo.0.dev.on", value: recorded },
+      { id: "demo.0.dev.name", value: { type: "state", common: { name: "Name" } } },
+    ]);
+    const known = new KnownObjects({ ...adapter, config: { deleteRecordedStates: false } });
+    await known.load();
+    await known.remove("dev", { recursive: true });
+    expect(known.ids()).toEqual(["demo.0.dev", "demo.0.dev.on"]);
+    expect(calls.filter(c => c[0] === "del").map(c => c[1])).toEqual(["demo.0.dev.name"]);
+  });
+
+  it("forgets what a move deletes without reading the deletion options, the children only with recursive", async () => {
+    // round 186 (R186-8, dl-manager 8d046fbce64f): a move's delete through `remove` applied the options to a move —
+    // with deleteRecordedStates off the old id stayed, with deleteRecordedHistory on its data was deleted
+    const recorded = { type: "state", common: { name: "On", custom: { "history.0": { enabled: true } } } };
+    const { adapter, calls } = fakeAdapter([
+      { id: "demo.0.old", value: { type: "device", common: { name: "Old" } } },
+      { id: "demo.0.old.on", value: recorded },
+      { id: "demo.0.keep", value: { type: "device", common: { name: "Keep" } } },
+      { id: "demo.0.keep.on", value: recorded },
+    ]);
+    const sent: string[] = [];
+    const known = new KnownObjects({
+      ...adapter,
+      config: { deleteRecordedStates: false, deleteRecordedHistory: true },
+      sendToAsync: instance => {
+        sent.push(instance);
+        return Promise.resolve({ success: true });
+      },
+    });
+    await known.load();
+    await known.deleteMoved("old", { recursive: true });
+    await known.deleteMoved("keep");
+    expect(known.ids()).toEqual(["demo.0.keep.on"]);
+    expect(calls.filter(c => c[0] !== "list")).toEqual([
+      ["del", "old", { recursive: true }],
+      ["del", "keep", { recursive: false }],
+    ]);
+    expect(calls.filter(c => c[0] === "list")).toHaveLength(1);
+    expect(sent).toEqual([]);
   });
 
   it("skips a row without an object, and a delete without recursive keeps the children known", async () => {
@@ -254,5 +384,242 @@ describe("KnownObjects — read once, write only on a difference", () => {
     expect(await known.replace("demo.0.dev.on", dropped)).toBe(true);
     expect((known.get("dev.on") as { common: Record<string, unknown> }).common.custom).toBeUndefined();
     expect(calls.filter(c => c[0] === "set")).toHaveLength(2);
+  });
+});
+
+describe("KnownObjects — overlapping operations wait for each other", () => {
+  /**
+   * A database that applies each operation when it is called and answers after a delay of its own, like a broker whose
+   * answers can overtake each other.
+   *
+   * @param initial the objects in the database
+   * @param delays the answer delay per operation in ms
+   * @param delays.extend extendObject
+   * @param delays.del delObjectAsync
+   * @param delays.list getObjectListAsync
+   * @param failFirstExtend whether the first extendObject fails without writing
+   * @returns the adapter, the database and the count of extendObject calls
+   */
+  function slowAdapter(
+    initial: Record<string, unknown>,
+    delays: { extend: number; del: number; list: number },
+    failFirstExtend = false,
+  ): { adapter: KnownObjectsAdapter; db: Map<string, unknown>; extends: () => number } {
+    const db = new Map<string, unknown>(Object.entries(initial));
+    let calls = 0;
+    const answer = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+    const full = (id: string): string => (id.startsWith("demo.0.") ? id : `demo.0.${id}`);
+    const adapter: KnownObjectsAdapter = {
+      ...removalDefaults,
+      namespace: "demo.0",
+      extendObject: (id, patch) => {
+        calls++;
+        if (failFirstExtend && calls === 1) {
+          return Promise.reject(new Error("db busy"));
+        }
+        db.set(full(id), extendedWith(db.get(full(id)), patch));
+        return answer(delays.extend);
+      },
+      setForeignObject: (id, obj) => {
+        db.set(id, storedAfterSet(id, db.get(id), obj));
+        return answer(delays.extend);
+      },
+      delObjectAsync: (id, options) => {
+        const key = full(id);
+        for (const known of [...db.keys()]) {
+          if (known === key || (options?.recursive && known.startsWith(`${key}.`))) {
+            db.delete(known);
+          }
+        }
+        return answer(delays.del);
+      },
+      getObjectListAsync: () => {
+        const rows = structuredClone([...db].map(([id, value]) => ({ id, value })));
+        return answer(delays.list).then(() => ({ rows }));
+      },
+    };
+    return { adapter, db, extends: () => calls };
+  }
+
+  const even = { extend: 5, del: 5, list: 5 };
+
+  it("keeps both patches of one id in the store, so a write back to the old value is made", async () => {
+    const { adapter, db } = slowAdapter(
+      { "demo.0.dev.volume": { type: "state", common: { min: 0, max: 97, unit: "dB" } } },
+      even,
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    await Promise.all([
+      known.extend("dev.volume", { common: { unit: "%", min: 0, max: 100 } }),
+      known.extend("dev.volume", { common: { step: 0.5 } }),
+    ]);
+    expect(known.get("dev.volume")).toEqual(db.get("demo.0.dev.volume"));
+    expect(await known.extend("dev.volume", { common: { unit: "dB", min: 0, max: 97 } })).toBe(true);
+    expect(db.get("demo.0.dev.volume")).toMatchObject({ common: { unit: "dB", max: 97, step: 0.5 } });
+  });
+
+  it("compares a queued write against what the one before it left: the same patch twice is written once", async () => {
+    const { adapter, extends: calls } = slowAdapter(
+      { "demo.0.dev.power": { type: "state", common: { role: "switch" } } },
+      even,
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    const results = await Promise.all([
+      known.extend("dev.power", { common: { role: "switch.power" } }),
+      known.replace("demo.0.dev.power", {
+        type: "state",
+        common: { role: "switch.power" },
+      } as unknown as ioBroker.SettableObject),
+      known.extend("demo.0.dev.power", { common: { role: "switch.power" } }),
+    ]);
+    expect(results).toEqual([true, true, false]);
+    expect(calls()).toBe(1);
+  });
+
+  it("runs the next operation of an id after a failed one", async () => {
+    const { adapter, db } = slowAdapter({ "demo.0.dev.mute": { type: "state", common: {} } }, even, true);
+    const known = new KnownObjects(adapter);
+    await known.load();
+    const first = known.extend("dev.mute", { common: { role: "media.mute" } });
+    const second = known.extend("dev.mute", { common: { role: "media.mute" } });
+    await expect(first).rejects.toThrow("db busy");
+    await expect(second).resolves.toBe(true);
+    expect(db.get("demo.0.dev.mute")).toMatchObject({ common: { role: "media.mute" } });
+  });
+
+  it("lets a recursive remove wait for a write below it that runs already", async () => {
+    // the write answers late, the delete early: the store would keep the child the database no longer has
+    const { adapter, db } = slowAdapter(
+      {
+        "demo.0.dev": { type: "device", common: { name: "Dev" } },
+        "demo.0.dev.on": { type: "state", common: { name: "On" } },
+      },
+      { extend: 10, del: 1, list: 1 },
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    await Promise.all([
+      known.extend("dev.on", { common: { name: "Power" } }),
+      known.remove("dev", { recursive: true }),
+    ]);
+    expect(known.get("dev.on")).toEqual(db.get("demo.0.dev.on"));
+    expect(await known.extend("dev.on", { common: { name: "Power" } })).toBe(true);
+    expect(db.get("demo.0.dev.on")).toEqual({ common: { name: "Power" } });
+  });
+
+  it("lets a write below a running recursive remove wait for it", async () => {
+    // the delete answers late, the write early: the store would forget the child the database holds again
+    const { adapter, db } = slowAdapter(
+      {
+        "demo.0.dev": { type: "device", common: { name: "Dev" } },
+        "demo.0.dev.on": { type: "state", common: { name: "On" } },
+      },
+      { extend: 1, del: 10, list: 1 },
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    await Promise.all([
+      known.remove("dev", { recursive: true }),
+      known.extend("dev.on", { common: { name: "Power" } }),
+    ]);
+    expect(known.get("dev.on")).toEqual(db.get("demo.0.dev.on"));
+    expect(known.get("dev")).toBeUndefined();
+    expect(await known.extend("dev.on", { common: { name: "Power" } })).toBe(false);
+  });
+
+  it("lets a write below a running recursive move delete wait for it", async () => {
+    // the same order as a recursive remove: the store would forget the child the database holds again
+    const { adapter, db } = slowAdapter(
+      {
+        "demo.0.dev": { type: "device", common: { name: "Dev" } },
+        "demo.0.dev.on": { type: "state", common: { name: "On" } },
+      },
+      { extend: 1, del: 10, list: 1 },
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    await Promise.all([
+      known.deleteMoved("dev", { recursive: true }),
+      known.extend("dev.on", { common: { name: "Power" } }),
+    ]);
+    expect(known.get("dev.on")).toEqual(db.get("demo.0.dev.on"));
+    expect(known.get("dev")).toBeUndefined();
+  });
+
+  it("lets a write wait for a running load, and a load wait for a running write", async () => {
+    const { adapter, db } = slowAdapter(
+      { "demo.0.dev.on": { type: "state", common: { name: "On" } } },
+      { extend: 1, del: 1, list: 10 },
+    );
+    const known = new KnownObjects(adapter);
+    await Promise.all([known.load(), known.extend("dev.on", { common: { name: "Power" } })]);
+    expect(known.get("dev.on")).toEqual(db.get("demo.0.dev.on"));
+    await Promise.all([known.extend("dev.on", { common: { name: "Light" } }), known.load()]);
+    expect(known.get("dev.on")).toEqual(db.get("demo.0.dev.on"));
+    expect(await known.extend("dev.on", { common: { name: "Power" } })).toBe(true);
+  });
+
+  it("lets an operation wait for one that started while an earlier one on the same id was still running", async () => {
+    const { adapter, extends: calls } = slowAdapter(
+      { "demo.0.dev.on": { type: "state", common: { name: "On" } } },
+      { extend: 10, del: 1, list: 1 },
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    const first = known.extend("dev.on", { common: { name: "A" } });
+    const second = known.extend("dev.on", { common: { name: "B" } });
+    await first;
+    await new Promise(resolve => setTimeout(resolve, 1));
+    expect(await known.extend("dev.on", { common: { name: "B" } })).toBe(false);
+    await second;
+    expect(calls()).toBe(2);
+  });
+
+  it("lets a write below wait for a recursive remove that started behind a write of the same id", async () => {
+    const { adapter, db } = slowAdapter(
+      {
+        "demo.0.dev": { type: "device", common: { name: "Dev" } },
+        "demo.0.dev.on": { type: "state", common: { name: "On" } },
+      },
+      { extend: 5, del: 20, list: 1 },
+    );
+    const known = new KnownObjects(adapter);
+    await known.load();
+    const renamed = known.extend("dev", { common: { name: "Device" } });
+    const removed = known.remove("dev", { recursive: true });
+    await renamed;
+    await new Promise(resolve => setTimeout(resolve, 1));
+    await Promise.all([removed, known.extend("dev.on", { common: { name: "Power" } })]);
+    expect(known.get("dev.on")).toEqual(db.get("demo.0.dev.on"));
+  });
+
+  it("forgets every finished operation, so nothing waits on it and nothing piles up", async () => {
+    const { adapter } = slowAdapter({}, { extend: 1, del: 1, list: 1 });
+    const known = new KnownObjects(adapter);
+    await Promise.all([
+      known.load(),
+      known.extend("dev.a", { common: { name: "A" } }),
+      known.remove("dev", { recursive: true }),
+      known.extend("dev.a", { common: { name: "B" } }),
+    ]);
+    await new Promise(resolve => setTimeout(resolve, 1));
+    const inner = known as unknown as { running: Map<string, unknown>; subtrees: Map<string, unknown> };
+    expect(inner.running.size + inner.subtrees.size).toBe(0);
+  });
+
+  it("keeps operations on different ids apart: none waits for another", async () => {
+    const { adapter, extends: calls } = slowAdapter({}, { extend: 20, del: 20, list: 1 });
+    const known = new KnownObjects(adapter);
+    await known.load();
+    const writes = Promise.all([
+      known.extend("dev.a", { common: { name: "A" } }),
+      known.remove("devb", { recursive: true }),
+      known.extend("dev.c", { common: { name: "C" } }),
+    ]);
+    await new Promise(resolve => setTimeout(resolve, 5));
+    expect(calls()).toBe(2);
+    await writes;
   });
 });

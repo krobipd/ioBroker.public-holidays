@@ -1,4 +1,18 @@
 {
   "instance": "public-holidays.0",
-  "mountSelectors": [".MuiAutocomplete-root"]
+  "targets": [
+    {
+      "name": "calendars",
+      "mountSelectors": ["[data-testid=\"cal-add\"]"],
+      "probe": [
+        { "expectEnabled": "[data-testid=\"cal-add\"]" },
+        { "fill": "[data-testid=\"cal-0-name\"]", "value": "render-check" }
+      ]
+    },
+    {
+      "name": "tree-changes",
+      "reveal": ["[data-testid=\"cal-0-delete\"]"],
+      "mountSelectors": ["[data-testid=\"tree-changes\"]"]
+    }
+  ]
 }

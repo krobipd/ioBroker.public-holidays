@@ -18,5 +18,11 @@
   "descNextName": "Vuoto finché non è stata trovata alcuna festività futura.",
   "descNextIsHoliday": "Falso quando non è stata trovata alcuna festività futura.",
   "descNextDate": "Sempre in formato ISO (AAAA-MM-GG), indipendentemente dal formato data impostato in ioBroker.",
-  "descNextDaysUntil": "0 significa che non è stata trovata alcuna festività futura — una reale dista sempre almeno un giorno."
+  "descNextDaysUntil": "0 significa che non è stata trovata alcuna festività futura — una reale dista sempre almeno un giorno.",
+  "removalHeader": "Eliminazione dei punti dati",
+  "removalInfo": "Quando l'adattatore non fornisce più un punto dati, lo elimina. Queste due opzioni decidono cosa succede a un punto dati che registri (history, sql, influxdb). Il log conta i punti dati mantenuti.",
+  "deleteRecordedStates": "Elimina i punti dati con registrazione",
+  "deleteRecordedStatesHelp": "Disattivato: un punto dati con registrazione resta ed è contato nel log — controllalo manualmente",
+  "deleteRecordedHistory": "Elimina anche i dati registrati",
+  "deleteRecordedHistoryHelp": "Ogni istanza di registrazione elimina prima i dati del punto dati"
 }

@@ -95,6 +95,62 @@
         "zh-cn": "未启用任何假日类型时，设置卡片现在显示适配器真正报告的内容，并刷新通道和数据点名称。"
       }
     },
+    "messages": [
+      {
+        "condition": {
+          "operand": "and",
+          "rules": [
+            "oldVersion<0.21.0",
+            "newVersion>=0.21.0"
+          ]
+        },
+        "title": {
+          "en": "Datapoints move into a calendar folder",
+          "de": "Datenpunkte ziehen in einen Kalender-Ordner",
+          "ru": "Точки данных переезжают в папку календаря",
+          "pt": "Os pontos de dados passam para uma pasta de calendário",
+          "nl": "Datapunten verhuizen naar een kalendermap",
+          "fr": "Les points de données passent dans un dossier de calendrier",
+          "it": "I datapoint passano in una cartella del calendario",
+          "es": "Los puntos de datos pasan a una carpeta de calendario",
+          "pl": "Punkty danych przechodzą do folderu kalendarza",
+          "uk": "Точки даних переїжджають у папку календаря",
+          "zh-cn": "数据点移入日历文件夹"
+        },
+        "text": {
+          "en": "Each calendar has its own folder now. Example: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Adjust paths in scripts and VIS.",
+          "de": "Jeder Kalender hat jetzt einen eigenen Ordner. Beispiel: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Pfade in Skripten und VIS anpassen.",
+          "ru": "У каждого календаря теперь своя папка. Пример: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Исправьте пути в скриптах и VIS.",
+          "pt": "Cada calendário tem agora a sua pasta. Exemplo: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Ajuste os caminhos em scripts e VIS.",
+          "nl": "Elke kalender heeft nu een eigen map. Voorbeeld: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Pas paden in scripts en VIS aan.",
+          "fr": "Chaque calendrier a désormais son dossier. Exemple : public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Adaptez les chemins dans les scripts et VIS.",
+          "it": "Ogni calendario ha ora una propria cartella. Esempio: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Adeguare i percorsi in script e VIS.",
+          "es": "Cada calendario tiene ahora su carpeta. Ejemplo: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Ajuste las rutas en scripts y VIS.",
+          "pl": "Każdy kalendarz ma teraz własny folder. Przykład: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Dostosuj ścieżki w skryptach i VIS.",
+          "uk": "Кожен календар тепер має власну папку. Приклад: public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday. Виправте шляхи у скриптах і VIS.",
+          "zh-cn": "每个日历现在都有自己的文件夹。示例：public-holidays.0.today.isHoliday → public-holidays.0.de-by-public.today.isHoliday。请调整脚本和 VIS 中的路径。"
+        },
+        "link": "https://github.com/krobipd/ioBroker.public-holidays/blob/main/docs/en/README.md#calendars",
+        "linkText": {
+          "en": "Calendars and the update",
+          "de": "Kalender und das Update",
+          "ru": "Календари и обновление",
+          "pt": "Calendários e a atualização",
+          "nl": "Kalenders en de update",
+          "fr": "Les calendriers et la mise à jour",
+          "it": "I calendari e l'aggiornamento",
+          "es": "Los calendarios y la actualización",
+          "pl": "Kalendarze i aktualizacja",
+          "uk": "Календарі та оновлення",
+          "zh-cn": "日历与更新"
+        },
+        "level": "warn",
+        "buttons": [
+          "agree",
+          "cancel"
+        ]
+      }
+    ],
     "plugins": {
       "sentry": {
         "dsn": "https://66f27ceff38c1ce1e6cdcc3095ba06d3@o4511524771266560.ingest.de.sentry.io/4511524773560400"
@@ -181,587 +237,91 @@
     "nogit": true
   },
   "native": {
-    "country": "",
-    "state": "",
-    "region": "",
-    "typePublic": true,
-    "typeBank": false,
-    "typeSchool": false,
-    "typeOptional": false,
-    "typeObservance": false,
-    "excludeHolidays": [],
-    "includeBridgeDays": false
+    "calendars": [
+      {
+        "uid": "c1",
+        "name": "",
+        "nameAuto": true,
+        "id": "system-public",
+        "country": "",
+        "state": "",
+        "region": "",
+        "typePublic": true,
+        "typeBank": false,
+        "typeSchool": false,
+        "typeOptional": false,
+        "typeObservance": false,
+        "excludeHolidays": [],
+        "includeBridgeDays": false
+      }
+    ],
+    "deleteRecordedStates": true,
+    "deleteRecordedHistory": false
   },
-  "instanceObjects": [
+  "instanceObjects": [],
+  "notifications": [
     {
-      "_id": "today",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Today",
-          "de": "Heute",
-          "ru": "Сегодня",
-          "pt": "Hoje",
-          "nl": "Vandaag",
-          "fr": "Aujourd'hui",
-          "it": "Oggi",
-          "es": "Hoy",
-          "pl": "Dzisiaj",
-          "uk": "Сьогодні",
-          "zh-cn": "今天"
-        }
+      "scope": "public-holidays",
+      "name": {
+        "en": "Public Holidays",
+        "de": "Feiertage",
+        "ru": "Государственные праздники",
+        "pt": "Feriados",
+        "nl": "Feestdagen",
+        "fr": "Jours fériés",
+        "it": "Giorni festivi",
+        "es": "Días festivos",
+        "pl": "Święta",
+        "uk": "Святкові дні",
+        "zh-cn": "公共假日"
       },
-      "native": {}
-    },
-    {
-      "_id": "today.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": "",
-        "desc": {
-          "en": "Empty on a day that is not a holiday.",
-          "de": "Leer an einem Tag, der kein Feiertag ist.",
-          "ru": "Пусто в день, который не является праздником.",
-          "pt": "Vazio num dia que não é feriado.",
-          "nl": "Leeg op een dag die geen feestdag is.",
-          "fr": "Vide un jour qui n'est pas férié.",
-          "it": "Vuoto in un giorno che non è festivo.",
-          "es": "Vacío en un día que no es festivo.",
-          "pl": "Puste w dniu, który nie jest świętem.",
-          "uk": "Порожньо в день, який не є святом.",
-          "zh-cn": "非节日的日子为空。"
-        }
+      "description": {
+        "en": "Problems of the Public Holidays adapter that only you can fix.",
+        "de": "Probleme des Feiertage-Adapters, die nur du beheben kannst.",
+        "ru": "Проблемы адаптера праздников, которые можете устранить только вы.",
+        "pt": "Problemas do adaptador de feriados que só você pode resolver.",
+        "nl": "Problemen van de feestdagen-adapter die alleen jij kunt oplossen.",
+        "fr": "Problèmes de l'adaptateur de jours fériés que vous seul pouvez résoudre.",
+        "it": "Problemi dell'adattatore dei giorni festivi che solo tu puoi risolvere.",
+        "es": "Problemas del adaptador de días festivos que solo tú puedes resolver.",
+        "pl": "Problemy adaptera świąt, które tylko ty możesz rozwiązać.",
+        "uk": "Проблеми адаптера свят, які можете усунути лише ви.",
+        "zh-cn": "只有您才能解决的公共假日适配器问题。"
       },
-      "native": {}
-    },
-    {
-      "_id": "today.isHoliday",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false,
-        "desc": {
-          "en": "Also true for bridge days while bridge days are switched on.",
-          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-          "ru": "Также истинно для дней-мостов, пока они включены.",
-          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
-          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
-          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
-          "it": "Vero anche per i ponti finché i ponti sono attivati.",
-          "es": "También verdadero en los días puente mientras los días puente estén activados.",
-          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-          "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
-          "zh-cn": "启用桥接日时，桥接日同样为真。"
+      "categories": [
+        {
+          "category": "userActionRequired",
+          "name": {
+            "en": "A setting stops the instance",
+            "de": "Eine Einstellung hält die Instanz an",
+            "ru": "Настройка останавливает экземпляр",
+            "pt": "Uma configuração interrompe a instância",
+            "nl": "Een instelling stopt de instantie",
+            "fr": "Un paramètre arrête l'instance",
+            "it": "Un'impostazione arresta l'istanza",
+            "es": "Un ajuste detiene la instancia",
+            "pl": "Ustawienie zatrzymuje instancję",
+            "uk": "Налаштування зупиняє екземпляр",
+            "zh-cn": "某项设置使实例停止"
+          },
+          "description": {
+            "en": "The instance stopped because one of its settings is wrong. Correct it in the instance settings and save — the instance then starts again.",
+            "de": "Die Instanz wurde angehalten, weil eine ihrer Einstellungen falsch ist. Korrigiere sie in den Instanz-Einstellungen und speichere — die Instanz startet dann wieder.",
+            "ru": "Экземпляр остановлен, потому что одна из его настроек неверна. Исправьте её в настройках экземпляра и сохраните — после этого экземпляр снова запустится.",
+            "pt": "A instância parou porque uma das suas configurações está errada. Corrija-a nas configurações da instância e salve — a instância inicia novamente.",
+            "nl": "De instantie is gestopt omdat een van haar instellingen onjuist is. Corrigeer deze in de instellingen van de instantie en sla op — de instantie start dan opnieuw.",
+            "fr": "L'instance s'est arrêtée car l'un de ses paramètres est incorrect. Corrigez-le dans les paramètres de l'instance et enregistrez — l'instance redémarre alors.",
+            "it": "L'istanza si è fermata perché una delle sue impostazioni è errata. Correggila nelle impostazioni dell'istanza e salva — l'istanza si riavvia.",
+            "es": "La instancia se detuvo porque uno de sus ajustes es incorrecto. Corrígelo en los ajustes de la instancia y guarda — la instancia se inicia de nuevo.",
+            "pl": "Instancja została zatrzymana, ponieważ jedno z jej ustawień jest błędne. Popraw je w ustawieniach instancji i zapisz — instancja uruchomi się ponownie.",
+            "uk": "Екземпляр зупинено, бо одне з його налаштувань неправильне. Виправте його в налаштуваннях екземпляра та збережіть — після цього екземпляр запуститься знову.",
+            "zh-cn": "实例已停止，因为其某项设置有误。请在实例设置中更正并保存，实例随后会重新启动。"
+          },
+          "severity": "alert",
+          "regex": [],
+          "limit": 1
         }
-      },
-      "native": {}
-    },
-    {
-      "_id": "yesterday",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Yesterday",
-          "de": "Gestern",
-          "ru": "Вчера",
-          "pt": "Ontem",
-          "nl": "Gisteren",
-          "fr": "Hier",
-          "it": "Ieri",
-          "es": "Ayer",
-          "pl": "Wczoraj",
-          "uk": "Вчора",
-          "zh-cn": "昨天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "yesterday.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": "",
-        "desc": {
-          "en": "Empty on a day that is not a holiday.",
-          "de": "Leer an einem Tag, der kein Feiertag ist.",
-          "ru": "Пусто в день, который не является праздником.",
-          "pt": "Vazio num dia que não é feriado.",
-          "nl": "Leeg op een dag die geen feestdag is.",
-          "fr": "Vide un jour qui n'est pas férié.",
-          "it": "Vuoto in un giorno che non è festivo.",
-          "es": "Vacío en un día que no es festivo.",
-          "pl": "Puste w dniu, który nie jest świętem.",
-          "uk": "Порожньо в день, який не є святом.",
-          "zh-cn": "非节日的日子为空。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "yesterday.isHoliday",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false,
-        "desc": {
-          "en": "Also true for bridge days while bridge days are switched on.",
-          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-          "ru": "Также истинно для дней-мостов, пока они включены.",
-          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
-          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
-          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
-          "it": "Vero anche per i ponti finché i ponti sono attivati.",
-          "es": "También verdadero en los días puente mientras los días puente estén activados.",
-          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-          "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
-          "zh-cn": "启用桥接日时，桥接日同样为真。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "tomorrow",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Tomorrow",
-          "de": "Morgen",
-          "ru": "Завтра",
-          "pt": "Amanhã",
-          "nl": "Morgen",
-          "fr": "Demain",
-          "it": "Domani",
-          "es": "Mañana",
-          "pl": "Jutro",
-          "uk": "Завтра",
-          "zh-cn": "明天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "tomorrow.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": "",
-        "desc": {
-          "en": "Empty on a day that is not a holiday.",
-          "de": "Leer an einem Tag, der kein Feiertag ist.",
-          "ru": "Пусто в день, который не является праздником.",
-          "pt": "Vazio num dia que não é feriado.",
-          "nl": "Leeg op een dag die geen feestdag is.",
-          "fr": "Vide un jour qui n'est pas férié.",
-          "it": "Vuoto in un giorno che non è festivo.",
-          "es": "Vacío en un día que no es festivo.",
-          "pl": "Puste w dniu, który nie jest świętem.",
-          "uk": "Порожньо в день, який не є святом.",
-          "zh-cn": "非节日的日子为空。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "tomorrow.isHoliday",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false,
-        "desc": {
-          "en": "Also true for bridge days while bridge days are switched on.",
-          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-          "ru": "Также истинно для дней-мостов, пока они включены.",
-          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
-          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
-          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
-          "it": "Vero anche per i ponti finché i ponti sono attivati.",
-          "es": "También verdadero en los días puente mientras los días puente estén activados.",
-          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-          "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
-          "zh-cn": "启用桥接日时，桥接日同样为真。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "dayAfterTomorrow",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Day after tomorrow",
-          "de": "Übermorgen",
-          "ru": "Послезавтра",
-          "pt": "Depois de amanhã",
-          "nl": "Overmorgen",
-          "fr": "Après-demain",
-          "it": "Dopodomani",
-          "es": "Pasado mañana",
-          "pl": "Pojutrze",
-          "uk": "Післязавтра",
-          "zh-cn": "后天"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "dayAfterTomorrow.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": "",
-        "desc": {
-          "en": "Empty on a day that is not a holiday.",
-          "de": "Leer an einem Tag, der kein Feiertag ist.",
-          "ru": "Пусто в день, который не является праздником.",
-          "pt": "Vazio num dia que não é feriado.",
-          "nl": "Leeg op een dag die geen feestdag is.",
-          "fr": "Vide un jour qui n'est pas férié.",
-          "it": "Vuoto in un giorno che non è festivo.",
-          "es": "Vacío en un día que no es festivo.",
-          "pl": "Puste w dniu, który nie jest świętem.",
-          "uk": "Порожньо в день, який не є святом.",
-          "zh-cn": "非节日的日子为空。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "dayAfterTomorrow.isHoliday",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false,
-        "desc": {
-          "en": "Also true for bridge days while bridge days are switched on.",
-          "de": "Auch wahr für Brückentage, solange Brückentage eingeschaltet sind.",
-          "ru": "Также истинно для дней-мостов, пока они включены.",
-          "pt": "Também verdadeiro para dias de ponte enquanto os dias de ponte estiverem ativados.",
-          "nl": "Ook waar voor brugdagen zolang brugdagen zijn ingeschakeld.",
-          "fr": "Vrai également pour les jours de pont tant que les jours de pont sont activés.",
-          "it": "Vero anche per i ponti finché i ponti sono attivati.",
-          "es": "También verdadero en los días puente mientras los días puente estén activados.",
-          "pl": "Prawda także dla dni pomostowych, dopóki dni pomostowe są włączone.",
-          "uk": "Також істинно для днів-мостів, поки їх увімкнено.",
-          "zh-cn": "启用桥接日时，桥接日同样为真。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "next",
-      "type": "channel",
-      "common": {
-        "name": {
-          "en": "Next holiday",
-          "de": "Nächster Feiertag",
-          "ru": "Следующий праздник",
-          "pt": "Próximo feriado",
-          "nl": "Volgende feestdag",
-          "fr": "Prochain jour férié",
-          "it": "Prossimo giorno festivo",
-          "es": "Próximo festivo",
-          "pl": "Następne święto",
-          "uk": "Наступне свято",
-          "zh-cn": "下一个假日"
-        },
-        "desc": {
-          "en": "The next holiday still ahead — a holiday that falls today stays in the today channel.",
-          "de": "Der nächste noch bevorstehende Feiertag — ein Feiertag, der heute ist, bleibt im Kanal Heute.",
-          "ru": "Ближайший предстоящий праздник — праздник, выпадающий на сегодня, остаётся в канале сегодняшнего дня.",
-          "pt": "O próximo feriado ainda por vir — um feriado que cai hoje permanece no canal de hoje.",
-          "nl": "De eerstvolgende feestdag die nog komt — een feestdag die vandaag valt blijft in het kanaal van vandaag.",
-          "fr": "Le prochain jour férié à venir — un jour férié qui tombe aujourd'hui reste dans le canal du jour.",
-          "it": "La prossima festività ancora futura — una festività che cade oggi resta nel canale di oggi.",
-          "es": "El próximo festivo aún por llegar — un festivo que cae hoy permanece en el canal de hoy.",
-          "pl": "Najbliższe nadchodzące święto — święto przypadające dzisiaj pozostaje w kanale dzisiejszym.",
-          "uk": "Найближче майбутнє свято — свято, що припадає на сьогодні, залишається в каналі сьогоднішнього дня.",
-          "zh-cn": "下一个尚未到来的节日 — 落在今天的节日仍留在今天通道中。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.name",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Holiday name",
-          "de": "Feiertagsname",
-          "ru": "Название праздника",
-          "pt": "Nome do feriado",
-          "nl": "Naam feestdag",
-          "fr": "Nom du jour férié",
-          "it": "Nome del giorno festivo",
-          "es": "Nombre del festivo",
-          "pl": "Nazwa święta",
-          "uk": "Назва свята",
-          "zh-cn": "假日名称"
-        },
-        "type": "string",
-        "role": "text",
-        "read": true,
-        "write": false,
-        "def": "",
-        "desc": {
-          "en": "Empty while no upcoming holiday was found.",
-          "de": "Leer, solange kein kommender Feiertag gefunden wurde.",
-          "ru": "Пусто, пока не найден предстоящий праздник.",
-          "pt": "Vazio enquanto nenhum feriado futuro for encontrado.",
-          "nl": "Leeg zolang er geen komende feestdag is gevonden.",
-          "fr": "Vide tant qu'aucun jour férié à venir n'a été trouvé.",
-          "it": "Vuoto finché non è stata trovata alcuna festività futura.",
-          "es": "Vacío mientras no se haya encontrado ningún festivo próximo.",
-          "pl": "Puste, dopóki nie znaleziono nadchodzącego święta.",
-          "uk": "Порожньо, доки не знайдено майбутнього свята.",
-          "zh-cn": "尚未找到下一个节日时为空。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.isHoliday",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Is a holiday",
-          "de": "Ist ein Feiertag",
-          "ru": "Является праздником",
-          "pt": "É feriado",
-          "nl": "Is een feestdag",
-          "fr": "Est un jour férié",
-          "it": "È un giorno festivo",
-          "es": "Es festivo",
-          "pl": "Jest świętem",
-          "uk": "Є святом",
-          "zh-cn": "是假日"
-        },
-        "type": "boolean",
-        "role": "indicator",
-        "read": true,
-        "write": false,
-        "def": false,
-        "desc": {
-          "en": "False when no upcoming holiday was found at all.",
-          "de": "Falsch, wenn überhaupt kein kommender Feiertag gefunden wurde.",
-          "ru": "Ложь, если предстоящий праздник вообще не найден.",
-          "pt": "Falso quando nenhum feriado futuro foi encontrado.",
-          "nl": "Onwaar wanneer er helemaal geen komende feestdag is gevonden.",
-          "fr": "Faux lorsqu'aucun jour férié à venir n'a été trouvé.",
-          "it": "Falso quando non è stata trovata alcuna festività futura.",
-          "es": "Falso cuando no se ha encontrado ningún festivo próximo.",
-          "pl": "Fałsz, gdy nie znaleziono żadnego nadchodzącego święta.",
-          "uk": "Хибно, якщо майбутнього свята взагалі не знайдено.",
-          "zh-cn": "完全没有找到下一个节日时为假。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.date",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Date",
-          "de": "Datum",
-          "ru": "Дата",
-          "pt": "Data",
-          "nl": "Datum",
-          "fr": "Date",
-          "it": "Data",
-          "es": "Fecha",
-          "pl": "Data",
-          "uk": "Дата",
-          "zh-cn": "日期"
-        },
-        "type": "string",
-        "role": "date",
-        "read": true,
-        "write": false,
-        "def": "",
-        "desc": {
-          "en": "Always ISO format (YYYY-MM-DD), independent of the date format set in ioBroker.",
-          "de": "Immer im ISO-Format (JJJJ-MM-TT), unabhängig vom in ioBroker eingestellten Datumsformat.",
-          "ru": "Всегда в формате ISO (ГГГГ-ММ-ДД), независимо от формата даты, заданного в ioBroker.",
-          "pt": "Sempre em formato ISO (AAAA-MM-DD), independentemente do formato de data definido no ioBroker.",
-          "nl": "Altijd ISO-formaat (JJJJ-MM-DD), onafhankelijk van het in ioBroker ingestelde datumformaat.",
-          "fr": "Toujours au format ISO (AAAA-MM-JJ), indépendamment du format de date configuré dans ioBroker.",
-          "it": "Sempre in formato ISO (AAAA-MM-GG), indipendentemente dal formato data impostato in ioBroker.",
-          "es": "Siempre en formato ISO (AAAA-MM-DD), independientemente del formato de fecha configurado en ioBroker.",
-          "pl": "Zawsze w formacie ISO (RRRR-MM-DD), niezależnie od formatu daty ustawionego w ioBroker.",
-          "uk": "Завжди у форматі ISO (РРРР-ММ-ДД), незалежно від формату дати, заданого в ioBroker.",
-          "zh-cn": "始终为 ISO 格式（YYYY-MM-DD），与 ioBroker 中设置的日期格式无关。"
-        }
-      },
-      "native": {}
-    },
-    {
-      "_id": "next.daysUntil",
-      "type": "state",
-      "common": {
-        "name": {
-          "en": "Days until holiday",
-          "de": "Tage bis zum Feiertag",
-          "ru": "Дней до праздника",
-          "pt": "Dias até ao feriado",
-          "nl": "Dagen tot feestdag",
-          "fr": "Jours jusqu'au jour férié",
-          "it": "Giorni fino al giorno festivo",
-          "es": "Días hasta el festivo",
-          "pl": "Dni do święta",
-          "uk": "Днів до свята",
-          "zh-cn": "距假日天数"
-        },
-        "type": "number",
-        "role": "value.interval",
-        "read": true,
-        "write": false,
-        "unit": "d",
-        "def": 0,
-        "desc": {
-          "en": "0 means no upcoming holiday was found — a real one is always at least one day ahead.",
-          "de": "0 bedeutet, dass kein kommender Feiertag gefunden wurde — ein echter liegt immer mindestens einen Tag voraus.",
-          "ru": "0 означает, что предстоящий праздник не найден — настоящий всегда минимум через один день.",
-          "pt": "0 significa que nenhum feriado futuro foi encontrado — um real está sempre a pelo menos um dia de distância.",
-          "nl": "0 betekent dat er geen komende feestdag is gevonden — een echte ligt altijd minstens één dag vooruit.",
-          "fr": "0 signifie qu'aucun jour férié à venir n'a été trouvé — un vrai est toujours à au moins un jour.",
-          "it": "0 significa che non è stata trovata alcuna festività futura — una reale dista sempre almeno un giorno.",
-          "es": "0 significa que no se encontró ningún festivo próximo — uno real está siempre al menos a un día de distancia.",
-          "pl": "0 oznacza, że nie znaleziono nadchodzącego święta — prawdziwe jest zawsze oddalone o co najmniej jeden dzień.",
-          "uk": "0 означає, що майбутнього свята не знайдено — справжнє завжди щонайменше через один день.",
-          "zh-cn": "0 表示没有找到下一个节日 — 真正的节日总是至少在一天之后。"
-        }
-      },
-      "native": {}
+      ]
     }
   ]
 }

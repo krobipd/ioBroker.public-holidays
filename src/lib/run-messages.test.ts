@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { makeConfig } from "../../test/helpers";
 import { emptyResult } from "./holiday-engine";
-import { hostZoneNote, scopeIssueText, staleExcludesText, summaryLine, systemCountryProblemText } from "./run-messages";
+import {
+  calendarSummaryLine,
+  DAMAGED_LIST_TEXT,
+  forCalendar,
+  hostZoneNote,
+  NO_CALENDAR_TEXT,
+  scopeIssueText,
+  skippedCalendarText,
+  staleExcludesText,
+  summaryLine,
+  systemCountryProblemText,
+} from "./run-messages";
 
 describe("systemCountryProblemText", () => {
   it.each([
@@ -84,5 +95,42 @@ describe("summaryLine", () => {
 
   it("says so when there is no holiday today and none ahead", () => {
     expect(summaryLine(emptyResult(), "DD.MM.YYYY")).toBe("Today: no holiday, next holiday: no upcoming holiday");
+  });
+});
+
+describe("the texts of several calendars", () => {
+  it("a line about one calendar names its folder first", () => {
+    expect(forCalendar("de-by-public", "No country configured — open adapter settings")).toBe(
+      "de-by-public: No country configured — open adapter settings",
+    );
+  });
+
+  it("a skipped calendar says which one and why, a forged id stays on one line", () => {
+    expect(skippedCalendarText({ position: 2, reason: "id", id: "" })).toBe(
+      "Calendar 2 has no valid id — skipped; open the adapter settings",
+    );
+    expect(skippedCalendarText({ position: 2, reason: "id", id: "a\nb" })).toBe(
+      "Calendar 2 has no valid id ('a b') — skipped; open the adapter settings",
+    );
+    expect(skippedCalendarText({ position: 3, reason: "duplicate", id: "cal" })).toBe(
+      "Calendar 3 uses the id 'cal' of a calendar above it — skipped; open the adapter settings",
+    );
+  });
+
+  it("the one summary line names every calendar in list order", () => {
+    const line = calendarSummaryLine(
+      [
+        { id: "a", computed: emptyResult() },
+        { id: "b", computed: emptyResult() },
+      ],
+      "",
+    );
+    expect(line).toBe(`a: ${summaryLine(emptyResult(), "")}; b: ${summaryLine(emptyResult(), "")}`);
+    expect(line.split("\n")).toHaveLength(1);
+  });
+
+  it("the damaged and the empty list are named", () => {
+    expect(DAMAGED_LIST_TEXT).toContain("nothing was changed");
+    expect(NO_CALENDAR_TEXT).toContain("add one");
   });
 });

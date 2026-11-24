@@ -18,10 +18,51 @@ Bundesländern, Kantonen, Provinzen und Regionen abdeckt.
 
 1. Adapter aus dem ioBroker-Repository (stable oder latest) installieren und eine Instanz anlegen.
    Eine Installation über eine GitHub-Adresse wird nicht unterstützt.
-2. Die Instanz-Einstellungen öffnen. Alle Einstellungen liegen auf einer geführten Karte, die von
-   oben nach unten durchgearbeitet wird.
+2. Die Instanz-Einstellungen öffnen. Sie enthalten eine Liste von Kalendern; eine neue Instanz hat einen.
+   Einen Kalender aufklappen: Oben stehen sein **Name** und sein **Ordner im Objektbaum**, darunter eine
+   geführte Karte, die von oben nach unten durchgearbeitet wird.
 3. Speichern und die Instanz einschalten — eine neue Instanz startet ausgeschaltet, bis sie eingerichtet
    ist. Der Adapter rechnet sofort und schreibt seine Datenpunkte.
+
+### Kalender
+
+Jeder Kalender hat seinen eigenen Standort, seine Feiertagstypen, Brückentage und Ausschlüsse, rechnet
+für sich und schreibt seine Datenpunkte in einen eigenen Ordner — zum Beispiel Deutschland Bayern Schulen,
+Österreich Banken und Deutschland Nordrhein-Westfalen gesetzlich nebeneinander in einer Instanz.
+
+- **Kalender anlegen** setzt einen neuen Kalender ans Ende der Liste. Er beginnt wie eine neue
+  Instanz: kein Land (dann gilt das Systemland), nur gesetzliche Feiertage.
+- **Kopieren** übernimmt alle Einstellungen; der Name bekommt „(Kopie)“, die Kennung die nächste freie Zahl.
+  **Löschen** nimmt den Kalender sofort ohne Rückfrage aus der Liste — wirksam wird das erst beim
+  Speichern. Die **Pfeile** ändern nur die Reihenfolge der Liste.
+- **Name** steht am Ordner im Objektbaum. Bleibt er leer, bildet ihn der Adapter: Land · Bundesland ·
+  Region, so weit gewählt — „Deutschland · Nordrhein-Westfalen“, „Systemland · Bayern“. Feiertagstypen,
+  Brückentage und Ausschlüsse kommen nicht hinein. Ein selbst eingetippter Name bleibt stehen.
+- **Der Ordner** steht nur zum Lesen unter dem Namen: Seine **Kennung** bildet der Adapter, du tippst sie nie.
+- **Die Kennung** sagt, wo ein Kalender gilt und welche Feiertage er enthält:
+  `<land>[-<bundesland>][-<region>]-<arten>`, klein geschrieben, die Arten in der Reihenfolge gesetzlich,
+  Bank, Schule, optional, Gedenktag — `de-by-school`, `at-bank`, `de-nw-public`. Ein Kalender, der dem
+  Systemland folgt, beginnt mit `system`. Ist der Code eines Bundeslands oder einer Region nur eine Zahl,
+  steht dort sein Name: die Steiermark (Code 6) ergibt `at-steiermark-public`. Zwei Kalender mit
+  derselben Standard-Kennung bekommen `-2`, `-3` …. Nur eine von Hand im Instanzobjekt bearbeitete Liste
+  kann eine leere oder doppelte Kennung tragen: Der Kalender wird rot, Speichern bleibt gesperrt, und
+  **Kennung neu bilden** behebt es.
+- **Ändern sich Land, Bundesland, Region oder Feiertagstypen**, zieht der Ordner beim Speichern um, mit
+  Werten, Räumen, Funktionen, Aliasen und Aufzeichnung. Brückentage, Ausschlüsse und der Name ziehen nie
+  um, und ein „-2“ bleibt, auch wenn sein Zwilling gelöscht wird; wer eine Einstellung zurückdreht,
+  bekommt den gespeicherten Ordner zurück. Vor dem Speichern steht der Umzug gelb unter dem Ordner und
+  unter der Liste, und ein roter Kasten direkt über dem Speichern-Knopf nennt jeden Ordner, der umzieht
+  oder gelöscht wird. Fest eingetragene Pfade in Skripten musst du selbst anpassen.
+- **Ein gelöschter Kalender** nimmt seinen Ordner mit allem darunter mit. Die zwei Optionen unter
+  **Löschen von Datenpunkten** entscheiden, was mit einem Datenpunkt geschieht, den du aufzeichnest
+  (history, sql, influxdb): Mit **Datenpunkte mit Aufzeichnung löschen** an (Standard) wird er mit
+  gelöscht, ist die Option aus, bleibt er und wird im Log gezählt; **Auch die aufgezeichneten Daten
+  löschen** löscht vorher auch seine aufgezeichneten Daten.
+
+**Update von 0.20.x:** Der erste Start nach dem Update übernimmt die bisherigen Einstellungen in den
+ersten Kalender, und die Datenpunkte ziehen in seinen Ordner — zum Beispiel
+`public-holidays.0.today.isHoliday` → `public-holidays.0.de-by-public.today.isHoliday`. Pfade in Skripten
+und VIS anpassen.
 
 ### Standort
 
@@ -124,6 +165,8 @@ ioBroker-Systemsprache wie die Datenpunkte, zeigt also den echten späteren Stan
 gewählt, zeigt sie das erkannte Systemland.
 
 ## Datenpunkte
+
+Jeder Kalender schreibt dieselben Datenpunkte unter seinen Ordner, `public-holidays.0.<Kennung>.`:
 
 | Datenpunkt                                             | Typ              | Bedeutung                                                                     |
 | ------------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------- |

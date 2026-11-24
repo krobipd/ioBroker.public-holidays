@@ -18,5 +18,11 @@
   "descNextName": "Leer, solange kein kommender Feiertag gefunden wurde.",
   "descNextIsHoliday": "Falsch, wenn überhaupt kein kommender Feiertag gefunden wurde.",
   "descNextDate": "Immer im ISO-Format (JJJJ-MM-TT), unabhängig vom in ioBroker eingestellten Datumsformat.",
-  "descNextDaysUntil": "0 bedeutet, dass kein kommender Feiertag gefunden wurde — ein echter liegt immer mindestens einen Tag voraus."
+  "descNextDaysUntil": "0 bedeutet, dass kein kommender Feiertag gefunden wurde — ein echter liegt immer mindestens einen Tag voraus.",
+  "removalHeader": "Löschen von Datenpunkten",
+  "removalInfo": "Stellt der Adapter einen Datenpunkt nicht mehr bereit, löscht er ihn. Diese zwei Optionen entscheiden, was mit einem Datenpunkt geschieht, den du aufzeichnest (history, sql, influxdb). Das Log zählt die behaltenen Datenpunkte.",
+  "deleteRecordedStates": "Datenpunkte mit Aufzeichnung löschen",
+  "deleteRecordedStatesHelp": "Aus: ein Datenpunkt mit Aufzeichnung bleibt und wird im Log gezählt — bitte manuell prüfen",
+  "deleteRecordedHistory": "Auch die aufgezeichneten Daten löschen",
+  "deleteRecordedHistoryHelp": "Jede aufzeichnende Instanz löscht zuerst die Daten des Datenpunkts"
 }

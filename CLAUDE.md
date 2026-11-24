@@ -25,14 +25,21 @@ Config-Änderung, js-controller triggert täglich um Mitternacht per Cron, danac
 ## Architektur
 
 ```
-src/main.ts                   → onReady: Übersetzungen → Einstellungs-Migration → Instanz-Reparatur → eigenen Baum lesen
-                                (KnownObjects) → Land auflösen → rechnen → Objekte auffrischen → States publizieren →
-                                Zusammenfassung → stop(); nur Ablauf, die Texte liefert run-messages
+src/main.ts                   → onReady: Übersetzungen → Einstellungs-Migration (die Schlüssel von 0.20.x als erster
+                                Kalender) → Instanz-Reparatur → eigenen Baum lesen (KnownObjects) → Kalenderliste lesen →
+                                Ordner abgleichen → je Kalender rechnen, Ordner auffrischen, States publizieren → EINE
+                                Zusammenfassung → stop(); ein gescheiterter Start endet über failStart (Code 11 mit
+                                Meldung bei falschen Einstellungen, sonst 6); nur Ablauf, die Texte liefert run-messages
 src/lib/holiday-shared.ts     → EINZIGE Quelle für alles, was Runtime UND Karte gleich sehen müssen: native-Leser (Trim),
                                 Typen, Scope-Code-Regeln (sameCode, isLoadableScopeKey), toHolidayId, beats, Brückentag-
                                 Namen, Sprachregel, Tagesliste über das Drei-Jahres-Fenster (buildScopeDays → buildDayMap →
-                                addBridgeDays), Kalenderschlüssel, Datumsformate. IMPORT-FREI (landet in zwei Bündeln);
-                                Wächter single-source.test.ts
+                                addBridgeDays), Kalenderschlüssel, Datumsformate, Kalenderliste (Leser, Kennungs-Slug,
+                                Standard-Kennung und -Name). IMPORT-FREI (landet in zwei Bündeln); Wächter single-source.test.ts
+src/lib/calendars.ts          → die Einstellungen von 0.20.x als erster Kalender, Kalender-Scope, Ordnername, gültige
+                                Kalender (ungültige oder doppelte Kennung → übersprungen und gewarnt)
+src/lib/calendar-tree.ts      → Kalenderordner (folder mit native.uid) gegen die Liste: Ordner ohne Kalender → Flotten-
+                                Löschung; Ordner mit neuer Kennung und der 0.20.x-Baum an der Wurzel bleiben bis zum
+                                Flotten-Umzugs-Master liegen
 src/lib/holiday-engine.ts     → date-holidays-Wrapper: Instanz, Ergebnis today/next, Stale-Exclude-Prüfung (teure
                                 Länder-Aggregation nur bei fehlendem Scope-Treffer), Scope-Diagnose, Debug-Liste
 src/lib/run-messages.ts       → alle Logtexte eines Laufs als reine Funktionen (Systemland, Scope, Zeitzone, Zusammenfassung)
@@ -40,15 +47,21 @@ src/lib/country-codes.ts      → Admin-Ländernamen beider Listen → Code, res
 src/lib/country.ts            → resolveCountry gegen die installierten date-holidays-Daten
 src/lib/config.ts             → rohes native → AdapterConfig
 src/lib/system-config.ts      → system.config (Land, Sprache, Datumsformat) mit Rückfall und Warnung
-src/lib/state-publisher.ts    → 17 Objekte mit literalen IDs auffrischen (nur wenn der gelesene Baum sie nicht schon trägt),
-                                Altbestand räumen, 12 States gegen EIN Sammel-Lesen vergleichen und nur Änderungen schreiben
-src/lib/err-text.ts · known-objects.ts · native-key-migration.ts (+ Tests) → Flotten-Master byte-gleich, nie hier ändern
+src/lib/state-publisher.ts    → je Kalender Ordner + 17 Objekte (Tabelle CALENDAR_OBJECTS) schreiben, nur wenn der gelesene
+                                Baum sie nicht schon trägt; Altbestand räumen; 12 States je Kalender gegen EIN Sammel-Lesen
+                                vergleichen und nur Änderungen schreiben
+src/lib/err-text.ts · known-objects.ts · native-key-migration.ts · object-removal.ts · enum-carry.ts · start-failure.ts (+ Tests)
+                              → Flotten-Master byte-gleich, nie hier ändern
 src/lib/log-text.ts           → oneLine / errLine (Fehlertext auf einer Logzeile)
 src/lib/i18n.ts · types.ts
-src-admin/                    → Admin-8-Karte (Module-Federation-Remote, guiApi 2): HolidayConfig.tsx (ConfigGeneric-Mount,
-                                reicht Systemland/-sprache/-datumsformat durch) + HolidayPanel.tsx (liest, leitet ab) +
-                                Tiers.tsx (die fünf Stufen) + scope-options.ts / exclude-options.ts (pure Logik auf
-                                holiday-shared) + scoped-holidays.ts (eine Gebiets-Konstruktion)
+src-admin/                    → Admin-8-Karte (Module-Federation-Remote, guiApi 2), zwei Mounts: CalendarsConfig.tsx
+                                (ConfigGeneric-Mount der Liste, EINE Ganzschreibung, eine leere oder doppelte Kennung
+                                einer handbearbeiteten Liste sperrt Speichern) + TreeChanges.tsx (roter Kasten über
+                                Speichern: was umzieht, was gelöscht wird); CalendarList.tsx (Akkordeon je Kalender:
+                                Name, Ordner nur zum Lesen, Umzugshinweis, „Kennung neu bilden“, Knöpfe) +
+                                calendar-list.ts (pure Listenlogik, treeChanges wie der Lauf) + HolidayPanel.tsx (die Karte
+                                eines Kalenders) + Tiers.tsx (die fünf Stufen) + scope-options.ts / exclude-options.ts (pure
+                                Logik auf holiday-shared) + scoped-holidays.ts (eine Gebiets-Konstruktion)
 admin/custom/                 → gebauter Karten-Bau, git-getrackt (`npm run build:admin`)
 scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-holidays` (Wurzel + Karten-Pin + Test + Neubau)
 ```
@@ -66,14 +79,19 @@ scripts/check-date-holidays.mjs → Entwickler-Werkzeug `npm run update:date-hol
 9. **Leere Typ-Auswahl heißt überall „keine Feiertage"** — nie still „alle".
 10. **Landeserkennung kennt beide Admin-Namenslisten und nennt den Grund, wenn sie scheitert** — der Einrichtungsassistent bis Admin 8.0.14 speichert eigene Namen.
 11. **`I18n.init` zuerst, dann räumt der Flotten-Helfer `migrateNativeKeys` obsolete Einstellungsschlüssel, `repairInstanceObject` nur noch `mode` + `supportedMessages` (auf `null`)** — jede Instanz-Schreibung ist ein Neustart, danach `stop()` + return.
-12. **`supportedMessages.stopInstance` nie ins Manifest** — der Host tötet sonst den laufenden Durchgang; `onUnload` bleibt leer, es gibt nichts abzuwarten.
-13. **Objekt-Refresh schreibt nur name + desc, und nur wenn der einmal gelesene Baum (`KnownObjects`) sie nicht schon trägt** — js-controller wendet das Manifest bei jedem Start an und friert nur `common.name` ein.
-14. **Die Karte schreibt mehrere Felder in EINER Ganzschreibung (`handleChangeMany`)** — `ConfigGeneric.onChange` kopiert `props.data` je Aufruf.
+12. **`supportedMessages.stopInstance` nie ins Manifest** — der Host tötet sonst den laufenden Durchgang; `onUnload` setzt nur den Stopp-Merker (ein Stopp während des Starts ist kein Startfehler, `failStart`) und ruft sofort `callback()`, es gibt nichts abzuwarten.
+13. **Die Objekte jedes Kalenderordners schreibt der Lauf selbst (Manifest ohne `instanceObjects`), und nur wenn der einmal gelesene Baum (`KnownObjects`) sie nicht schon trägt** — die Ordner hängen an den Einstellungen.
+14. **Die Karte schreibt die ganze Kalenderliste in EINER Ganzschreibung (`writeList`)** — `ConfigGeneric.onChange` kopiert `props.data` je Aufruf.
 15. **Ein beim Öffnen verwaister Wert wird gezeigt, nie automatisch geschrieben** — sonst bewaffnet das bloße Öffnen den Speichern-Knopf.
 16. **Die Tage folgen der Host-Uhr; eine abweichende Host-Zeitzone steht nur im Debug-Log** — Rechnen in der Landeszeit wäre bei einem UTC-Container falscher.
 17. **Nicht ladbare Mischschreibungs-Gebiete (12, date-holidays-Defekt) werden gewarnt und in der Karte markiert** — die Bibliothek fällt dort still auf das Elterngebiet zurück.
 18. **Neue Instanzen starten deaktiviert (`common.enabled: false`)** — Paket-Check `instance-enabled`; bestehende Instanzen behalten ihre Einstellung.
-19. **Die zwölf States sind schreibgeschützt und werden im Speicher gegen EIN Sammel-Lesen verglichen** — `setStateChangedAsync` liest jeden State einzeln (Ressourcen-Prüfung des Inventars).
+19. **Die zwölf States je Kalender sind schreibgeschützt und werden im Speicher gegen EIN Sammel-Lesen verglichen** — `setStateChangedAsync` liest jeden State einzeln (Ressourcen-Prüfung des Inventars).
+20. **Mehrere Kalender je Instanz, auch mehrere desselben Landes; jeder rechnet für sich und schreibt in seinen Ordner `<Kennung>`, die uid in `native` bindet Ordner und Kalender** — krobi 2026-11-20 22:43 (Konzept abgenommen), Bau 22:59.
+21. **Die Kennung bildet immer der Adapter aus Standort und Arten (`<land|system>[-<gebiet>][-<region>]-<arten>`, ein reiner Zahlen-Code wird zum Gebietsnamen, Gleichstand `-2`) und nur, wenn sich Land, Bundesland, Region oder Arten ändern; der Name ist frei, leer heißt automatisch: nur Land · Bundesland · Region** — Konzept 22:43, Karte krobi 2026-11-21 02:32–02:47.
+22. **Ein Ordner ohne Kalender geht über die Flotten-Löschung mit den zwei Löschoptionen; ein Ordner mit neuer Kennung und der Baum von 0.20.x an der Wurzel ziehen nur mit dem Flotten-Umzugs-Master um, nie mit eigenem Code** — Werkbank Antwort 99eb2a0a9bce, krobi 23:08.
+23. **Die Einstellungen von 0.20.x werden beim ersten Start zum ersten Kalender (`migrateNativeKeys`, eine Schreibung, Neustart); das Update warnt per `common.messages`** — krobi 22:5x „aktuelle datenbäume werde beim update auf ihre settings umgezogen dazu gibs dann auch eine warnung beim update“.
+24. **Eine unlesbare Kalenderliste ändert nichts am Baum und beendet den Start als Einstellungsfehler (`SettingsError` → `failStart`: eine error-Zeile, Meldung `userActionRequired`, Code 11), eine ungültige oder doppelte Kennung überspringt nur ihren Kalender** — sonst löschte ein kaputter Eintrag fremde Ordner; der Abschluss folgt dem Flotten-Startfehler-Standard (krobi 2026-11-11 23:32).
 
 <!-- core-decisions:begin (generated from the sealed register — change only through the Werkbank) -->
 
@@ -106,7 +124,8 @@ krobi's decisions for this adapter. The register with his verbatim words lives i
 
 ## State Tree
 
-4 Tages-Kanäle × (name, isHoliday) + next × (name, isHoliday, date, daysUntil `unit: d`) = 12 States, 17 Objekte.
+Je Kalender ein Ordner `<Kennung>` (`folder`, Name = Kalendername, `native.uid`) mit 4 Tages-Kanälen × (name, isHoliday)
+und next × (name, isHoliday, date, daysUntil `unit: d`) = 12 States, 17 Objekte. Das Manifest trägt keine `instanceObjects`.
 
 ## Tests
 
@@ -119,11 +138,13 @@ sagen sie; der Stand steht in der dev-history.
   `ready`/`unload` über die registrierten Handler aus; JSON-Merge, Kopien, Schreibzähler), Wächter (`single-source`,
   `instance-objects-reach`, `country-count`, `date-holidays-currency`).
 - **Karten-Suite** (`src-admin/vitest.config.ts`, Flotten-Master, jsdom, gegen die echte `ConfigGeneric`):
-  `HolidayConfig.test.tsx` plus die Logik-Tests der Karte (`scope-options`, `exclude-options`, `card-parity` =
-  Vorschau gegen Runtime Tag für Tag) — sie liegen neben der Karte, der Nadel-Harness schickt Karten-Nadeln an
+  `CalendarsConfig.test.tsx` (Liste, Ordneranzeige, „Kennung neu bilden“, Umzugs- und Löschhinweise) plus die
+  Logik-Tests der Karte (`calendar-list`, `scope-options`, `exclude-options`, `card-parity` = Vorschau gegen
+  Runtime Tag für Tag) — sie liegen neben der Karte, der Nadel-Harness schickt Karten-Nadeln an
   diese Suite. `npm run test:admin` = `check:admin` (typprüft die Tests mit) + Lint + Suite; braucht `build:admin` davor.
-- **Objekt-Inventar** (`test/inventory.js`, Flotten-Vorlage): `waitForAdapterWork` wartet auf `next.daysUntil > 0`,
-  den Wert, den nur ein vollständiger Lauf mit Land schreibt (die Objekte legt js-controller vor `ready` an).
+- **Objekt-Inventar** (`test/inventory.js`, Flotten-Vorlage): ein Kalender DE/BY (`de-by-public`); `waitForAdapterWork`
+  wartet auf `de-by-public.next.daysUntil > 0`, den Wert, den nur ein vollständiger Lauf mit Land schreibt; `MOVES`
+  nennt den Umzug der zwölf States.
 - **Mutationen:** `Ressourcen/iobroker-entwicklung/mutation-testing/mutations_publicholidays.py` ist HANDGEPFLEGT
   (der Plan ist veraltet, nie `build_mutations.py`); Nadeln auf Flotten-Mastern liegen in `mutations_tooling.py`.
 - **`format:check`** klammert `admin/custom/**` aus (erzeugter Bau), keine `.prettierignore` (W0084/W5048).

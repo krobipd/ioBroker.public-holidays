@@ -716,3 +716,285 @@ export function formatDayMonth(dateKey: string, dateFormat: string): string {
   const separator = between || ".";
   return dd < mm ? `${day}${separator}${month}${separator === "." ? "." : ""}` : `${month}${separator}${day}`;
 }
+
+// --- Several calendars in one instance (concept accepted by krobi 2026-11-20 22:43, built from 22:59) ---
+//
+// Every calendar carries the settings the whole instance carried up to 0.20.x (same field names, so
+// the card's tiers and the runtime's config reader work on one calendar record unchanged), plus its
+// name and its id — the folder it publishes under. The id rule follows the fleet's device-id scheme:
+// WHERE the calendar applies and WHICH holidays it holds, never the display name.
+
+/** The `native` key holding the calendar list. */
+export const CALENDAR_LIST_KEY = "calendars";
+
+/** The uid the manifest default and the update migration give the first calendar. */
+export const FIRST_CALENDAR_UID = "c1";
+
+/**
+ * The calendar list of a `native` record, or `null` when the key holds no list at all — a damaged
+ * setting, on which nothing is created, moved or deleted. Entries that are not plain objects are
+ * dropped.
+ *
+ * @param native the instance's `native` record
+ * @returns the calendar records in list order, or null
+ */
+export function readCalendarList(native: Record<string, unknown>): Record<string, unknown>[] | null {
+  const list = native[CALENDAR_LIST_KEY];
+  if (!Array.isArray(list)) {
+    return null;
+  }
+  return list.filter((c): c is Record<string, unknown> => !!c && typeof c === "object" && !Array.isArray(c));
+}
+
+/**
+ * The settings of a new calendar, as the single-calendar card started out: no country (the system
+ * country applies), only the default types, no excludes, no bridge days.
+ *
+ * @returns the location and holiday fields of a fresh calendar
+ */
+export function freshCalendarFields(): Record<string, unknown> {
+  const fields: Record<string, unknown> = { country: "", state: "", region: "" };
+  for (const t of HOLIDAY_TYPES) {
+    fields[t.flag] = t.defaultOn;
+  }
+  fields.excludeHolidays = [];
+  fields.includeBridgeDays = false;
+  return fields;
+}
+
+/**
+ * Text made into an id: lower case, umlauts spelled out (ä → ae, ß → ss), other accents dropped,
+ * every run of other characters one hyphen, no hyphen in front.
+ *
+ * @param text what the user typed, or a name
+ * @param keepTrailingHyphen keep a hyphen at the end — while the user is still typing ("heinz-")
+ * @returns the id form
+ */
+export function calendarSlug(text: string, keepTrailingHyphen = false): string {
+  const slug = text
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-/, "");
+  return keepTrailingHyphen ? slug : slug.replace(/-$/, "");
+}
+
+/** A valid calendar id: lower-case letters and digits in hyphen-separated groups. */
+const CALENDAR_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Whether a value is a usable calendar id (a folder name in the object tree).
+ *
+ * @param id the stored id
+ * @returns true for a valid id
+ */
+export function isCalendarId(id: unknown): id is string {
+  return typeof id === "string" && CALENDAR_ID.test(id);
+}
+
+/**
+ * The area part of a standard id: the official code, unless it is digits only (every Austrian
+ * state, 6 = Steiermark) — then the area's own name, which date-holidays gives without a language
+ * (so the id never depends on a language setting). A name that yields nothing keeps the code.
+ *
+ * @param code the state or region code ("" for none)
+ * @param name the area name as date-holidays has it without a language
+ * @returns the part, "" without a code
+ */
+export function areaIdPart(code: string, name: string): string {
+  if (!code) {
+    return "";
+  }
+  return /[a-z]/i.test(code) ? code : calendarSlug(name.replace(/\\/g, "")) || code;
+}
+
+/**
+ * The standard id of a calendar: `<country|system>[-<state>[-<region>]]-<type>[-<type>…]`, lower
+ * case, the types in their priority order (public, bank, school, optional, observance).
+ *
+ * @param country the stored country code ("" when the calendar follows the system country)
+ * @param statePart the state's part ({@link areaIdPart}), "" for none
+ * @param regionPart the region's part, "" for none
+ * @param types the enabled holiday types, in priority order
+ * @returns the id, before any tie suffix
+ */
+export function standardCalendarId(
+  country: string,
+  statePart: string,
+  regionPart: string,
+  types: readonly string[],
+): string {
+  return calendarSlug([country || "system", statePart, regionPart, ...types].filter(Boolean).join("-"));
+}
+
+/**
+ * An id no other calendar holds: the base itself, else the base with `-2`, `-3`, ….
+ *
+ * @param base the wanted id
+ * @param taken the ids of the other calendars
+ * @returns the first free id
+ */
+export function uniqueCalendarId(base: string, taken: ReadonlySet<string>): string {
+  if (!taken.has(base)) {
+    return base;
+  }
+  for (let n = 2; ; n++) {
+    if (!taken.has(`${base}-${n}`)) {
+      return `${base}-${n}`;
+    }
+  }
+}
+
+/**
+ * The word for the system country in the standard calendar name, per language: the runtime and the
+ * card build the same name.
+ */
+export const SYSTEM_COUNTRY_WORDS: Record<string, string> = {
+  de: "Systemland",
+  en: "System country",
+  es: "País del sistema",
+  fr: "Pays du système",
+  it: "Paese di sistema",
+  nl: "Systeemland",
+  pl: "Kraj systemu",
+  pt: "País do sistema",
+  ru: "Страна системы",
+  uk: "Країна системи",
+  zh: "系统国家",
+};
+
+/**
+ * The standard name of a calendar: where it applies, in the system language — "Deutschland ·
+ * Nordrhein-Westfalen", "Systemland · Bayern". Nothing else goes in: not the holiday types, not the
+ * bridge days, no count (krobi 2026-11-21 02:45/02:47 — a count changes with the year and every
+ * exclude, and with it the folder's name in the object tree).
+ *
+ * @param countryName the country's display name, "" when the calendar follows the system country
+ * @param areaNames the names of its state and region, as far as chosen
+ * @param language the ioBroker system language ("zh-cn" reads as "zh"), English when unknown
+ * @returns the name
+ */
+export function standardCalendarName(countryName: string, areaNames: readonly string[], language: string): string {
+  const system = SYSTEM_COUNTRY_WORDS[language.toLowerCase().split("-")[0]] ?? SYSTEM_COUNTRY_WORDS.en;
+  return [countryName || system, ...areaNames.filter(Boolean)].join(" · ");
+}
+
+/**
+ * The display name of a country in a language. date-holidays translates country names for a handful
+ * of countries only; `Intl.DisplayNames` knows every ISO region, and with `fallback: "none"` says
+ * "unknown" (undefined) instead of echoing the code, so the library's own name stays the fallback.
+ *
+ * @param lang an ioBroker language tag
+ * @returns a code → name function
+ */
+export function countryNamer(lang: string): (code: string, fallback: string) => string {
+  let names: Intl.DisplayNames | null = null;
+  try {
+    names = new Intl.DisplayNames([lang === "zh-cn" ? "zh-Hans" : lang], { type: "region", fallback: "none" });
+  } catch {
+    names = null;
+  }
+  return (code, fallback) => {
+    try {
+      return names?.of(code) ?? fallback;
+    } catch {
+      // A code Intl does not accept as a region (none today — a guard, not a case).
+      return fallback;
+    }
+  };
+}
+
+/**
+ * The area lookups the standard id and name need — a date-holidays instance fits, and each bundle
+ * passes its own (the card's is pinned to the runtime's version), so this file stays import-free.
+ * date-holidays answers `undefined` for an unknown scope although its types say otherwise.
+ */
+export interface AreaNameSource {
+  /** Country code → name, in `lang` where the data has it. */
+  getCountries(lang?: string): Record<string, string> | undefined;
+  /** State code → name; without `lang` the area's own name. */
+  getStates(country: string, lang?: string): Record<string, string> | undefined;
+  /** Region code → name; without `lang` the area's own name. */
+  getRegions(country: string, state: string, lang?: string): Record<string, string> | undefined;
+}
+
+/** Where a calendar applies and which holidays it holds — what its standard id and name are built from. */
+export interface CalendarScope {
+  /** The stored country as a code, "" when the calendar follows the system country. */
+  country: string;
+  /** The system country's code, used for the areas while `country` is "". */
+  systemCountry: string;
+  /** The state code, "" for none. */
+  state: string;
+  /** The region code, "" for none. */
+  region: string;
+  /** The enabled holiday types, in priority order. */
+  types: readonly string[];
+}
+
+/**
+ * Reads a name map of date-holidays without throwing (an unknown scope may throw or answer undefined).
+ *
+ * @param read the lookup
+ * @returns the map, or an empty one
+ */
+function namesOf(read: () => Record<string, string> | undefined): Record<string, string> {
+  try {
+    return read() ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * The standard id of a calendar ({@link standardCalendarId}) with its area parts looked up.
+ *
+ * @param scope where the calendar applies and its types
+ * @param source date-holidays
+ * @returns the id, before any tie suffix
+ */
+export function standardIdOf(scope: CalendarScope, source: AreaNameSource): string {
+  const area = scope.country || scope.systemCountry;
+  const states = area && scope.state ? namesOf(() => source.getStates(area)) : {};
+  const regions = area && scope.state && scope.region ? namesOf(() => source.getRegions(area, scope.state)) : {};
+  return standardCalendarId(
+    scope.country,
+    areaIdPart(scope.state, states[scope.state] ?? ""),
+    areaIdPart(scope.region, regions[scope.region] ?? ""),
+    scope.types,
+  );
+}
+
+/**
+ * The standard name of a calendar ({@link standardCalendarName}) with its names looked up in a language.
+ *
+ * @param scope where the calendar applies and its types
+ * @param language the ioBroker system language
+ * @param source date-holidays
+ * @returns the name
+ */
+export function standardNameOf(scope: CalendarScope, language: string, source: AreaNameSource): string {
+  const area = scope.country || scope.systemCountry;
+  const countryName = scope.country
+    ? countryNamer(language)(
+        scope.country,
+        namesOf(() => source.getCountries(language))[scope.country] ?? scope.country,
+      )
+    : "";
+  const stateName = area && scope.state ? (namesOf(() => source.getStates(area, language))[scope.state] ?? "") : "";
+  const regionName =
+    area && scope.state && scope.region
+      ? (namesOf(() => source.getRegions(area, scope.state, language))[scope.region] ?? "")
+      : "";
+  return standardCalendarName(
+    countryName,
+    [stateName, regionName].map(n => n.replace(/\\/g, "")),
+    language,
+  );
+}

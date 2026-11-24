@@ -7,7 +7,12 @@
 // The collision rule and the bridge-day algorithm come from src/lib/holiday-shared.ts — the SAME
 // module the runtime uses, so the preview cannot drift from what gets published.
 import Holidays from "date-holidays";
-import { buildScopeDays, isLoadableScopeKey, pickHolidayLanguages } from "../../src/lib/holiday-shared.js";
+import {
+  buildScopeDays,
+  countryNamer,
+  isLoadableScopeKey,
+  pickHolidayLanguages,
+} from "../../src/lib/holiday-shared.js";
 import { type MakeScopedHolidays, makeScopedHolidays, type ScopeSelection } from "./scoped-holidays";
 
 /** One entry of a country/state/region picker. */
@@ -49,33 +54,6 @@ function toOptions(
 }
 
 /**
- * The display name of a country in the admin language. date-holidays translates country names for
- * a handful of countries only, so a German list read "日本 (JP)" and
- * "Ελλάδα (GR)", and a search for "Japan" found nothing. `Intl.DisplayNames` knows every ISO region
- * in every browser language; `fallback: "none"` makes it say "unknown" (undefined) instead of echoing
- * the bare code, so the library's own name stays the fallback.
- *
- * @param lang the admin language
- * @returns a code → label function
- */
-function regionNamer(lang: string): (code: string, fallback: string) => string {
-  let names: Intl.DisplayNames | null = null;
-  try {
-    names = new Intl.DisplayNames([lang === "zh-cn" ? "zh-Hans" : lang], { type: "region", fallback: "none" });
-  } catch {
-    names = null;
-  }
-  return (code, fallback) => {
-    try {
-      return names?.of(code) ?? fallback;
-    } catch {
-      // A code Intl does not accept as a region (none today — a guard, not a case).
-      return fallback;
-    }
-  };
-}
-
-/**
  * The country options in the admin language.
  *
  * @param lang the admin language
@@ -83,7 +61,7 @@ function regionNamer(lang: string): (code: string, fallback: string) => string {
  * @returns the options, sorted by name
  */
 export function getCountryOptions(lang: string, makeHd: MakeHolidays = defaultMakeHolidays): ScopeOption[] {
-  return toOptions(makeHd().getCountries(lang), lang, regionNamer(lang));
+  return toOptions(makeHd().getCountries(lang), lang, countryNamer(lang));
 }
 
 /**

@@ -2,17 +2,58 @@
   "i18n": true,
   "type": "panel",
   "items": {
-    "_holidayCard": {
+    "_calendars": {
       "type": "custom",
       "i18n": true,
       "url": "custom/customComponents.js",
-      "name": "PublicHolidaysComponentSet/Components/HolidayConfig",
+      "name": "PublicHolidaysComponentSet/Components/CalendarsConfig",
       "guiApi": 2,
       "xs": 12,
       "sm": 12,
       "md": 12,
       "lg": 12,
       "xl": 12
+    },
+    "_removalHeader": {
+      "newLine": true,
+      "type": "header",
+      "text": "removalHeader",
+      "size": 5
+    },
+    "_removalInfo": {
+      "type": "staticText",
+      "text": "removalInfo",
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12,
+      "style": {
+        "fontSize": 14,
+        "marginBottom": 8
+      }
+    },
+    "deleteRecordedStates": {
+      "newLine": true,
+      "type": "checkbox",
+      "label": "deleteRecordedStates",
+      "help": "deleteRecordedStatesHelp",
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 6,
+      "xl": 6
+    },
+    "deleteRecordedHistory": {
+      "type": "checkbox",
+      "label": "deleteRecordedHistory",
+      "help": "deleteRecordedHistoryHelp",
+      "hidden": "!data.deleteRecordedStates",
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 6,
+      "xl": 6
     },
     "_supportHeader": {
       "newLine": true,
@@ -58,6 +99,19 @@
       "md": 4,
       "lg": 4,
       "xl": 4
+    },
+    "_treeChanges": {
+      "newLine": true,
+      "type": "custom",
+      "i18n": true,
+      "url": "custom/customComponents.js",
+      "name": "PublicHolidaysComponentSet/Components/TreeChanges",
+      "guiApi": 2,
+      "xs": 12,
+      "sm": 12,
+      "md": 12,
+      "lg": 12,
+      "xl": 12
     }
   }
 }

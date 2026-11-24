@@ -1,3 +1,4 @@
+import type { SkippedCalendar } from "./calendars";
 import type { CountryResolution } from "./country-codes";
 import type { ScopeIssue } from "./holiday-engine";
 import { formatDateForDisplay } from "./holiday-shared";
@@ -91,4 +92,52 @@ export function summaryLine(computed: ComputedHolidays, dateFormat: string): str
     ? `${oneLine(next.name)} on ${formatDateForDisplay(next.date, dateFormat)} (in ${days})`
     : "no upcoming holiday";
   return `Today: ${today.isHoliday ? oneLine(today.name) : "no holiday"}, next holiday: ${nextText}`;
+}
+
+/**
+ * A line about one calendar — every warning and note of a calendar's computation names its folder,
+ * so a user with several calendars sees which one it is about.
+ *
+ * @param id the calendar's folder id
+ * @param text the line
+ * @returns the line with the calendar in front
+ */
+export function forCalendar(id: string, text: string): string {
+  return `${id}: ${text}`;
+}
+
+/**
+ * The settings error when the settings hold no calendar list at all — nothing is created, moved or
+ * deleted, and the start ends (failStart: error line, notification, exit code 11).
+ */
+export const DAMAGED_LIST_TEXT =
+  "The calendar list in the settings is damaged — nothing was changed; open the adapter settings and save them";
+
+/** The warning when the list is empty. */
+export const NO_CALENDAR_TEXT = "No calendar is set up — add one in the adapter settings";
+
+/**
+ * The warning for a calendar the run skips.
+ *
+ * @param skipped the calendar and why
+ * @returns the warning
+ */
+export function skippedCalendarText(skipped: SkippedCalendar): string {
+  return skipped.reason === "id"
+    ? `Calendar ${skipped.position} has no valid id${skipped.id ? ` ('${oneLine(skipped.id)}')` : ""} — skipped; open the adapter settings`
+    : `Calendar ${skipped.position} uses the id '${oneLine(skipped.id)}' of a calendar above it — skipped; open the adapter settings`;
+}
+
+/**
+ * The one info line of a run (P-04): per calendar its folder, today and the next holiday.
+ *
+ * @param results each calendar's folder id and published result, in list order
+ * @param dateFormat the system date format
+ * @returns the line
+ */
+export function calendarSummaryLine(
+  results: ReadonlyArray<{ id: string; computed: ComputedHolidays }>,
+  dateFormat: string,
+): string {
+  return results.map(r => forCalendar(r.id, summaryLine(r.computed, dateFormat))).join("; ");
 }
